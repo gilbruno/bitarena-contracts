@@ -4,7 +4,9 @@ pragma solidity 0.8.26;
 /**
  * @dev Emitted when a challenge is created
  */
-event ChallengeCreated(
-    string indexed _challengeName,
-    address indexed _challengeAddress
-);
+event ChallengeDeployed(uint indexed challengeCounter, address indexed challengeAddress);
+
+/**
+ * @dev Emitted when there is an intent challenge creation
+ */
+event IntentChallengeCreation(uint indexed challengeCounter);

@@ -13,7 +13,8 @@ contract BitarenaChallenge is AccessControlDefaultAdminRules{
     uint16 private s_nbTeams;
     uint16 private s_nbTeamPlayers;
     uint private s_startAt;
-    uint private s_amount;
+    uint private s_amountPerPlayer;
+
     bool private s_isPrivate;
     bool private s_isCanceled;
     address private s_admin;
@@ -34,6 +35,7 @@ contract BitarenaChallenge is AccessControlDefaultAdminRules{
         string memory _platform,
         uint16 _nbTeams,
         uint16 _nbTeamPlayers,
+        uint _amountPerPlayer,
         uint _startAt,
         bool _isPrivate
     ) AccessControlDefaultAdminRules(1 days, _challengeAdmin) {
@@ -45,6 +47,7 @@ contract BitarenaChallenge is AccessControlDefaultAdminRules{
         _platform = s_platform;
         _nbTeams = s_nbTeams;
         _nbTeamPlayers = s_nbTeamPlayers;
+        _amountPerPlayer = s_amountPerPlayer;
         _startAt = s_startAt;
         _isPrivate = s_isPrivate;
         s_isCanceled = false;
@@ -118,17 +121,17 @@ contract BitarenaChallenge is AccessControlDefaultAdminRules{
     }
 
         /**
-     * @dev getter for state variable s_amount
+     * @dev getter for state variable s_amountPerPlayer
      */
-    function getAmount() external view returns (uint) {
-        return s_amount;
+    function getAmountPerPlayer() external view returns (uint) {
+        return s_amountPerPlayer;
     }
 
     /**
-     * @dev setter for state variable s_amount
+     * @dev setter for state variable s_amountPerPlayer
      */
-    function setAmount(uint _amount) internal {
-        s_amount = _amount;
+    function setAmountPerPlayer(uint _amountPerPlayer) internal {
+        s_amountPerPlayer = _amountPerPlayer;
     }
 
 
