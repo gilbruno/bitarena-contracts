@@ -13,9 +13,11 @@ contract BitarenaChallenge is AccessControlDefaultAdminRules{
     uint16 private s_nbTeamPlayers;
     uint private s_startAt;
     bool private s_isPrivate;
+    bool private s_isCanceled;
     address private s_admin;
     address private s_litigationAdmin;
     address private s_creator;
+
 
     bytes32 public constant CHALLENGE_ADMIN_ROLE = keccak256("CHALLENGE_ADMIN_ROLE");
     bytes32 public constant CHALLENGE_LITIGATION_ADMIN_ROLE = keccak256("CHALLENGE_LITIGATION_ADMIN_ROLE");
@@ -43,10 +45,16 @@ contract BitarenaChallenge is AccessControlDefaultAdminRules{
         _nbTeamPlayers = s_nbTeamPlayers;
         _startAt = s_startAt;
         _isPrivate = s_isPrivate;
+        s_isCanceled = false;
         _grantRole(CHALLENGE_ADMIN_ROLE, _challengeAdmin);
         
 
     }
+
+    function cancelChallenge() public onlyRole(CHALLENGE_CREATOR_ROLE) {
+        setIsCanceled(true);
+    }
+
 
     /**
      * @dev getter for state variable s_game
@@ -89,4 +97,17 @@ contract BitarenaChallenge is AccessControlDefaultAdminRules{
         return s_isPrivate;
     }
 
+    /**
+     * @dev getter for state variable s_isCanceled
+     */
+    function getIsCanceled() external view returns (bool) {
+        return s_isCanceled;
+    }
+
+    /**
+     * @dev getter for state variable s_isCanceled
+     */
+    function setIsCanceled(bool _isCanceled) internal {
+        s_isCanceled = _isCanceled;
+    }
 }
