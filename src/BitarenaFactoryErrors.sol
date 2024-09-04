@@ -4,6 +4,11 @@ pragma solidity 0.8.26;
 /**
  * @dev 
  */
+error AddressZeroError();
+
+/**
+ * @dev 
+ */
 error BalanceChallengeCreatorError();
 
 

@@ -52,6 +52,7 @@ contract BitarenaChallenge is AccessControlDefaultAdminRules{
         _isPrivate = s_isPrivate;
         s_isCanceled = false;
         _grantRole(CHALLENGE_ADMIN_ROLE, _challengeAdmin);
+        _grantRole(CHALLENGE_CREATOR_ROLE, _challengeCreator);
         
 
     }
