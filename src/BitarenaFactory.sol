@@ -10,8 +10,7 @@ import {ChallengeAdminAddressZeroError} from './BitarenaFactoryErrors.sol';
 import {ChallengeLitigationAdminAddressZeroError} from './BitarenaFactoryErrors.sol';
 import {NbTeamsError} from './BitarenaFactoryErrors.sol';
 import {NbPlayersPerTeamsError} from './BitarenaFactoryErrors.sol';
-
-
+import {ChallengeCreated} from './BitarenaFactoryEvents.sol';
 
 contract BitarenaFactory is Ownable, AccessControl {
 
@@ -30,10 +29,11 @@ contract BitarenaFactory is Ownable, AccessControl {
         address _challengeAdmin,
         address _challengeLitigationAdmin,
         address _challengeCreator,
+        string memory _challengeName,
         string memory _game,
         string memory _platform,
-        uint _nbTeams,
-        uint _nbPlayersPerTeam,
+        uint16 _nbTeams,
+        uint16 _nbTeamPlayers,
         uint _startAt,
         bool _isPrivate
     ) onlyRole(BITARENA_FACTORY_ADMIN) public {
@@ -41,8 +41,10 @@ contract BitarenaFactory is Ownable, AccessControl {
         if(_challengeAdmin == address(0)) revert ChallengeAdminAddressZeroError();
         if(_challengeLitigationAdmin == address(0)) revert ChallengeLitigationAdminAddressZeroError();
         if(_nbTeams < 2) revert NbTeamsError();
-        if(_nbPlayersPerTeam < 1) revert NbPlayersPerTeamsError();
+        if(_nbTeamPlayers < 1) revert NbPlayersPerTeamsError();
 
-        BitarenaChallenge bitarenaChallenge = new BitarenaChallenge(_game, _platform, _nbTeams, _nbPlayersPerTeam, _startAt, _isPrivate);
+        BitarenaChallenge bitarenaChallenge = new BitarenaChallenge(_challengeAdmin, _challengeLitigationAdmin,  _challengeCreator, _challengeName, _game, _platform, _nbTeams, _nbTeamPlayers, _startAt, _isPrivate);
+
+        emit ChallengeCreated(_challengeName, address(bitarenaChallenge));
     }
 }
