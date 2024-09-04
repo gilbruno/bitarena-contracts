@@ -3,6 +3,7 @@
 pragma solidity 0.8.26;
 
 import {AccessControlDefaultAdminRules} from "openzeppelin-contracts/contracts/access/extensions/AccessControlDefaultAdminRules.sol";
+import {ChallengeCancelAfterStartDateError} from "./BitarenaChallengeErrors.sol";
 
 contract BitarenaChallenge is AccessControlDefaultAdminRules{
 
@@ -12,6 +13,7 @@ contract BitarenaChallenge is AccessControlDefaultAdminRules{
     uint16 private s_nbTeams;
     uint16 private s_nbTeamPlayers;
     uint private s_startAt;
+    uint private s_amount;
     bool private s_isPrivate;
     bool private s_isCanceled;
     address private s_admin;
@@ -51,7 +53,11 @@ contract BitarenaChallenge is AccessControlDefaultAdminRules{
 
     }
 
+    /**
+     * @dev Only the challengecreator can cancel  a challenge only before _startDate
+     */
     function cancelChallenge() public onlyRole(CHALLENGE_CREATOR_ROLE) {
+        if (block.timestamp > s_startAt) revert ChallengeCancelAfterStartDateError();
         setIsCanceled(true);
     }
 
@@ -105,9 +111,25 @@ contract BitarenaChallenge is AccessControlDefaultAdminRules{
     }
 
     /**
-     * @dev getter for state variable s_isCanceled
+     * @dev setter for state variable s_isCanceled
      */
     function setIsCanceled(bool _isCanceled) internal {
         s_isCanceled = _isCanceled;
     }
+
+        /**
+     * @dev getter for state variable s_amount
+     */
+    function getAmount() external view returns (uint) {
+        return s_amount;
+    }
+
+    /**
+     * @dev setter for state variable s_amount
+     */
+    function setAmount(uint _amount) internal {
+        s_amount = _amount;
+    }
+
+
 }
