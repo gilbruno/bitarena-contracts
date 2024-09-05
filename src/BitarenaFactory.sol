@@ -97,7 +97,7 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
         );
 
         //Hydrate challenges array
-        challenge.challengeAddress = address(bitarenaChallenge);
+        s_challengesMap[_challengeCounter].challengeAddress = address(bitarenaChallenge);
         s_challenges.push(challenge);
 
         //Send amountPerPlayer from creator to challenge smart contract

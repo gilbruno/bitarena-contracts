@@ -517,4 +517,56 @@ contract BitarenaTest is Test {
         assertEq(address(bitarenaFactory).balance, STARTING_BALANCE_ETH);
     }
 
+    /**
+     * @dev Test that the property 'challengeAddress' is correctly hydrated after Challenge Deployment
+     * 
+     */
+    function testChallengeAddressInStateVariableStructAfterDeploying() public {
+        deployFactory();
+        
+        vm.deal(address(bitarenaFactory), STARTING_BALANCE_ETH);
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
+            CHALLENGE1,
+            GAME1,
+            PLATFORM1,
+            TWO_TEAMS,
+            ONE_PLAYER,
+            AMOUNT_PER_PLAYER,
+            block.timestamp + 1 days,
+            false
+        );
+        vm.stopBroadcast();
+
+        vm.startBroadcast(ADMIN_FACTORY);
+        bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_LITIGATION_CHALLENGE1, 1);
+        vm.stopBroadcast();       
+
+        assertEq(bitarenaFactory.isChallengeDeployed(1), true);
+    }
+
+    /**
+     * @dev Test that the property 'challengeAddress' is equal to address(0) before Challenge deployment
+     * 
+     */
+    function testChallengeAddressInStateVariableStructBeforeDeploying() public {
+        deployFactory();
+        
+        vm.deal(address(bitarenaFactory), STARTING_BALANCE_ETH);
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
+            CHALLENGE1,
+            GAME1,
+            PLATFORM1,
+            TWO_TEAMS,
+            ONE_PLAYER,
+            AMOUNT_PER_PLAYER,
+            block.timestamp + 1 days,
+            false
+        );
+        vm.stopBroadcast();
+
+        assertEq(bitarenaFactory.isChallengeDeployed(1), false);
+    }
+
 }
