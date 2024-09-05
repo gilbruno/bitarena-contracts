@@ -10,30 +10,18 @@ import {BalanceChallengeCreatorError, ChallengeAdminAddressZeroError,
     ChallengeNameError, ChallengePlatformError, 
     ChallengeStartDateError, NbTeamsError, NbPlayersPerTeamsError, SendMoneyToChallengeError} from './BitarenaFactoryErrors.sol';
 import {IntentChallengeCreation, ChallengeDeployed} from './BitarenaFactoryEvents.sol';
+import {Challenge} from './ChallengeStruct.sol';
 
 contract BitarenaFactory is Context, Ownable, AccessControl {
 
     uint private s_challengeCounter;
 
-    struct Challenge {
-        address challengeCreator;
-        address challengeAddress;
-		string challengeName;
-        string game;
-        string platform;
-        uint16 nbTeams;
-        uint16 nbTeamPlayers;
-        uint amountPerPlayer;
-        uint startAt;
-        bool isPrivate;
-	}   
 
-    mapping(uint indexChallenge => Challenge) s_challengesMap;
-    Challenge[] s_challengesArray;
-
-    bytes32 public constant BITARENA_FACTORY_ADMIN = keccak256("BITARENA_FACTORY_ADMIN");
-
+    mapping(uint indexChallenge => Challenge) private s_challengesMap;
+    
     Challenge[] private s_challenges;
+    
+    bytes32 public constant BITARENA_FACTORY_ADMIN = keccak256("BITARENA_FACTORY_ADMIN");
 
 	constructor () Ownable(msg.sender) {
         s_challengeCounter = 0;
@@ -116,5 +104,27 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
         if (!sent) revert SendMoneyToChallengeError();
 
         emit ChallengeDeployed(_challengeCounter, address(bitarenaChallenge));
+    }
+
+    /**
+     * @dev Getter for 's_challengeCounter'
+     */
+    function getChallengeCounter() public view returns (uint) {
+        return s_challengeCounter;
+    }
+
+    /**
+     * @dev Getter for the 's_challengesMap' by index
+     * @param index : index of the mapping
+     */
+    function getChallengeByIndex(uint index) public view returns(Challenge memory) {
+        return s_challengesMap[index];
+    }
+
+    /**
+     * @dev Getter for s_challenges
+     */
+    function getChallengesArray() public view returns (Challenge[] memory) {
+        return s_challenges;
     }
 }
