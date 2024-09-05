@@ -9,6 +9,7 @@ import {BalanceChallengeCreatorError, ChallengeAdminAddressZeroError,
     ChallengeNameError, ChallengePlatformError, 
     ChallengeStartDateError, NbTeamsError, NbPlayersPerTeamsError, SendMoneyToChallengeError} from '../src/BitarenaFactoryErrors.sol';
 import {Challenge} from '../src/ChallengeStruct.sol';
+import {BitarenaChallenge} from '../src/BitarenaChallenge.sol';
 
 
 contract BitarenaTest is Test {
@@ -433,6 +434,87 @@ contract BitarenaTest is Test {
 
         vm.stopBroadcast();
         assertEq(address(CREATOR_CHALLENGE1).balance, STARTING_BALANCE_ETH - AMOUNT_PER_PLAYER);
+    }
+
+    /**
+     * @dev Test challenge creation fails if a bad index is provided (= not exists )
+     */
+    function testChallengeCreationRevertIfBAdCounterIsProvided() public {
+        deployFactory();
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
+            CHALLENGE1,
+            GAME1,
+            PLATFORM1,
+            TWO_TEAMS,
+            ONE_PLAYER,
+            AMOUNT_PER_PLAYER,
+            block.timestamp + 1 days,
+            false
+        );
+        vm.stopBroadcast();
+
+        vm.expectRevert(ChallengeCounterError.selector);
+        vm.startBroadcast(ADMIN_FACTORY);
+        bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_LITIGATION_CHALLENGE1, 2);
+        vm.stopBroadcast();       
+    }
+
+    /**
+     * @dev Test balance factory before deploying a challenge
+     * The factory owns 'STARTING_BALANCE_ETH' before the challenge intent creation
+     * After the Challenge intent creation it must own 'STARTING_BALANCE_ETH' + AMOUNT_PER_PLAYER
+     */
+    function testBalanceFactoryBeforeDeployingChallenge() public {
+        deployFactory();
+        
+        vm.deal(address(bitarenaFactory), STARTING_BALANCE_ETH);
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
+            CHALLENGE1,
+            GAME1,
+            PLATFORM1,
+            TWO_TEAMS,
+            ONE_PLAYER,
+            AMOUNT_PER_PLAYER,
+            block.timestamp + 1 days,
+            false
+        );
+        vm.stopBroadcast();
+
+        vm.startBroadcast(ADMIN_FACTORY);
+        // BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_LITIGATION_CHALLENGE1, 1);
+        // console.log('BALANCE OF FACTORY AFTER ', address(bitarenaFactory).balance);
+        vm.stopBroadcast();       
+        assertEq(address(bitarenaFactory).balance, STARTING_BALANCE_ETH + AMOUNT_PER_PLAYER);
+    }
+
+    /**
+     * @dev Test balance factory after deploying a challenge
+     * The factory owns 'STARTING_BALANCE_ETH' before the challenge deployment 
+     * And after the deployment it owns 'STARTING_BALANCE_ETH' as well
+     */
+    function testBalanceFactoryAfterDeployingChallenge() public {
+        deployFactory();
+        
+        vm.deal(address(bitarenaFactory), STARTING_BALANCE_ETH);
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
+            CHALLENGE1,
+            GAME1,
+            PLATFORM1,
+            TWO_TEAMS,
+            ONE_PLAYER,
+            AMOUNT_PER_PLAYER,
+            block.timestamp + 1 days,
+            false
+        );
+        vm.stopBroadcast();
+
+        vm.startBroadcast(ADMIN_FACTORY);
+        bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_LITIGATION_CHALLENGE1, 1);
+        vm.stopBroadcast();       
+        assertEq(address(bitarenaFactory).balance, STARTING_BALANCE_ETH);
     }
 
 }

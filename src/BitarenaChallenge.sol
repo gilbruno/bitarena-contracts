@@ -56,7 +56,20 @@ contract BitarenaChallenge is AccessControlDefaultAdminRules{
         
 
     }
+    /**
+     * @dev Fonction receive pour accepter les paiements en Ether
+     */
+    receive() external payable {
+        // Logique optionnelle ici, si nécessaire
+    }
 
+    /**
+     * @dev Fonction fallback pour gérer les appels de fonction inconnus et accepter les paiements en Ether
+     */
+    fallback() external payable {
+        // Logique optionnelle ici, si nécessaire
+    }
+    
     /**
      * @dev Only the challengecreator can cancel  a challenge only before _startDate
      */

@@ -6,7 +6,7 @@ import {Ownable} from "openzeppelin-contracts/contracts/access/Ownable.sol";
 import {AccessControl} from "openzeppelin-contracts/contracts/access/AccessControl.sol";
 import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
 import {BalanceChallengeCreatorError, ChallengeAdminAddressZeroError, 
-    ChallengeCounterError, ChallengeCreatorAddressZeroError, ChallengeLitigationAdminAddressZeroError, ChallengeGameError, 
+    ChallengeCounterError, ChallengeDeployedError, ChallengeCreatorAddressZeroError, ChallengeLitigationAdminAddressZeroError, ChallengeGameError, 
     ChallengeNameError, ChallengePlatformError, 
     ChallengeStartDateError, NbTeamsError, NbPlayersPerTeamsError, SendMoneyToChallengeError} from './BitarenaFactoryErrors.sol';
 import {IntentChallengeCreation, ChallengeDeployed} from './BitarenaFactoryEvents.sol';
@@ -71,8 +71,9 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
         address _challengeAdmin,
         address _challengeLitigationAdmin,
         uint _challengeCounter
-    ) public onlyRole(BITARENA_FACTORY_ADMIN){
+    ) public onlyRole(BITARENA_FACTORY_ADMIN) returns (BitarenaChallenge){
         if (_challengeCounter > s_challengeCounter) revert ChallengeCounterError();
+        if (isChallengeDeployed(_challengeCounter)) revert ChallengeDeployedError();
 
         Challenge memory challenge = s_challengesMap[_challengeCounter];
 
@@ -104,6 +105,8 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
         if (!sent) revert SendMoneyToChallengeError();
 
         emit ChallengeDeployed(_challengeCounter, address(bitarenaChallenge));
+
+        return bitarenaChallenge;
     }
 
     /**
@@ -126,5 +129,10 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
      */
     function getChallengesArray() public view returns (Challenge[] memory) {
         return s_challenges;
+    }
+
+    function isChallengeDeployed(uint index) public view returns(bool) {
+        Challenge memory challengeCreated = getChallengeByIndex(index);
+        return (challengeCreated.challengeAddress != address(0));
     }
 }

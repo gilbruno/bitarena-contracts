@@ -23,6 +23,11 @@ error ChallengeCreatorAddressZeroError();
 error ChallengeCounterError();
 
 /**
+ * @dev 
+ */
+error ChallengeDeployedError();
+
+/**
  * @dev an unexpected zero address was transmitted for the Challenge Admin. (eg. `address(0)`)
  */
 error ChallengeAdminAddressZeroError();
