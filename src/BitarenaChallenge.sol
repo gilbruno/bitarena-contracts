@@ -3,9 +3,11 @@
 pragma solidity 0.8.26;
 
 import {AccessControlDefaultAdminRules} from "openzeppelin-contracts/contracts/access/extensions/AccessControlDefaultAdminRules.sol";
-import {ChallengeCancelAfterStartDateError} from "./BitarenaChallengeErrors.sol";
+import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
+import {ChallengeCancelAfterStartDateError, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError} from "./BitarenaChallengeErrors.sol";
+import {PlayerJoinsTeam, TeamCreated} from "./BitarenaChallengeEvents.sol";
 
-contract BitarenaChallenge is AccessControlDefaultAdminRules{
+contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
 
     string private s_name;
     string private s_game;
@@ -15,12 +17,14 @@ contract BitarenaChallenge is AccessControlDefaultAdminRules{
     uint private s_startAt;
     uint private s_amountPerPlayer;
 
+    uint16 s_teamCounter;
     bool private s_isPrivate;
     bool private s_isCanceled;
     address private s_admin;
     address private s_litigationAdmin;
     address private s_creator;
 
+    mapping(uint16 teamIndex => address[] players) private s_players;
 
     bytes32 public constant CHALLENGE_ADMIN_ROLE = keccak256("CHALLENGE_ADMIN_ROLE");
     bytes32 public constant CHALLENGE_LITIGATION_ADMIN_ROLE = keccak256("CHALLENGE_LITIGATION_ADMIN_ROLE");
@@ -53,9 +57,47 @@ contract BitarenaChallenge is AccessControlDefaultAdminRules{
         s_isCanceled = false;
         _grantRole(CHALLENGE_ADMIN_ROLE, _challengeAdmin);
         _grantRole(CHALLENGE_CREATOR_ROLE, _challengeCreator);
-        
 
+        s_teamCounter++;
     }
+
+
+    function createTeam() internal {
+        s_teamCounter++;
+        if (s_teamCounter > s_nbTeams) revert NbTeamsLimitReachedError();
+
+        //If a team is created for the first time, we add the creator in this team
+        if (s_teamCounter == 1) {
+            s_players[s_teamCounter].push(s_creator);
+            emit PlayerJoinsTeam(s_teamCounter, s_creator);
+        }
+        emit TeamCreated(s_teamCounter);
+    }
+
+    function joinTeam(uint16 _teamIndex) internal {
+        address[] storage existingPlayers = s_players[_teamIndex];
+        if (existingPlayers.length == s_nbTeamPlayers) revert NbPlayersPerTeamsLimitReachedError();
+
+        existingPlayers.push(_msgSender());
+        s_players[_teamIndex] = existingPlayers; 
+    }
+
+    /**
+     * @dev Function that will be callable by front end. 
+     * If value of _teamIndex equals 0 then it's a creation team intent
+     * Otherwise the player wants to join the team with specified index
+     * @param _teamIndex : index of the team
+     */
+    function joinOrCreateTeam(uint16 _teamIndex) public {
+        //Intent to create a new team 
+        if (_teamIndex == 0) {
+            createTeam();
+        }
+        else {
+            joinTeam(_teamIndex);
+        }
+    }
+
     /**
      * @dev Fonction receive pour accepter les paiements en Ether
      */
@@ -134,7 +176,7 @@ contract BitarenaChallenge is AccessControlDefaultAdminRules{
         s_isCanceled = _isCanceled;
     }
 
-        /**
+    /**
      * @dev getter for state variable s_amountPerPlayer
      */
     function getAmountPerPlayer() external view returns (uint) {
@@ -146,6 +188,13 @@ contract BitarenaChallenge is AccessControlDefaultAdminRules{
      */
     function setAmountPerPlayer(uint _amountPerPlayer) internal {
         s_amountPerPlayer = _amountPerPlayer;
+    }
+
+    /**
+     * @dev getter for mapping state variable s_players
+     */
+    function getPlayersByTeamIndex(uint16 _teamIndex) external view returns (address[] memory) {
+        return s_players[_teamIndex];
     }
 
 

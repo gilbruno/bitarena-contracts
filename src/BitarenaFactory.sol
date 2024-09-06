@@ -100,6 +100,9 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
         s_challengesMap[_challengeCounter].challengeAddress = address(bitarenaChallenge);
         s_challenges.push(challenge);
 
+        //Create the firstTeam and add the creator of the challenge in this first team
+        bitarenaChallenge.joinOrCreateTeam(0);
+
         //Send amountPerPlayer from creator to challenge smart contract
         (bool sent, ) = address(bitarenaChallenge).call{value: challenge.amountPerPlayer}("");
         if (!sent) revert SendMoneyToChallengeError();
