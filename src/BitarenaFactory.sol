@@ -6,7 +6,7 @@ import {Ownable} from "openzeppelin-contracts/contracts/access/Ownable.sol";
 import {AccessControl} from "openzeppelin-contracts/contracts/access/AccessControl.sol";
 import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
 import {BalanceChallengeCreatorError, ChallengeAdminAddressZeroError, 
-    ChallengeCounterError, ChallengeDeployedError, ChallengeCreatorAddressZeroError, ChallengeLitigationAdminAddressZeroError, ChallengeGameError, 
+    ChallengeCounterError, ChallengeDeployedError, ChallengeCreatorAddressZeroError, ChallengeDisputeAdminAddressZeroError, ChallengeGameError, 
     ChallengeNameError, ChallengePlatformError, 
     ChallengeStartDateError, NbTeamsError, NbPlayersPerTeamsError, SendMoneyToChallengeError} from './BitarenaFactoryErrors.sol';
 import {IntentChallengeCreation, ChallengeDeployed} from './BitarenaFactoryEvents.sol';
@@ -70,7 +70,7 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
 
     function createChallenge(
         address _challengeAdmin,
-        address _challengeLitigationAdmin,
+        address _challengeDisputeAdmin,
         uint256 _challengeCounter
     ) public onlyRole(BITARENA_FACTORY_ADMIN) returns (BitarenaChallenge){
         if (_challengeCounter > s_challengeCounter) revert ChallengeCounterError();
@@ -80,13 +80,13 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
 
         if(challenge.challengeCreator == address(0)) revert ChallengeCreatorAddressZeroError();
         if(_challengeAdmin == address(0)) revert ChallengeAdminAddressZeroError();
-        if(_challengeLitigationAdmin == address(0)) revert ChallengeLitigationAdminAddressZeroError();
+        if(_challengeDisputeAdmin == address(0)) revert ChallengeDisputeAdminAddressZeroError();
         
 
         ChallengeParams memory challengeParams = ChallengeParams({
             factory: address(this),
             challengeAdmin: _challengeAdmin,
-            challengeLitigationAdmin: _challengeLitigationAdmin,
+            challengeDisputeAdmin: _challengeDisputeAdmin,
             challengeCreator: challenge.challengeCreator,
             name: challenge.challengeName,
             game: challenge.game,

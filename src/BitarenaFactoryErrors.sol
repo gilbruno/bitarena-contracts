@@ -33,9 +33,9 @@ error ChallengeDeployedError();
 error ChallengeAdminAddressZeroError();
 
 /**
- * @dev an unexpected zero address was transmitted for the Challenge Litigation Admin. (eg. `address(0)`)
+ * @dev an unexpected zero address was transmitted for the Challenge Dispute Admin. (eg. `address(0)`)
  */
-error ChallengeLitigationAdminAddressZeroError();
+error ChallengeDisputeAdminAddressZeroError();
 
 /**
  * @dev 

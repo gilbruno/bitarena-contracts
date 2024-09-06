@@ -5,7 +5,7 @@ import {Test, console} from "forge-std/Test.sol";
 import {BitarenaFactory} from "../src/BitarenaFactory.sol";
 import {BitarenaToken} from "../src/BitarenaToken.sol";
 import {BalanceChallengeCreatorError, ChallengeAdminAddressZeroError, 
-    ChallengeCounterError, ChallengeCreatorAddressZeroError, ChallengeLitigationAdminAddressZeroError, ChallengeGameError, 
+    ChallengeCounterError, ChallengeCreatorAddressZeroError, ChallengeDisputeAdminAddressZeroError, ChallengeGameError, 
     ChallengeNameError, ChallengePlatformError, 
     ChallengeStartDateError, NbTeamsError, NbPlayersPerTeamsError, SendMoneyToChallengeError} from '../src/BitarenaFactoryErrors.sol';
 import {Challenge} from '../src/ChallengeStruct.sol';
@@ -18,8 +18,8 @@ contract BitarenaTest is Test {
     address ADMIN_FACTORY = makeAddr("adminFactory");
     address ADMIN_CHALLENGE1 = makeAddr("adminChallenge1");
     address ADMIN_CHALLENGE2 = makeAddr("adminChallenge2");
-    address ADMIN_LITIGATION_CHALLENGE1 = makeAddr("adminLitigationChallenge1");
-    address ADMIN_LITIGATION_CHALLENGE2 = makeAddr("adminLitigationChallenge2");
+    address ADMIN_DISPUTE_CHALLENGE1 = makeAddr("adminDisputeChallenge1");
+    address ADMIN_DISPUTE_CHALLENGE2 = makeAddr("adminDisputeChallenge2");
     address CREATOR_CHALLENGE1 = makeAddr("creatorChallenge1");
     address CREATOR_CHALLENGE2 = makeAddr("creatorChallenge2");
     address PLAYER1_CHALLENGE1 = makeAddr("player1Challenge1");
@@ -262,7 +262,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();
 
         vm.startBroadcast(ADMIN_FACTORY);
-        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_LITIGATION_CHALLENGE1, 1);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, 1);
         vm.stopBroadcast();       
 
         assertEq(bitarenaChallenge.getName(), CHALLENGE1);
@@ -310,7 +310,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();
 
         vm.startBroadcast(ADMIN_FACTORY);
-        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_LITIGATION_CHALLENGE1, 1);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, 1);
         vm.stopBroadcast();       
 
         assertEq(bitarenaChallenge.getGame(), GAME1);
@@ -359,7 +359,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();
 
         vm.startBroadcast(ADMIN_FACTORY);
-        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_LITIGATION_CHALLENGE1, 1);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, 1);
         vm.stopBroadcast();       
 
         assertEq(bitarenaChallenge.getPlatform(), PLATFORM1);
@@ -409,7 +409,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();
 
         vm.startBroadcast(ADMIN_FACTORY);
-        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_LITIGATION_CHALLENGE1, 1);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, 1);
         vm.stopBroadcast();       
 
         assertEq(bitarenaChallenge.getNbTeams(), TWO_TEAMS);
@@ -569,7 +569,7 @@ contract BitarenaTest is Test {
 
         vm.expectRevert(ChallengeCounterError.selector);
         vm.startBroadcast(ADMIN_FACTORY);
-        bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_LITIGATION_CHALLENGE1, 2);
+        bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, 2);
         vm.stopBroadcast();       
     }
 
@@ -595,7 +595,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();
 
         vm.startBroadcast(ADMIN_FACTORY);
-        // BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_LITIGATION_CHALLENGE1, 1);
+        // BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, 1);
         // console.log('BALANCE OF FACTORY AFTER ', address(bitarenaFactory).balance);
         vm.stopBroadcast();       
         assertEq(address(bitarenaFactory).balance, STARTING_BALANCE_ETH + AMOUNT_PER_PLAYER);
@@ -622,7 +622,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();
 
         vm.startBroadcast(ADMIN_FACTORY);
-        bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_LITIGATION_CHALLENGE1, 1);
+        bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, 1);
         vm.stopBroadcast();       
 
         assertEq(address(bitarenaFactory).balance, STARTING_BALANCE_ETH);
@@ -649,7 +649,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();
 
         vm.startBroadcast(ADMIN_FACTORY);
-        bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_LITIGATION_CHALLENGE1, 1);
+        bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, 1);
         vm.stopBroadcast();       
 
         assertEq(bitarenaFactory.isChallengeDeployed(1), true);
@@ -699,7 +699,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();
 
         vm.startBroadcast(ADMIN_FACTORY);
-        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_LITIGATION_CHALLENGE1, 1);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, 1);
         vm.stopBroadcast();       
 
         assertEq(bitarenaChallenge.getTeamCounter(), 1);
@@ -726,7 +726,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();
 
         vm.startBroadcast(ADMIN_FACTORY);
-        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_LITIGATION_CHALLENGE1, 1);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, 1);
         vm.stopBroadcast();       
         
         assertEq(bitarenaChallenge.getPlayersByTeamIndex(1)[0], bitarenaChallenge.getCreator());
@@ -754,7 +754,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();
 
         vm.startBroadcast(ADMIN_FACTORY);
-        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_LITIGATION_CHALLENGE1, 1);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, 1);
         vm.stopBroadcast();       
 
         vm.expectRevert(NbPlayersPerTeamsLimitReachedError.selector);
@@ -785,7 +785,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();
 
         vm.startBroadcast(ADMIN_FACTORY);
-        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_LITIGATION_CHALLENGE1, 1);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, 1);
         vm.stopBroadcast();       
 
         vm.startBroadcast(PLAYER1_CHALLENGE1);
@@ -824,7 +824,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();
 
         vm.startBroadcast(ADMIN_FACTORY);
-        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_LITIGATION_CHALLENGE1, 1);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, 1);
         vm.stopBroadcast();       
 
         //send players some native tokens to enable them to jointeams
@@ -875,7 +875,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();
 
         vm.startBroadcast(ADMIN_FACTORY);
-        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_LITIGATION_CHALLENGE1, 1);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, 1);
         vm.stopBroadcast();       
 
         //send players some native tokens to enable them to jointeams
@@ -919,7 +919,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();
 
         vm.startBroadcast(ADMIN_FACTORY);
-        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_LITIGATION_CHALLENGE1, 1);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, 1);
         vm.stopBroadcast();       
 
         //send players some native tokens to enable them to jointeams
@@ -941,6 +941,8 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();               
 
     }
+
+    //TODO : Tests balance of challenge smart contract after many joining teams
 
 
 }

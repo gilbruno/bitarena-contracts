@@ -5,7 +5,7 @@ pragma solidity 0.8.26;
 struct ChallengeParams {
     address factory;
     address challengeAdmin;
-    address challengeLitigationAdmin;
+    address challengeDisputeAdmin;
     address challengeCreator;
     bytes32 name;
     bytes32 game;

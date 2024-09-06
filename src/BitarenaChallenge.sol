@@ -27,15 +27,18 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
     address private immutable s_factory;
 
     mapping(uint16 teamIndex => address[] players) private s_players;
+    mapping(uint16 teamIndex => bool winner) s_winners;
+
 
     bytes32 public constant CHALLENGE_ADMIN_ROLE = keccak256("CHALLENGE_ADMIN_ROLE");
     bytes32 public constant CHALLENGE_LITIGATION_ADMIN_ROLE = keccak256("CHALLENGE_LITIGATION_ADMIN_ROLE");
     bytes32 public constant CHALLENGE_CREATOR_ROLE = keccak256("CHALLENGE_CREATOR_ROLE");
+    bytes32 public constant GAMER_ROLE = keccak256("GAMER_ROLE");
 
     constructor(ChallengeParams memory params) AccessControlDefaultAdminRules(1 days, params.challengeAdmin) {
         s_factory = params.factory;
         s_admin = params.challengeAdmin;
-        s_litigationAdmin = params.challengeLitigationAdmin;
+        s_litigationAdmin = params.challengeDisputeAdmin;
         s_creator = params.challengeCreator;
         s_name = params.name;
         s_game = params.game;
@@ -62,6 +65,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
         // Otherwise we add the creator of the team in the created team
         address player = s_teamCounter == 1 ? s_creator : _msgSender();
         s_players[s_teamCounter].push(player);
+        s_winners[s_teamCounter] = false;
         emit PlayerJoinsTeam(s_teamCounter, player);
         emit TeamCreated(s_teamCounter);
     }
@@ -91,7 +95,37 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
         else {
             if (block.timestamp >= s_startAt) revert TimeElapsedToJoinTeamError();
             joinTeam(_teamIndex);
+            _grantRole(GAMER_ROLE, _msgSender());
         }
+    }
+    
+
+    /**
+     * @dev
+     * @param _teamIndex : indexof the team
+     */
+    function claimVictory(uint16 _teamIndex) public onlyRole(GAMER_ROLE) onlyRole(CHALLENGE_CREATOR_ROLE){
+        s_winners[_teamIndex] = true;
+    }
+
+    /**
+     * @dev
+     */
+    function setPercentageForDispute() public onlyRole(CHALLENGE_ADMIN_ROLE) {
+
+    }
+    /**
+     * @dev 
+     */
+    function createDispute() public onlyRole(GAMER_ROLE) onlyRole(CHALLENGE_CREATOR_ROLE) {
+
+    }
+
+    /**
+     * @dev
+     */
+    function setDelayForVictoryClaim() public onlyRole(CHALLENGE_ADMIN_ROLE) {
+
     }
 
     /**
