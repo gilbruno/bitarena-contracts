@@ -702,4 +702,32 @@ contract BitarenaTest is Test {
         assertEq(bitarenaChallenge.getTeamCounter(), 1);
     }
 
+    /**
+     * @dev Test that the only player in the first team after Challenge deployment is the challenge creator
+     * 
+     */
+    function testFirstTeamCreatedAfterChallengeDeploymentContainsOnlyCreator() public {
+        deployFactory();
+        
+        vm.deal(address(bitarenaFactory), STARTING_BALANCE_ETH);
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
+            CHALLENGE1,
+            GAME1,
+            PLATFORM1,
+            TWO_TEAMS,
+            ONE_PLAYER,
+            AMOUNT_PER_PLAYER,
+            block.timestamp + 1 days,
+            false
+        );
+        vm.stopBroadcast();
+
+        vm.startBroadcast(ADMIN_FACTORY);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_LITIGATION_CHALLENGE1, 1);
+        vm.stopBroadcast();       
+        
+        assertEq(bitarenaChallenge.getPlayersByTeamIndex(1)[0], bitarenaChallenge.getCreator());
+    }
+
 }

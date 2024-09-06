@@ -127,6 +127,13 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
     }
 
     /**
+     * @dev getter for state variable s_creator
+     */
+    function getCreator() external view returns (address) {
+        return s_creator;
+    }
+
+    /**
      * @dev getter for state variable s_game
      */
     function getGame() external view returns (string memory) {
