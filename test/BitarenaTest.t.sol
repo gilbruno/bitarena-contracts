@@ -10,7 +10,7 @@ import {BalanceChallengeCreatorError, ChallengeAdminAddressZeroError,
     ChallengeStartDateError, NbTeamsError, NbPlayersPerTeamsError, SendMoneyToChallengeError} from '../src/BitarenaFactoryErrors.sol';
 import {Challenge} from '../src/ChallengeStruct.sol';
 import {BitarenaChallenge} from '../src/BitarenaChallenge.sol';
-import {ChallengeCancelAfterStartDateError, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError} from "../src/BitarenaChallengeErrors.sol";
+import {ChallengeCancelAfterStartDateError, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, TeamDoesNotExistsError, TimeElapsedToJoinTeamError} from "../src/BitarenaChallengeErrors.sol";
 
 
 contract BitarenaTest is Test {
@@ -854,5 +854,93 @@ contract BitarenaTest is Test {
         assertEq(bitarenaChallenge.getPlayersByTeamIndex(2)[0], PLAYER2_CHALLENGE1);
         assertEq(bitarenaChallenge.getPlayersByTeamIndex(2)[1], PLAYER3_CHALLENGE1);
     }
+
+    /**
+     * @dev Test that some players can not join team after challenge start date
+     */
+    function testPlayersCanNotJoinExistingTeamsAfterChallengeStartDate() public {
+        deployFactory();
+        
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
+            CHALLENGE1,
+            GAME1,
+            PLATFORM1,
+            TWO_TEAMS,
+            TWO_PLAYERS,
+            AMOUNT_PER_PLAYER,
+            block.timestamp + 1 days,
+            false
+        );
+        vm.stopBroadcast();
+
+        vm.startBroadcast(ADMIN_FACTORY);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_LITIGATION_CHALLENGE1, 1);
+        vm.stopBroadcast();       
+
+        //send players some native tokens to enable them to jointeams
+        //A second player joins the team 1
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.joinOrCreateTeam{value: AMOUNT_PER_PLAYER}(1);
+        vm.stopBroadcast();               
+
+
+        //The PLAYER2 creates a new team : team with index 2 is created
+        vm.startBroadcast(PLAYER2_CHALLENGE1);
+        bitarenaChallenge.joinOrCreateTeam{value: AMOUNT_PER_PLAYER}(0);
+        vm.stopBroadcast();               
+
+        //The PLAYER3 joins the team2 2 days leter (we define the startAt 1 day in the future)
+        uint256 TwoDaysInTheFuture = block.timestamp + 2 days;
+        vm.warp(TwoDaysInTheFuture);
+        vm.expectRevert(TimeElapsedToJoinTeamError.selector);
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.joinOrCreateTeam{value: AMOUNT_PER_PLAYER}(2);
+        vm.stopBroadcast();               
+    }
+
+    /**
+     * @dev Test that some players can not join team that does not exist 
+     */
+    function testPlayersCanNotJoinNotExistingTeam() public {
+        deployFactory();
+        
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
+            CHALLENGE1,
+            GAME1,
+            PLATFORM1,
+            TWO_TEAMS,
+            TWO_PLAYERS,
+            AMOUNT_PER_PLAYER,
+            block.timestamp + 1 days,
+            false
+        );
+        vm.stopBroadcast();
+
+        vm.startBroadcast(ADMIN_FACTORY);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_LITIGATION_CHALLENGE1, 1);
+        vm.stopBroadcast();       
+
+        //send players some native tokens to enable them to jointeams
+        //A second player joins the team 1
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.joinOrCreateTeam{value: AMOUNT_PER_PLAYER}(1);
+        vm.stopBroadcast();               
+
+
+        //The PLAYER2 creates a new team : team with index 2 is created
+        vm.startBroadcast(PLAYER2_CHALLENGE1);
+        bitarenaChallenge.joinOrCreateTeam{value: AMOUNT_PER_PLAYER}(0);
+        vm.stopBroadcast();               
+
+        //The PLAYER3 joins the team3 (with index 3) that does not exist
+        vm.expectRevert(TeamDoesNotExistsError.selector);
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.joinOrCreateTeam{value: AMOUNT_PER_PLAYER}(3);
+        vm.stopBroadcast();               
+
+    }
+
 
 }

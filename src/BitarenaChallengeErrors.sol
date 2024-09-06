@@ -26,3 +26,8 @@ error NbPlayersPerTeamsLimitReachedError();
  * @dev 
  */
 error TeamDoesNotExistsError();
+
+/**
+ * @dev 
+ */
+error TimeElapsedToJoinTeamError();

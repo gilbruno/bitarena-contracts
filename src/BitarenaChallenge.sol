@@ -4,7 +4,7 @@ pragma solidity 0.8.26;
 
 import {AccessControlDefaultAdminRules} from "openzeppelin-contracts/contracts/access/extensions/AccessControlDefaultAdminRules.sol";
 import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
-import {BalanceChallengePlayerError, ChallengeCancelAfterStartDateError, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, TeamDoesNotExistsError} from "./BitarenaChallengeErrors.sol";
+import {BalanceChallengePlayerError, ChallengeCancelAfterStartDateError, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, TeamDoesNotExistsError, TimeElapsedToJoinTeamError} from "./BitarenaChallengeErrors.sol";
 import {PlayerJoinsTeam, TeamCreated, Debug} from "./BitarenaChallengeEvents.sol";
 import {ChallengeParams} from "./ChallengeParams.sol";
 
@@ -78,7 +78,8 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
      * Oherwise the player wants to join the team with specified index
      * When you join a team you must pay the 'amountPerPlayer'. 
      * We have an exception when the factory call the function because that's the first team creation by the challenge creator 
-     * and he already paid for the challenge
+     * and he already paid for the challenge.
+     * We reject the Tx if a player wants to join a team afetr the challenge start date
      * @param _teamIndex : index of the team
      */
     function joinOrCreateTeam(uint16 _teamIndex) public payable {
@@ -88,6 +89,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
             createTeam();
         }
         else {
+            if (block.timestamp >= s_startAt) revert TimeElapsedToJoinTeamError();
             joinTeam(_teamIndex);
         }
     }
