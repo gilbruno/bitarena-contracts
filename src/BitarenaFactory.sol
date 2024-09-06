@@ -11,13 +11,14 @@ import {BalanceChallengeCreatorError, ChallengeAdminAddressZeroError,
     ChallengeStartDateError, NbTeamsError, NbPlayersPerTeamsError, SendMoneyToChallengeError} from './BitarenaFactoryErrors.sol';
 import {IntentChallengeCreation, ChallengeDeployed} from './BitarenaFactoryEvents.sol';
 import {Challenge} from './ChallengeStruct.sol';
+import {ChallengeParams} from './ChallengeParams.sol';
 
 contract BitarenaFactory is Context, Ownable, AccessControl {
 
-    uint private s_challengeCounter;
+    uint256 private s_challengeCounter;
 
 
-    mapping(uint indexChallenge => Challenge) private s_challengesMap;
+    mapping(uint256 indexChallenge => Challenge) private s_challengesMap;
     
     Challenge[] private s_challenges;
     
@@ -29,18 +30,18 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
 	}
 
     function intentChallengeCreation(
-        string memory _challengeName,
-        string memory _game,
-        string memory _platform,
+        bytes32 _challengeName,
+        bytes32 _game,
+        bytes32 _platform,
         uint16 _nbTeams,
         uint16 _nbTeamPlayers,
-        uint _amountPerPlayer,
-        uint _startAt,
+        uint256 _amountPerPlayer,
+        uint256 _startAt,
         bool _isPrivate
     ) public payable {
-        if (bytes(_challengeName).length == 0) revert ChallengeNameError();
-        if (bytes(_game).length == 0) revert ChallengeGameError();
-        if (bytes(_platform).length == 0) revert ChallengePlatformError();
+        if (_challengeName == 0) revert ChallengeNameError();
+        if (_game == 0) revert ChallengeGameError();
+        if (_platform == 0) revert ChallengePlatformError();
         if(_nbTeams < 2) revert NbTeamsError();
         if(_nbTeamPlayers < 1) revert NbPlayersPerTeamsError();
         if (_startAt <= block.timestamp) revert ChallengeStartDateError();
@@ -70,7 +71,7 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
     function createChallenge(
         address _challengeAdmin,
         address _challengeLitigationAdmin,
-        uint _challengeCounter
+        uint256 _challengeCounter
     ) public onlyRole(BITARENA_FACTORY_ADMIN) returns (BitarenaChallenge){
         if (_challengeCounter > s_challengeCounter) revert ChallengeCounterError();
         if (isChallengeDeployed(_challengeCounter)) revert ChallengeDeployedError();
@@ -82,20 +83,22 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
         if(_challengeLitigationAdmin == address(0)) revert ChallengeLitigationAdminAddressZeroError();
         
 
-        BitarenaChallenge bitarenaChallenge = new BitarenaChallenge(
-            address(this),
-            _challengeAdmin, 
-            _challengeLitigationAdmin, 
-            challenge.challengeCreator, 
-            challenge.challengeName, 
-            challenge.game, 
-            challenge.platform, 
-            challenge.nbTeams, 
-            challenge.nbTeamPlayers, 
-            challenge.amountPerPlayer, 
-            challenge.startAt, 
-            challenge.isPrivate
-        );
+        ChallengeParams memory challengeParams = ChallengeParams({
+            factory: address(this),
+            challengeAdmin: _challengeAdmin,
+            challengeLitigationAdmin: _challengeLitigationAdmin,
+            challengeCreator: challenge.challengeCreator,
+            name: challenge.challengeName,
+            game: challenge.game,
+            platform: challenge.platform,
+            nbTeams: challenge.nbTeams,
+            nbTeamPlayers: challenge.nbTeamPlayers,
+            amountPerPlayer: challenge.amountPerPlayer,
+            startAt: challenge.startAt,
+            isPrivate: challenge.isPrivate
+        });
+
+        BitarenaChallenge bitarenaChallenge = new BitarenaChallenge(challengeParams);
 
         //Hydrate challenges array
         s_challengesMap[_challengeCounter].challengeAddress = address(bitarenaChallenge);
@@ -116,7 +119,7 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
     /**
      * @dev Getter for 's_challengeCounter'
      */
-    function getChallengeCounter() public view returns (uint) {
+    function getChallengeCounter() public view returns (uint256) {
         return s_challengeCounter;
     }
 
@@ -124,7 +127,7 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
      * @dev Getter for the 's_challengesMap' by index
      * @param index : index of the mapping
      */
-    function getChallengeByIndex(uint index) public view returns(Challenge memory) {
+    function getChallengeByIndex(uint256 index) public view returns(Challenge memory) {
         return s_challengesMap[index];
     }
 
@@ -135,7 +138,7 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
         return s_challenges;
     }
 
-    function isChallengeDeployed(uint index) public view returns(bool) {
+    function isChallengeDeployed(uint256 index) public view returns(bool) {
         Challenge memory challengeCreated = getChallengeByIndex(index);
         return (challengeCreated.challengeAddress != address(0));
     }

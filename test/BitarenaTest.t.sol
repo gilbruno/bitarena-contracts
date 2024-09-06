@@ -26,12 +26,12 @@ contract BitarenaTest is Test {
     address PLAYER2_CHALLENGE1 = makeAddr("player2Challenge1");
     address PLAYER3_CHALLENGE1 = makeAddr("player3Challenge1");
 
-    string CHALLENGE1 = "Challenge 1";
-    string CHALLENGE2 = "Challenge 2";
-    string GAME1 = "Counter Strike";
-    string GAME2 = "Far cry";
-    string PLATFORM1 = "UOS";
-    string PLATFORM2 = "Steam";
+    bytes32 CHALLENGE1 = "Challenge 1";
+    bytes32 CHALLENGE2 = "Challenge 2";
+    bytes32 GAME1 = "Counter Strike";
+    bytes32 GAME2 = "Far cry";
+    bytes32 PLATFORM1 = "UOS";
+    bytes32 PLATFORM2 = "Steam";
     uint16 ONE_TEAM = 1;
     uint16 TWO_TEAMS = 2;
     uint16 ONE_PLAYER = 1;
@@ -47,12 +47,16 @@ contract BitarenaTest is Test {
 
         vm.deal(CREATOR_CHALLENGE1, STARTING_BALANCE_ETH);
         vm.deal(CREATOR_CHALLENGE2, STARTING_BALANCE_ETH);
+        vm.deal(PLAYER1_CHALLENGE1, STARTING_BALANCE_ETH);
+        vm.deal(PLAYER2_CHALLENGE1, STARTING_BALANCE_ETH);
+        vm.deal(PLAYER3_CHALLENGE1, STARTING_BALANCE_ETH);
     }
 
     function deployFactory() public {
         vm.startBroadcast(ADMIN_FACTORY);
         bitarenaFactory = new BitarenaFactory();
         vm.stopBroadcast();
+        vm.deal(address(bitarenaFactory), STARTING_BALANCE_ETH);
     }
 
     /**
@@ -521,7 +525,7 @@ contract BitarenaTest is Test {
         );
 
         vm.stopBroadcast();
-        assertEq(address(bitarenaFactory).balance, AMOUNT_PER_PLAYER);
+        assertEq(address(bitarenaFactory).balance, AMOUNT_PER_PLAYER+STARTING_BALANCE_ETH);
     }
 
     /**
@@ -577,7 +581,6 @@ contract BitarenaTest is Test {
     function testBalanceFactoryBeforeDeployingChallenge() public {
         deployFactory();
         
-        vm.deal(address(bitarenaFactory), STARTING_BALANCE_ETH);
         vm.startBroadcast(CREATOR_CHALLENGE1);
         bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
             CHALLENGE1,
@@ -605,8 +608,6 @@ contract BitarenaTest is Test {
      */
     function testBalanceFactoryAfterDeployingChallenge() public {
         deployFactory();
-        
-        vm.deal(address(bitarenaFactory), STARTING_BALANCE_ETH);
         vm.startBroadcast(CREATOR_CHALLENGE1);
         bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
             CHALLENGE1,
@@ -634,7 +635,6 @@ contract BitarenaTest is Test {
     function testChallengeAddressInStateVariableStructAfterDeploying() public {
         deployFactory();
         
-        vm.deal(address(bitarenaFactory), STARTING_BALANCE_ETH);
         vm.startBroadcast(CREATOR_CHALLENGE1);
         bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
             CHALLENGE1,
@@ -662,7 +662,6 @@ contract BitarenaTest is Test {
     function testChallengeAddressInStateVariableStructBeforeDeploying() public {
         deployFactory();
         
-        vm.deal(address(bitarenaFactory), STARTING_BALANCE_ETH);
         vm.startBroadcast(CREATOR_CHALLENGE1);
         bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
             CHALLENGE1,
@@ -686,7 +685,6 @@ contract BitarenaTest is Test {
     function testFirstTeamCreatedAfterChallengeDeployment() public {
         deployFactory();
         
-        vm.deal(address(bitarenaFactory), STARTING_BALANCE_ETH);
         vm.startBroadcast(CREATOR_CHALLENGE1);
         bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
             CHALLENGE1,
@@ -714,7 +712,6 @@ contract BitarenaTest is Test {
     function testFirstTeamCreatedAfterChallengeDeploymentContainsOnlyCreator() public {
         deployFactory();
         
-        vm.deal(address(bitarenaFactory), STARTING_BALANCE_ETH);
         vm.startBroadcast(CREATOR_CHALLENGE1);
         bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
             CHALLENGE1,
@@ -743,7 +740,6 @@ contract BitarenaTest is Test {
     function testPlayerCanNotJoinTeamIfCreatorCreateChallengeWithOnlyOnePlayerPerTeam() public {
         deployFactory();
         
-        vm.deal(address(bitarenaFactory), STARTING_BALANCE_ETH);
         vm.startBroadcast(CREATOR_CHALLENGE1);
         bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
             CHALLENGE1,
@@ -762,7 +758,6 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();       
 
         vm.expectRevert(NbPlayersPerTeamsLimitReachedError.selector);
-        vm.deal(PLAYER1_CHALLENGE1, STARTING_BALANCE_ETH);
         vm.startBroadcast(PLAYER1_CHALLENGE1);
         bitarenaChallenge.joinOrCreateTeam{value: AMOUNT_PER_PLAYER}(1);
         vm.stopBroadcast();               
@@ -776,7 +771,6 @@ contract BitarenaTest is Test {
     function testPlayerCanCreateTeamIfNbTeamsLimitIsOk() public {
         deployFactory();
         
-        vm.deal(address(bitarenaFactory), STARTING_BALANCE_ETH);
         vm.startBroadcast(CREATOR_CHALLENGE1);
         bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
             CHALLENGE1,
@@ -794,7 +788,6 @@ contract BitarenaTest is Test {
         BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_LITIGATION_CHALLENGE1, 1);
         vm.stopBroadcast();       
 
-        vm.deal(PLAYER1_CHALLENGE1, STARTING_BALANCE_ETH);
         vm.startBroadcast(PLAYER1_CHALLENGE1);
         bitarenaChallenge.joinOrCreateTeam{value: AMOUNT_PER_PLAYER}(0);
         vm.stopBroadcast();               
@@ -817,7 +810,6 @@ contract BitarenaTest is Test {
     function testPlayersCanJoinExistingTeamsIfLimitIsOk() public {
         deployFactory();
         
-        vm.deal(address(bitarenaFactory), STARTING_BALANCE_ETH);
         vm.startBroadcast(CREATOR_CHALLENGE1);
         bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
             CHALLENGE1,
@@ -836,9 +828,6 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();       
 
         //send players some native tokens to enable them to jointeams
-        vm.deal(PLAYER1_CHALLENGE1, STARTING_BALANCE_ETH);
-        vm.deal(PLAYER2_CHALLENGE1, STARTING_BALANCE_ETH);
-        vm.deal(PLAYER3_CHALLENGE1, STARTING_BALANCE_ETH);
         //A second player joins the team 1
         vm.startBroadcast(PLAYER1_CHALLENGE1);
         bitarenaChallenge.joinOrCreateTeam{value: AMOUNT_PER_PLAYER}(1);

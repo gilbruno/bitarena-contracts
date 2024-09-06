@@ -6,24 +6,25 @@ import {AccessControlDefaultAdminRules} from "openzeppelin-contracts/contracts/a
 import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
 import {BalanceChallengePlayerError, ChallengeCancelAfterStartDateError, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, TeamDoesNotExistsError} from "./BitarenaChallengeErrors.sol";
 import {PlayerJoinsTeam, TeamCreated, Debug} from "./BitarenaChallengeEvents.sol";
+import {ChallengeParams} from "./ChallengeParams.sol";
 
 contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
 
-    string private s_name;
-    string private s_game;
-    string private s_platform;
-    uint16 private s_nbTeams;
-    uint16 private s_nbTeamPlayers;
-    uint private s_startAt;
-    uint private s_amountPerPlayer;
+    bytes32 private s_name;
+    bytes32 private s_game;
+    bytes32 private s_platform;
+    uint16 private immutable s_nbTeams;
+    uint16 private immutable s_nbTeamPlayers;
+    uint256 private immutable s_startAt;
+    uint256 private immutable s_amountPerPlayer;
 
     uint16 private s_teamCounter;
     bool private s_isPrivate;
     bool private s_isCanceled;
     address private s_admin;
     address private s_litigationAdmin;
-    address private s_creator;
-    address private s_factory;
+    address private immutable s_creator;
+    address private immutable s_factory;
 
     mapping(uint16 teamIndex => address[] players) private s_players;
 
@@ -31,63 +32,44 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
     bytes32 public constant CHALLENGE_LITIGATION_ADMIN_ROLE = keccak256("CHALLENGE_LITIGATION_ADMIN_ROLE");
     bytes32 public constant CHALLENGE_CREATOR_ROLE = keccak256("CHALLENGE_CREATOR_ROLE");
 
-    constructor(
-        address _factory,
-        address _challengeAdmin,
-        address _challengeLitigationAdmin,
-        address _challengeCreator,
-        string memory _name,
-        string memory _game,
-        string memory _platform,
-        uint16 _nbTeams,
-        uint16 _nbTeamPlayers,
-        uint _amountPerPlayer,
-        uint _startAt,
-        bool _isPrivate
-    ) AccessControlDefaultAdminRules(1 days, _challengeAdmin) {
-        s_factory = _factory;
-        s_admin = _challengeAdmin;
-        s_litigationAdmin = _challengeLitigationAdmin;
-        s_creator = _challengeCreator;
-        s_name = _name;
-        s_game = _game;
-        s_platform = _platform;
-        s_nbTeams = _nbTeams;
-        s_nbTeamPlayers = _nbTeamPlayers;
-        s_amountPerPlayer = _amountPerPlayer;
-        s_startAt = _startAt;
-        s_isPrivate = _isPrivate;
+    constructor(ChallengeParams memory params) AccessControlDefaultAdminRules(1 days, params.challengeAdmin) {
+        s_factory = params.factory;
+        s_admin = params.challengeAdmin;
+        s_litigationAdmin = params.challengeLitigationAdmin;
+        s_creator = params.challengeCreator;
+        s_name = params.name;
+        s_game = params.game;
+        s_platform = params.platform;
+        s_nbTeams = params.nbTeams;
+        s_nbTeamPlayers = params.nbTeamPlayers;
+        s_amountPerPlayer = params.amountPerPlayer;
+        s_startAt = params.startAt;
+        s_isPrivate = params.isPrivate;
         s_isCanceled = false;
-        _grantRole(CHALLENGE_ADMIN_ROLE, _challengeAdmin);
-        _grantRole(CHALLENGE_CREATOR_ROLE, _challengeCreator);
+        _grantRole(CHALLENGE_ADMIN_ROLE, params.challengeAdmin);
+        _grantRole(CHALLENGE_CREATOR_ROLE, params.challengeCreator);
         s_teamCounter = 0;
     }
 
 
     function createTeam() internal {
-        s_teamCounter++;
-        //if (s_teamCounter > s_nbTeams) revert NbTeamsLimitReachedError();
-
+        if (s_teamCounter == s_nbTeams) revert NbTeamsLimitReachedError();
+        unchecked {
+            ++s_teamCounter;
+        }
+        
         //If a team is created for the first time, we add the creator in this team.
         // Otherwise we add the creator of the team in the created team
-        if (s_teamCounter == 1) {
-            s_players[s_teamCounter].push(s_creator);
-            emit PlayerJoinsTeam(s_teamCounter, s_creator);
-        }
-        else {
-            s_players[s_teamCounter].push(_msgSender());
-            emit PlayerJoinsTeam(s_teamCounter, _msgSender());
-        }
+        address player = s_teamCounter == 1 ? s_creator : _msgSender();
+        s_players[s_teamCounter].push(player);
+        emit PlayerJoinsTeam(s_teamCounter, player);
         emit TeamCreated(s_teamCounter);
     }
 
     function joinTeam(uint16 _teamIndex) internal {
-        address[] storage existingPlayers = s_players[_teamIndex];
-        if (existingPlayers.length == s_nbTeamPlayers) revert NbPlayersPerTeamsLimitReachedError();
+        if (s_players[_teamIndex].length == s_nbTeamPlayers) revert NbPlayersPerTeamsLimitReachedError();
         if (_teamIndex > s_teamCounter) revert TeamDoesNotExistsError();
-
-        existingPlayers.push(_msgSender());
-        s_players[_teamIndex] = existingPlayers; 
+        s_players[_teamIndex].push(_msgSender());
     }
 
     /**
@@ -135,7 +117,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
     /**
      * @dev getter for state variable s_name
      */
-    function getName() external view returns (string memory) {
+    function getName() external view returns (bytes32) {
         return s_name;
     }
 
@@ -149,14 +131,14 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
     /**
      * @dev getter for state variable s_game
      */
-    function getGame() external view returns (string memory) {
+    function getGame() external view returns (bytes32) {
         return s_game;
     }
 
     /**
      * @dev getter for state variable s_platform
      */
-    function getPlatform() external view returns (string memory) {
+    function getPlatform() external view returns (bytes32) {
         return s_platform;
     }
     /**
@@ -176,7 +158,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
     /**
      * @dev getter for state variable s_startAt
      */
-    function getChallengeStartDate() external view returns (uint) {
+    function getChallengeStartDate() external view returns (uint256) {
         return s_startAt;
     }
 
@@ -204,16 +186,10 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
     /**
      * @dev getter for state variable s_amountPerPlayer
      */
-    function getAmountPerPlayer() external view returns (uint) {
+    function getAmountPerPlayer() external view returns (uint256) {
         return s_amountPerPlayer;
     }
 
-    /**
-     * @dev setter for state variable s_amountPerPlayer
-     */
-    function setAmountPerPlayer(uint _amountPerPlayer) internal {
-        s_amountPerPlayer = _amountPerPlayer;
-    }
 
     /**
      * @dev getter for the state variable s_teamCounter

@@ -2,15 +2,17 @@
 
 pragma solidity 0.8.26;
 
-struct Challenge {
+struct ChallengeParams {
+    address factory;
+    address challengeAdmin;
+    address challengeLitigationAdmin;
     address challengeCreator;
-    address challengeAddress;
-    bytes32 challengeName;
+    bytes32 name;
     bytes32 game;
     bytes32 platform;
     uint16 nbTeams;
     uint16 nbTeamPlayers;
-    uint amountPerPlayer;
-    uint startAt;
+    uint256 amountPerPlayer;
+    uint256 startAt;
     bool isPrivate;
-}   
+}
