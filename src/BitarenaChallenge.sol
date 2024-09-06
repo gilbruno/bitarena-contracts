@@ -4,7 +4,7 @@ pragma solidity 0.8.26;
 
 import {AccessControlDefaultAdminRules} from "openzeppelin-contracts/contracts/access/extensions/AccessControlDefaultAdminRules.sol";
 import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
-import {ChallengeCancelAfterStartDateError, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError} from "./BitarenaChallengeErrors.sol";
+import {ChallengeCancelAfterStartDateError, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, TeamDoesNotExistsError} from "./BitarenaChallengeErrors.sol";
 import {PlayerJoinsTeam, TeamCreated} from "./BitarenaChallengeEvents.sol";
 
 contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
@@ -65,10 +65,15 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
         s_teamCounter++;
         //if (s_teamCounter > s_nbTeams) revert NbTeamsLimitReachedError();
 
-        //If a team is created for the first time, we add the creator in this team
+        //If a team is created for the first time, we add the creator in this team.
+        // Otherwise we add the creator of the team in the created team
         if (s_teamCounter == 1) {
             s_players[s_teamCounter].push(s_creator);
             emit PlayerJoinsTeam(s_teamCounter, s_creator);
+        }
+        else {
+            s_players[s_teamCounter].push(_msgSender());
+            emit PlayerJoinsTeam(s_teamCounter, _msgSender());
         }
         emit TeamCreated(s_teamCounter);
     }
@@ -76,6 +81,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
     function joinTeam(uint16 _teamIndex) internal {
         address[] storage existingPlayers = s_players[_teamIndex];
         if (existingPlayers.length == s_nbTeamPlayers) revert NbPlayersPerTeamsLimitReachedError();
+        if (_teamIndex > s_teamCounter) revert TeamDoesNotExistsError();
 
         existingPlayers.push(_msgSender());
         s_players[_teamIndex] = existingPlayers; 

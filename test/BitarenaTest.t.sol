@@ -10,6 +10,7 @@ import {BalanceChallengeCreatorError, ChallengeAdminAddressZeroError,
     ChallengeStartDateError, NbTeamsError, NbPlayersPerTeamsError, SendMoneyToChallengeError} from '../src/BitarenaFactoryErrors.sol';
 import {Challenge} from '../src/ChallengeStruct.sol';
 import {BitarenaChallenge} from '../src/BitarenaChallenge.sol';
+import {ChallengeCancelAfterStartDateError, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError} from "../src/BitarenaChallengeErrors.sol";
 
 
 contract BitarenaTest is Test {
@@ -21,6 +22,10 @@ contract BitarenaTest is Test {
     address ADMIN_LITIGATION_CHALLENGE2 = makeAddr("adminLitigationChallenge2");
     address CREATOR_CHALLENGE1 = makeAddr("creatorChallenge1");
     address CREATOR_CHALLENGE2 = makeAddr("creatorChallenge2");
+    address PLAYER1_CHALLENGE1 = makeAddr("player1Challenge1");
+    address PLAYER2_CHALLENGE1 = makeAddr("player2Challenge1");
+    address PLAYER3_CHALLENGE1 = makeAddr("player3Challenge1");
+
     string CHALLENGE1 = "Challenge 1";
     string CHALLENGE2 = "Challenge 2";
     string GAME1 = "Counter Strike";
@@ -728,6 +733,131 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();       
         
         assertEq(bitarenaChallenge.getPlayersByTeamIndex(1)[0], bitarenaChallenge.getCreator());
+    }
+
+    /**
+     * @dev Test that if the Challenge is set with only 1 player per team, anyone can join the team created by the creator 
+     * as it's the unique player in his team
+     * 
+     */
+    function testPlayerCanNotJoinTeamIfCreatorCreateChallengeWithOnlyOnePlayerPerTeam() public {
+        deployFactory();
+        
+        vm.deal(address(bitarenaFactory), STARTING_BALANCE_ETH);
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
+            CHALLENGE1,
+            GAME1,
+            PLATFORM1,
+            TWO_TEAMS,
+            ONE_PLAYER,
+            AMOUNT_PER_PLAYER,
+            block.timestamp + 1 days,
+            false
+        );
+        vm.stopBroadcast();
+
+        vm.startBroadcast(ADMIN_FACTORY);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_LITIGATION_CHALLENGE1, 1);
+        vm.stopBroadcast();       
+
+        vm.expectRevert(NbPlayersPerTeamsLimitReachedError.selector);
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.joinOrCreateTeam(1);
+        vm.stopBroadcast();               
+    }
+
+    /**
+     * @dev Test that a player can create a team if nb teams limit is OK
+     * as it's the unique player in his team
+     * Case of challenge that is set with 2 teams and only 1 player per team
+     */
+    function testPlayerCanCreateTeamIfNbTeamsLimitIsOk() public {
+        deployFactory();
+        
+        vm.deal(address(bitarenaFactory), STARTING_BALANCE_ETH);
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
+            CHALLENGE1,
+            GAME1,
+            PLATFORM1,
+            TWO_TEAMS,
+            ONE_PLAYER,
+            AMOUNT_PER_PLAYER,
+            block.timestamp + 1 days,
+            false
+        );
+        vm.stopBroadcast();
+
+        vm.startBroadcast(ADMIN_FACTORY);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_LITIGATION_CHALLENGE1, 1);
+        vm.stopBroadcast();       
+
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.joinOrCreateTeam(0);
+        vm.stopBroadcast();               
+
+        //Test that data are OK : 
+        //teamCounter = 2
+        //creator is the only player in the team 1
+        //PLAYER1_CHALLENGE1 is the only player in the team 2
+        assertEq(bitarenaChallenge.getTeamCounter(), 2);
+        assertEq(bitarenaChallenge.getPlayersByTeamIndex(1)[0], bitarenaChallenge.getCreator());
+        assertEq(bitarenaChallenge.getPlayersByTeamIndex(2)[0], PLAYER1_CHALLENGE1);
+        assertEq(bitarenaChallenge.getPlayersByTeamIndex(1).length, 1);
+        assertEq(bitarenaChallenge.getPlayersByTeamIndex(2).length, 1);
+    }
+
+    /**
+     * @dev Test that some players can join teams if limits are ok
+     * Case of challenge that is set with 2 teams and 2 players per team
+     */
+    function testPlayersCanJoinExistingTeamsIfLimitIsOk() public {
+        deployFactory();
+        
+        vm.deal(address(bitarenaFactory), STARTING_BALANCE_ETH);
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
+            CHALLENGE1,
+            GAME1,
+            PLATFORM1,
+            TWO_TEAMS,
+            TWO_PLAYERS,
+            AMOUNT_PER_PLAYER,
+            block.timestamp + 1 days,
+            false
+        );
+        vm.stopBroadcast();
+
+        vm.startBroadcast(ADMIN_FACTORY);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_LITIGATION_CHALLENGE1, 1);
+        vm.stopBroadcast();       
+
+        //A second player joins the team 1
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.joinOrCreateTeam(1);
+        vm.stopBroadcast();               
+
+
+        //The PLAYER2 creates a new team : team with index 2 is created
+        vm.startBroadcast(PLAYER2_CHALLENGE1);
+        bitarenaChallenge.joinOrCreateTeam(0);
+        vm.stopBroadcast();               
+
+        //The PLAYER3 joins the team2
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.joinOrCreateTeam(2);
+        vm.stopBroadcast();               
+
+        //Test that data are OK : 
+        //teamCounter = 2
+        //creator and PLAYER1 are players of team 1
+        //PLAYER2 and PLAYER3 are players of team 2
+        assertEq(bitarenaChallenge.getTeamCounter(), 2);
+        assertEq(bitarenaChallenge.getPlayersByTeamIndex(1)[0], bitarenaChallenge.getCreator());
+        assertEq(bitarenaChallenge.getPlayersByTeamIndex(1)[1], PLAYER1_CHALLENGE1);
+        assertEq(bitarenaChallenge.getPlayersByTeamIndex(2)[0], PLAYER2_CHALLENGE1);
+        assertEq(bitarenaChallenge.getPlayersByTeamIndex(2)[1], PLAYER3_CHALLENGE1);
     }
 
 }

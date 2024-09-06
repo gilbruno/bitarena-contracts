@@ -16,3 +16,8 @@ error NbTeamsLimitReachedError();
  * @dev 
  */
 error NbPlayersPerTeamsLimitReachedError();
+
+/**
+ * @dev 
+ */
+error TeamDoesNotExistsError();
