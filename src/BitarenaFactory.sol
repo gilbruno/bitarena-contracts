@@ -83,6 +83,7 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
         
 
         BitarenaChallenge bitarenaChallenge = new BitarenaChallenge(
+            address(this),
             _challengeAdmin, 
             _challengeLitigationAdmin, 
             challenge.challengeCreator, 
@@ -107,7 +108,7 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
         (bool sent, ) = address(bitarenaChallenge).call{value: challenge.amountPerPlayer}("");
         if (!sent) revert SendMoneyToChallengeError();
 
-        emit ChallengeDeployed(_challengeCounter, address(bitarenaChallenge));
+        emit ChallengeDeployed(_challengeCounter, address(bitarenaChallenge), address(this));
 
         return bitarenaChallenge;
     }

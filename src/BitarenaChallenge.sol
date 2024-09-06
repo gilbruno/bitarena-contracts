@@ -4,8 +4,8 @@ pragma solidity 0.8.26;
 
 import {AccessControlDefaultAdminRules} from "openzeppelin-contracts/contracts/access/extensions/AccessControlDefaultAdminRules.sol";
 import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
-import {ChallengeCancelAfterStartDateError, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, TeamDoesNotExistsError} from "./BitarenaChallengeErrors.sol";
-import {PlayerJoinsTeam, TeamCreated} from "./BitarenaChallengeEvents.sol";
+import {BalanceChallengePlayerError, ChallengeCancelAfterStartDateError, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, TeamDoesNotExistsError} from "./BitarenaChallengeErrors.sol";
+import {PlayerJoinsTeam, TeamCreated, Debug} from "./BitarenaChallengeEvents.sol";
 
 contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
 
@@ -23,6 +23,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
     address private s_admin;
     address private s_litigationAdmin;
     address private s_creator;
+    address private s_factory;
 
     mapping(uint16 teamIndex => address[] players) private s_players;
 
@@ -31,6 +32,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
     bytes32 public constant CHALLENGE_CREATOR_ROLE = keccak256("CHALLENGE_CREATOR_ROLE");
 
     constructor(
+        address _factory,
         address _challengeAdmin,
         address _challengeLitigationAdmin,
         address _challengeCreator,
@@ -43,6 +45,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
         uint _startAt,
         bool _isPrivate
     ) AccessControlDefaultAdminRules(1 days, _challengeAdmin) {
+        s_factory = _factory;
         s_admin = _challengeAdmin;
         s_litigationAdmin = _challengeLitigationAdmin;
         s_creator = _challengeCreator;
@@ -90,11 +93,15 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
     /**
      * @dev Function that will be callable by front end. 
      * If value of _teamIndex equals 0 then it's a creation team intent
-     * Otherwise the player wants to join the team with specified index
+     * Oherwise the player wants to join the team with specified index
+     * When you join a team you must pay the 'amountPerPlayer'. 
+     * We have an exception when the factory call the function because that's the first team creation by the challenge creator 
+     * and he already paid for the challenge
      * @param _teamIndex : index of the team
      */
-    function joinOrCreateTeam(uint16 _teamIndex) public {
-        //Intent to create a new team 
+    function joinOrCreateTeam(uint16 _teamIndex) public payable {
+        if (msg.value < s_amountPerPlayer && _msgSender() != s_factory) revert BalanceChallengePlayerError();
+        //Intent to create a new team (and becomes automatically a member of the newly created team)
         if (_teamIndex == 0) {
             createTeam();
         }
@@ -104,17 +111,17 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
     }
 
     /**
-     * @dev Fonction receive pour accepter les paiements en Ether
+     * @dev 
      */
     receive() external payable {
-        // Logique optionnelle ici, si nécessaire
+        
     }
 
     /**
-     * @dev Fonction fallback pour gérer les appels de fonction inconnus et accepter les paiements en Ether
+     * @dev 
      */
     fallback() external payable {
-        // Logique optionnelle ici, si nécessaire
+        
     }
     
     /**

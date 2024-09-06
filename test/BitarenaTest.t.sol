@@ -762,8 +762,9 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();       
 
         vm.expectRevert(NbPlayersPerTeamsLimitReachedError.selector);
+        vm.deal(PLAYER1_CHALLENGE1, STARTING_BALANCE_ETH);
         vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.joinOrCreateTeam(1);
+        bitarenaChallenge.joinOrCreateTeam{value: AMOUNT_PER_PLAYER}(1);
         vm.stopBroadcast();               
     }
 
@@ -793,8 +794,9 @@ contract BitarenaTest is Test {
         BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_LITIGATION_CHALLENGE1, 1);
         vm.stopBroadcast();       
 
+        vm.deal(PLAYER1_CHALLENGE1, STARTING_BALANCE_ETH);
         vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.joinOrCreateTeam(0);
+        bitarenaChallenge.joinOrCreateTeam{value: AMOUNT_PER_PLAYER}(0);
         vm.stopBroadcast();               
 
         //Test that data are OK : 
@@ -833,20 +835,24 @@ contract BitarenaTest is Test {
         BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_LITIGATION_CHALLENGE1, 1);
         vm.stopBroadcast();       
 
+        //send players some native tokens to enable them to jointeams
+        vm.deal(PLAYER1_CHALLENGE1, STARTING_BALANCE_ETH);
+        vm.deal(PLAYER2_CHALLENGE1, STARTING_BALANCE_ETH);
+        vm.deal(PLAYER3_CHALLENGE1, STARTING_BALANCE_ETH);
         //A second player joins the team 1
         vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.joinOrCreateTeam(1);
+        bitarenaChallenge.joinOrCreateTeam{value: AMOUNT_PER_PLAYER}(1);
         vm.stopBroadcast();               
 
 
         //The PLAYER2 creates a new team : team with index 2 is created
         vm.startBroadcast(PLAYER2_CHALLENGE1);
-        bitarenaChallenge.joinOrCreateTeam(0);
+        bitarenaChallenge.joinOrCreateTeam{value: AMOUNT_PER_PLAYER}(0);
         vm.stopBroadcast();               
 
         //The PLAYER3 joins the team2
         vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.joinOrCreateTeam(2);
+        bitarenaChallenge.joinOrCreateTeam{value: AMOUNT_PER_PLAYER}(2);
         vm.stopBroadcast();               
 
         //Test that data are OK : 
