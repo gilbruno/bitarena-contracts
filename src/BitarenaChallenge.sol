@@ -17,7 +17,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
     uint private s_startAt;
     uint private s_amountPerPlayer;
 
-    uint16 s_teamCounter;
+    uint16 private s_teamCounter;
     bool private s_isPrivate;
     bool private s_isCanceled;
     address private s_admin;
@@ -43,28 +43,27 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
         uint _startAt,
         bool _isPrivate
     ) AccessControlDefaultAdminRules(1 days, _challengeAdmin) {
-        _challengeAdmin = s_admin;
-        _challengeLitigationAdmin = s_litigationAdmin;
-        _challengeCreator = s_creator;
-        _name = s_name;
-        _game = s_game;
-        _platform = s_platform;
-        _nbTeams = s_nbTeams;
-        _nbTeamPlayers = s_nbTeamPlayers;
-        _amountPerPlayer = s_amountPerPlayer;
-        _startAt = s_startAt;
-        _isPrivate = s_isPrivate;
+        s_admin = _challengeAdmin;
+        s_litigationAdmin = _challengeLitigationAdmin;
+        s_creator = _challengeCreator;
+        s_name = _name;
+        s_game = _game;
+        s_platform = _platform;
+        s_nbTeams = _nbTeams;
+        s_nbTeamPlayers = _nbTeamPlayers;
+        s_amountPerPlayer = _amountPerPlayer;
+        s_startAt = _startAt;
+        s_isPrivate = _isPrivate;
         s_isCanceled = false;
         _grantRole(CHALLENGE_ADMIN_ROLE, _challengeAdmin);
         _grantRole(CHALLENGE_CREATOR_ROLE, _challengeCreator);
-
-        s_teamCounter++;
+        s_teamCounter = 0;
     }
 
 
     function createTeam() internal {
         s_teamCounter++;
-        if (s_teamCounter > s_nbTeams) revert NbTeamsLimitReachedError();
+        //if (s_teamCounter > s_nbTeams) revert NbTeamsLimitReachedError();
 
         //If a team is created for the first time, we add the creator in this team
         if (s_teamCounter == 1) {
@@ -120,6 +119,12 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
         setIsCanceled(true);
     }
 
+    /**
+     * @dev getter for state variable s_name
+     */
+    function getName() external view returns (string memory) {
+        return s_name;
+    }
 
     /**
      * @dev getter for state variable s_game
@@ -137,7 +142,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
     /**
      * @dev getter for state variable s_nbTeams
      */
-    function getNbTeam() external view returns (uint16) {
+    function getNbTeams() external view returns (uint16) {
         return s_nbTeams;
     }
 
@@ -188,6 +193,13 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
      */
     function setAmountPerPlayer(uint _amountPerPlayer) internal {
         s_amountPerPlayer = _amountPerPlayer;
+    }
+
+    /**
+     * @dev getter for the state variable s_teamCounter
+     */
+    function getTeamCounter() external view returns (uint16) {
+        return s_teamCounter;
     }
 
     /**

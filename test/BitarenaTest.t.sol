@@ -232,6 +232,32 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();
         assertEq(challengeStructCreated.challengeName, CHALLENGE1);
     }
+    /**
+     * @dev Test value of state var "s_challengesName" after intent challenge creation 
+     */
+    function testStateVariableAfterChallengeDeployment1() public {
+        deployFactory();
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
+            CHALLENGE1,
+            GAME1,
+            PLATFORM1,
+            TWO_TEAMS,
+            ONE_PLAYER,
+            AMOUNT_PER_PLAYER,
+            block.timestamp + 1 days,
+            false
+        );
+
+
+        vm.stopBroadcast();
+
+        vm.startBroadcast(ADMIN_FACTORY);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_LITIGATION_CHALLENGE1, 1);
+        vm.stopBroadcast();       
+
+        assertEq(bitarenaChallenge.getName(), CHALLENGE1);
+    }
 
     /**
      * @dev Test value of mapping "s_challengesMap" after intent challenge creation 
@@ -254,6 +280,31 @@ contract BitarenaTest is Test {
 
         vm.stopBroadcast();
         assertEq(challengeStructCreated.game, GAME1);
+    }
+
+    /**
+     * @dev Test value of state var "s_game" after challenge creation/deployment
+     */
+    function testStateVariableAfterChallengeDeployment2() public {
+        deployFactory();
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
+            CHALLENGE1,
+            GAME1,
+            PLATFORM1,
+            TWO_TEAMS,
+            ONE_PLAYER,
+            AMOUNT_PER_PLAYER,
+            block.timestamp + 1 days,
+            false
+        );
+        vm.stopBroadcast();
+
+        vm.startBroadcast(ADMIN_FACTORY);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_LITIGATION_CHALLENGE1, 1);
+        vm.stopBroadcast();       
+
+        assertEq(bitarenaChallenge.getGame(), GAME1);
     }
 
     /**
@@ -280,6 +331,32 @@ contract BitarenaTest is Test {
     }
 
     /**
+     * @dev Test value of mapping state var "s_platform" after challenge creation/deployment 
+     */
+    function testStateVariableAfterChallengeDeployment3() public {
+        deployFactory();
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
+            CHALLENGE1,
+            GAME1,
+            PLATFORM1,
+            TWO_TEAMS,
+            ONE_PLAYER,
+            AMOUNT_PER_PLAYER,
+            block.timestamp + 1 days,
+            false
+        );
+
+        vm.stopBroadcast();
+
+        vm.startBroadcast(ADMIN_FACTORY);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_LITIGATION_CHALLENGE1, 1);
+        vm.stopBroadcast();       
+
+        assertEq(bitarenaChallenge.getPlatform(), PLATFORM1);
+    }
+
+    /**
      * @dev Test value of mapping "s_challengesMap" after intent challenge creation 
      */
     function testStateVariableAfterIntentChallengeCreation4() public {
@@ -300,6 +377,33 @@ contract BitarenaTest is Test {
 
         vm.stopBroadcast();
         assertEq(challengeStructCreated.nbTeams, TWO_TEAMS);
+    }
+
+    /**
+     * @dev Test value of state var "s_nbTeams" after challenge creation/deployment 
+     */
+    function testStateVariableAfterChallengeDeployment4() public {
+        deployFactory();
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
+            CHALLENGE1,
+            GAME1,
+            PLATFORM1,
+            TWO_TEAMS,
+            ONE_PLAYER,
+            AMOUNT_PER_PLAYER,
+            block.timestamp + 1 days,
+            false
+        );
+
+        Challenge memory challengeStructCreated = bitarenaFactory.getChallengeByIndex(1); 
+        vm.stopBroadcast();
+
+        vm.startBroadcast(ADMIN_FACTORY);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_LITIGATION_CHALLENGE1, 1);
+        vm.stopBroadcast();       
+
+        assertEq(bitarenaChallenge.getNbTeams(), TWO_TEAMS);
     }
 
     /**
@@ -514,6 +618,7 @@ contract BitarenaTest is Test {
         vm.startBroadcast(ADMIN_FACTORY);
         bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_LITIGATION_CHALLENGE1, 1);
         vm.stopBroadcast();       
+
         assertEq(address(bitarenaFactory).balance, STARTING_BALANCE_ETH);
     }
 
@@ -567,6 +672,34 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();
 
         assertEq(bitarenaFactory.isChallengeDeployed(1), false);
+    }
+
+    /**
+     * @dev Test that the first team is created after Challenge deployment
+     * 
+     */
+    function testFirstTeamCreatedAfterChallengeDeployment() public {
+        deployFactory();
+        
+        vm.deal(address(bitarenaFactory), STARTING_BALANCE_ETH);
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
+            CHALLENGE1,
+            GAME1,
+            PLATFORM1,
+            TWO_TEAMS,
+            ONE_PLAYER,
+            AMOUNT_PER_PLAYER,
+            block.timestamp + 1 days,
+            false
+        );
+        vm.stopBroadcast();
+
+        vm.startBroadcast(ADMIN_FACTORY);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_LITIGATION_CHALLENGE1, 1);
+        vm.stopBroadcast();       
+
+        assertEq(bitarenaChallenge.getTeamCounter(), 1);
     }
 
 }
