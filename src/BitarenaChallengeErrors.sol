@@ -10,6 +10,12 @@ error BalanceChallengePlayerError();
 /**
  * @dev 
  */
+error ChallengeCanceledError();
+
+
+/**
+ * @dev 
+ */
 error ChallengeCancelAfterStartDateError();
 
 /**
@@ -25,6 +31,12 @@ error NbPlayersPerTeamsLimitReachedError();
 /**
  * @dev 
  */
+error SendMoneyBackToPlayersError();
+
+
+/**
+ * @dev 
+ */
 error TeamDoesNotExistsError();
 
 /**
@@ -36,3 +48,8 @@ error TimeElapsedToJoinTeamError();
  * @dev 
  */
 error TimeElapsedToCreateDisputeError();
+
+/**
+ * @dev 
+ */
+error TimeElapsedToClaimVictoryError();

@@ -4,6 +4,7 @@ pragma solidity ^0.8.13;
 import {Test, console} from "forge-std/Test.sol";
 import {BitarenaFactory} from "../src/BitarenaFactory.sol";
 import {BitarenaToken} from "../src/BitarenaToken.sol";
+import {CHALLENGE_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_CREATOR_ROLE, GAMER_ROLE} from "../src/BitarenaChallengeConstants.sol";
 import {BalanceChallengeCreatorError, ChallengeAdminAddressZeroError, 
     ChallengeCounterError, ChallengeCreatorAddressZeroError, ChallengeDisputeAdminAddressZeroError, ChallengeGameError, 
     ChallengeNameError, ChallengePlatformError, 
@@ -410,7 +411,6 @@ contract BitarenaTest is Test {
             false
         );
 
-        Challenge memory challengeStructCreated = bitarenaFactory.getChallengeByIndex(1); 
         vm.stopBroadcast();
 
         vm.startBroadcast(ADMIN_FACTORY);
@@ -419,6 +419,88 @@ contract BitarenaTest is Test {
 
         assertEq(bitarenaChallenge.getNbTeams(), TWO_TEAMS);
     }
+
+    /**
+     * @dev Test value of state var "s_disputeAdmin" after challenge creation/deployment 
+     */
+    function testStateVariableAfterChallengeDeployment5() public {
+        deployFactory();
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
+            CHALLENGE1,
+            GAME1,
+            PLATFORM1,
+            TWO_TEAMS,
+            ONE_PLAYER,
+            AMOUNT_PER_PLAYER,
+            block.timestamp + 1 days,
+            false
+        );
+
+        vm.stopBroadcast();
+
+        vm.startBroadcast(ADMIN_FACTORY);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, 1);
+        vm.stopBroadcast();       
+
+        assertEq(bitarenaChallenge.getDisputeAdmin(), ADMIN_DISPUTE_CHALLENGE1);
+    }
+
+    /**
+     * @dev Test value of state var "s_disputeAdmin" after challenge creation/deployment 
+     */
+    function testStateVariableAfterChallengeDeployment6() public {
+        deployFactory();
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
+            CHALLENGE1,
+            GAME1,
+            PLATFORM1,
+            TWO_TEAMS,
+            ONE_PLAYER,
+            AMOUNT_PER_PLAYER,
+            block.timestamp + 1 days,
+            false
+        );
+
+        vm.stopBroadcast();
+
+        vm.startBroadcast(ADMIN_FACTORY);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, 1);
+        vm.stopBroadcast();       
+
+        assertEq(bitarenaChallenge.getChallengeAdmin(), ADMIN_CHALLENGE1);
+    }
+
+    /**
+     * @dev Test roles after challenge creation/deployment 
+     */
+    function testRolesAfterChallengeDeployment1() public {
+        deployFactory();
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
+            CHALLENGE1,
+            GAME1,
+            PLATFORM1,
+            TWO_TEAMS,
+            ONE_PLAYER,
+            AMOUNT_PER_PLAYER,
+            block.timestamp + 1 days,
+            false
+        );
+
+        vm.stopBroadcast();
+
+        vm.startBroadcast(ADMIN_FACTORY);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, 1);
+        vm.stopBroadcast();       
+
+        assertEq(bitarenaChallenge.hasRole(CHALLENGE_ADMIN_ROLE, ADMIN_CHALLENGE1), true);
+        assertEq(bitarenaChallenge.hasRole(CHALLENGE_DISPUTE_ADMIN_ROLE, ADMIN_DISPUTE_CHALLENGE1), true);
+        assertEq(bitarenaChallenge.hasRole(CHALLENGE_CREATOR_ROLE, CREATOR_CHALLENGE1), true);
+    }
+
+
 
     /**
      * @dev Test value of mapping "s_challengesMap" after intent challenge creation 
@@ -762,7 +844,7 @@ contract BitarenaTest is Test {
         BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, 1);
         vm.stopBroadcast();       
         
-        assertEq(bitarenaChallenge.getPlayersByTeamIndex(1)[0], bitarenaChallenge.getCreator());
+        assertEq(bitarenaChallenge.getTeamsByTeamIndex(1)[0], bitarenaChallenge.getCreator());
     }
 
     /**
@@ -830,10 +912,10 @@ contract BitarenaTest is Test {
         //creator is the only player in the team 1
         //PLAYER1_CHALLENGE1 is the only player in the team 2
         assertEq(bitarenaChallenge.getTeamCounter(), 2);
-        assertEq(bitarenaChallenge.getPlayersByTeamIndex(1)[0], bitarenaChallenge.getCreator());
-        assertEq(bitarenaChallenge.getPlayersByTeamIndex(2)[0], PLAYER1_CHALLENGE1);
-        assertEq(bitarenaChallenge.getPlayersByTeamIndex(1).length, 1);
-        assertEq(bitarenaChallenge.getPlayersByTeamIndex(2).length, 1);
+        assertEq(bitarenaChallenge.getTeamsByTeamIndex(1)[0], bitarenaChallenge.getCreator());
+        assertEq(bitarenaChallenge.getTeamsByTeamIndex(2)[0], PLAYER1_CHALLENGE1);
+        assertEq(bitarenaChallenge.getTeamsByTeamIndex(1).length, 1);
+        assertEq(bitarenaChallenge.getTeamsByTeamIndex(2).length, 1);
     }
 
     /**
@@ -882,10 +964,10 @@ contract BitarenaTest is Test {
         //creator and PLAYER1 are players of team 1
         //PLAYER2 and PLAYER3 are players of team 2
         assertEq(bitarenaChallenge.getTeamCounter(), 2);
-        assertEq(bitarenaChallenge.getPlayersByTeamIndex(1)[0], bitarenaChallenge.getCreator());
-        assertEq(bitarenaChallenge.getPlayersByTeamIndex(1)[1], PLAYER1_CHALLENGE1);
-        assertEq(bitarenaChallenge.getPlayersByTeamIndex(2)[0], PLAYER2_CHALLENGE1);
-        assertEq(bitarenaChallenge.getPlayersByTeamIndex(2)[1], PLAYER3_CHALLENGE1);
+        assertEq(bitarenaChallenge.getTeamsByTeamIndex(1)[0], bitarenaChallenge.getCreator());
+        assertEq(bitarenaChallenge.getTeamsByTeamIndex(1)[1], PLAYER1_CHALLENGE1);
+        assertEq(bitarenaChallenge.getTeamsByTeamIndex(2)[0], PLAYER2_CHALLENGE1);
+        assertEq(bitarenaChallenge.getTeamsByTeamIndex(2)[1], PLAYER3_CHALLENGE1);
     }
 
     /**

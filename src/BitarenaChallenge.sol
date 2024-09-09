@@ -4,9 +4,10 @@ pragma solidity 0.8.26;
 
 import {AccessControlDefaultAdminRules} from "openzeppelin-contracts/contracts/access/extensions/AccessControlDefaultAdminRules.sol";
 import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
-import {BalanceChallengePlayerError, ChallengeCancelAfterStartDateError, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, TeamDoesNotExistsError, TimeElapsedToCreateDisputeError, TimeElapsedToJoinTeamError} from "./BitarenaChallengeErrors.sol";
-import {PlayerJoinsTeam, TeamCreated, Debug} from "./BitarenaChallengeEvents.sol";
+import {BalanceChallengePlayerError, ChallengeCanceledError, ChallengeCancelAfterStartDateError, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, SendMoneyBackToPlayersError, TeamDoesNotExistsError, TimeElapsedToClaimVictoryError, TimeElapsedToCreateDisputeError, TimeElapsedToJoinTeamError} from "./BitarenaChallengeErrors.sol";
+import {PlayerJoinsTeam, TeamCreated, Debug, VictoryClaimed} from "./BitarenaChallengeEvents.sol";
 import {ChallengeParams} from "./ChallengeParams.sol";
+import {CHALLENGE_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_CREATOR_ROLE, GAMER_ROLE} from "./BitarenaChallengeConstants.sol";
 
 contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
 
@@ -15,34 +16,35 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
     bytes32 private s_platform;
     uint16 private immutable s_nbTeams;
     uint16 private immutable s_nbTeamPlayers;
-    uint16 private s_percentageAmountDispute;
+    uint16 private s_feePercentage;
+    uint16 private s_feePercentageDispute;
     uint256 private immutable s_startAt;
     uint256 private immutable s_amountPerPlayer;
-    uint256 private s_delayVictoryClaim;
+    uint256 private s_delayStartVictoryClaim;
+    uint256 private s_delayEndVictoryClaim;
     uint256 private s_challengePool;
+    uint256 private s_disputePool;
 
     uint16 private s_teamCounter;
     bool private s_isPrivate;
     bool private s_isCanceled;
     address private s_admin;
-    address private s_litigationAdmin;
+    address private s_disputeAdmin;
     address private immutable s_creator;
     address private immutable s_factory;
 
-    mapping(uint16 teamIndex => address[] players) private s_players;
+    mapping(uint16 teamIndex => address[] players) private s_teams;
+    mapping(address player => uint16 teamNumber) private s_players;
     mapping(uint16 teamIndex => bool winner) s_winners;
 
     /** CONSTANTS */
-    bytes32 public constant CHALLENGE_ADMIN_ROLE = keccak256("CHALLENGE_ADMIN_ROLE");
-    bytes32 public constant CHALLENGE_LITIGATION_ADMIN_ROLE = keccak256("CHALLENGE_LITIGATION_ADMIN_ROLE");
-    bytes32 public constant CHALLENGE_CREATOR_ROLE = keccak256("CHALLENGE_CREATOR_ROLE");
-    bytes32 public constant GAMER_ROLE = keccak256("GAMER_ROLE");
     uint8 private constant DECIMALS_PERCENTAGE_AMOUNT_DISPUTE = 2;
+    uint8 private constant DECIMALS_FEE_PERCENTAGE_AMOUNT = 2;
 
     constructor(ChallengeParams memory params) AccessControlDefaultAdminRules(1 days, params.challengeAdmin) {
         s_factory = params.factory;
         s_admin = params.challengeAdmin;
-        s_litigationAdmin = params.challengeDisputeAdmin;
+        s_disputeAdmin = params.challengeDisputeAdmin;
         s_creator = params.challengeCreator;
         s_name = params.name;
         s_game = params.game;
@@ -55,12 +57,16 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
         s_isCanceled = false;
         s_teamCounter = 0;
         s_challengePool = 0;
+        s_feePercentage = 10;
         _grantRole(CHALLENGE_ADMIN_ROLE, params.challengeAdmin);
         _grantRole(CHALLENGE_CREATOR_ROLE, params.challengeCreator);
-
+        _grantRole(CHALLENGE_DISPUTE_ADMIN_ROLE, params.challengeDisputeAdmin);
     }
 
 
+    /**
+     * @dev Internal function to create a team
+     */
     function createTeam() internal {
         if (s_teamCounter == s_nbTeams) revert NbTeamsLimitReachedError();
         unchecked {
@@ -70,16 +76,16 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
         //If a team is created for the first time, we add the creator in this team.
         // Otherwise we add the creator of the team in the created team
         address player = s_teamCounter == 1 ? s_creator : _msgSender();
-        s_players[s_teamCounter].push(player);
+        s_teams[s_teamCounter].push(player);
         s_winners[s_teamCounter] = false;
         emit PlayerJoinsTeam(s_teamCounter, player);
         emit TeamCreated(s_teamCounter);
     }
 
     function joinTeam(uint16 _teamIndex) internal {
-        if (s_players[_teamIndex].length == s_nbTeamPlayers) revert NbPlayersPerTeamsLimitReachedError();
+        if (s_teams[_teamIndex].length == s_nbTeamPlayers) revert NbPlayersPerTeamsLimitReachedError();
         if (_teamIndex > s_teamCounter) revert TeamDoesNotExistsError();
-        s_players[_teamIndex].push(_msgSender());
+        s_teams[_teamIndex].push(_msgSender());
         emit PlayerJoinsTeam(_teamIndex, _msgSender());
     }
 
@@ -95,12 +101,13 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
      */
     function joinOrCreateTeam(uint16 _teamIndex) public payable {
         if (msg.value < s_amountPerPlayer && _msgSender() != s_factory) revert BalanceChallengePlayerError();
+        if (block.timestamp >= s_startAt) revert TimeElapsedToJoinTeamError();
+        if (s_isCanceled) revert ChallengeCanceledError();
         //Intent to create a new team (and becomes automatically a member of the newly created team)
         if (_teamIndex == 0) {
             createTeam();
         }
         else {
-            if (block.timestamp >= s_startAt) revert TimeElapsedToJoinTeamError();
             joinTeam(_teamIndex);
             _grantRole(GAMER_ROLE, _msgSender());
         }
@@ -109,18 +116,29 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
     
 
     /**
-     * @dev
+     * @dev It can be done only between (s_startAt + s_delayStartVictoryClaim) and (s_startAt + s_delayStartVictoryClaim + s_delayEndVictoryClaim)
      * @param _teamIndex : indexof the team
      */
-    function claimVictory(uint16 _teamIndex) public onlyRole(GAMER_ROLE) onlyRole(CHALLENGE_CREATOR_ROLE){
+    function claimVictory(uint16 _teamIndex) public onlyRole(GAMER_ROLE) onlyRole(CHALLENGE_CREATOR_ROLE) {
+        if (_teamIndex > s_teamCounter) revert TeamDoesNotExistsError();
+        if (block.timestamp > (s_startAt + s_delayStartVictoryClaim + s_delayEndVictoryClaim)) revert TimeElapsedToClaimVictoryError();
         s_winners[_teamIndex] = true;
+        emit VictoryClaimed(_teamIndex, _msgSender());
+    }
+
+
+    /**
+     * @dev
+     */
+    function setFeePercentageDispute(uint16 _percentage) public onlyRole(CHALLENGE_ADMIN_ROLE) {
+        s_feePercentageDispute = _percentage;
     }
 
     /**
      * @dev
      */
-    function setPercentageForDispute() public onlyRole(CHALLENGE_ADMIN_ROLE) {
-
+    function setFeePercentage(uint16 _percentage) public onlyRole(CHALLENGE_ADMIN_ROLE) {
+        s_feePercentage = _percentage;
     }
 
     /** All players can create a dispute.
@@ -131,19 +149,28 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
      * @dev 
      */
     function createDispute() public onlyRole(GAMER_ROLE) onlyRole(CHALLENGE_CREATOR_ROLE) {
-        if (block.timestamp >= s_startAt + s_delayVictoryClaim) revert TimeElapsedToCreateDisputeError();
+        if (block.timestamp == s_startAt + s_delayStartVictoryClaim) revert TimeElapsedToCreateDisputeError();
     }
 
     /**
-     * Delay set by the admin during which you can create a dispute to challenge the victory.
-     * It runs after the challenge start date.
+     * Delay to start the victory claim (after the start date).
+     * Ex : 1 days
+     * 
      * @dev
      */
-    function setDelayForVictoryClaim(uint256 _delayForVictoryClaim) public onlyRole(CHALLENGE_ADMIN_ROLE) {
-        s_delayVictoryClaim = _delayForVictoryClaim;
+    function setDelayStartForVictoryClaim(uint256 _delayStartVictoryClaim) public onlyRole(CHALLENGE_ADMIN_ROLE) {
+        s_delayStartVictoryClaim = _delayStartVictoryClaim;
     }
 
-
+    /**
+     * Delay to end the victory claim (after the start date of victory claim).
+     * Ex : 5 hours
+     * 
+     * @dev
+     */
+    function setDelayEndForVictoryClaim(uint256 _delayEndVictoryClaim) public onlyRole(CHALLENGE_ADMIN_ROLE) {
+        s_delayEndVictoryClaim = _delayEndVictoryClaim;
+    }
     /**
      * @dev 
      */
@@ -171,6 +198,40 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
     function cancelChallenge() public onlyRole(CHALLENGE_CREATOR_ROLE) {
         if (block.timestamp > s_startAt) revert ChallengeCancelAfterStartDateError();
         setIsCanceled(true);
+    }
+
+    /**
+     * After the challenge creator cancel the challenge, the money must be sent back to players
+     */
+    function returnMoneyBackDueToChallengeCancel() internal {
+        uint16 teamCount = s_teamCounter;
+        for (uint16 i = 1; i <= teamCount; i++) {
+            address[] memory teamPlayers = s_teams[i];
+            for (uint256 j = 0; j < teamPlayers.length; j++) {
+                address player = teamPlayers[j];
+                (bool success, ) = player.call{value: s_amountPerPlayer}("");
+                if (!success) revert SendMoneyBackToPlayersError();
+            }
+        }
+        //Reset the challenge pool
+        s_challengePool = 0;
+    }
+
+    /**
+     * @dev By calling this function after the victory claim perido, it calculatesif thers is a dispute
+     * meaning if at least 2 teams claim the victory among all the teams
+     * 
+     */
+    function disputeExists() public {
+
+    }
+
+    /**
+     * @dev 
+     * Rules : Only the winner can withdraw the pool
+     */
+    function withdrawChallengePool() public {
+
     }
 
     /**
@@ -258,24 +319,39 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
     }
 
     /**
-     * @dev getter for mapping state variable s_players
+     * @dev getter for mapping state variable s_teams
      */
-    function getPlayersByTeamIndex(uint16 _teamIndex) external view returns (address[] memory) {
-        return s_players[_teamIndex];
+    function getTeamsByTeamIndex(uint16 _teamIndex) external view returns (address[] memory) {
+        return s_teams[_teamIndex];
     }
 
     /**
-     * @dev getter for state variable s_delayVictoryClaim
+     * @dev getter for mapping state variable s_teams
+     * @return the team number of the player
      */
-    function getDelayVictoryClaim() external view returns (uint256) {
-        return s_delayVictoryClaim;
+    function getTeamOfPlayer(address _player) external view returns (uint16) {
+        return s_players[_player];
     }
 
     /**
-     * @dev getter for state variable s_percentageAmountDispute
+     * @dev getter for state variable s_delayStartVictoryClaim
      */
-    function getPercentageAmountdispute() external view returns (uint16) {
-        return s_percentageAmountDispute;
+    function getDelayStartVictoryClaim() external view returns (uint256) {
+        return s_delayStartVictoryClaim;
+    }
+
+    /**
+     * @dev getter for state variable s_delayEndVictoryClaim
+     */
+    function getDelayEndVictoryClaim() external view returns (uint256) {
+        return s_delayEndVictoryClaim;
+    }
+
+    /**
+     * @dev getter for state variable s_feePercentageDispute
+     */
+    function getFeePercentageDispute() external view returns (uint16) {
+        return s_feePercentageDispute;
     }
 
     /**
@@ -283,6 +359,34 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
      */
     function getChallengePool() external view returns (uint256) {
         return s_challengePool;
+    }
+
+    /**
+     * @dev getter for state variable s_disputePool
+     */
+    function getDisputePool() external view returns (uint256) {
+        return s_disputePool;
+    }
+
+    /**
+     * @dev getter for state variable s_feePercentage
+     */
+    function getFeePercentage() external view returns (uint16) {
+        return s_feePercentage;
+    }
+
+    /**
+     * @dev getter for state variable s_admin
+     */
+    function getChallengeAdmin() external view returns (address) {
+        return s_admin;
+    }
+
+    /**
+     * @dev getter for state variable s_disputeAdmin
+     */
+    function getDisputeAdmin() external view returns (address) {
+        return s_disputeAdmin;
     }
 
 }

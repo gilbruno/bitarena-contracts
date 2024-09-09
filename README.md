@@ -64,3 +64,12 @@ $ forge --help
 $ anvil --help
 $ cast --help
 ```
+
+## Spcific commands for the Bitarena smart contracts
+
+### See uncovered lines by units tests
+
+
+```
+forge coverage --fork-url $SEPOLIA_RPC_URL --report debug
+```
