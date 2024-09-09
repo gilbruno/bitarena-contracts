@@ -31,3 +31,8 @@ error TeamDoesNotExistsError();
  * @dev 
  */
 error TimeElapsedToJoinTeamError();
+
+/**
+ * @dev 
+ */
+error TimeElapsedToCreateDisputeError();

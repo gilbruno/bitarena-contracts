@@ -10,7 +10,7 @@ import {BalanceChallengeCreatorError, ChallengeAdminAddressZeroError,
     ChallengeStartDateError, NbTeamsError, NbPlayersPerTeamsError, SendMoneyToChallengeError} from '../src/BitarenaFactoryErrors.sol';
 import {Challenge} from '../src/ChallengeStruct.sol';
 import {BitarenaChallenge} from '../src/BitarenaChallenge.sol';
-import {ChallengeCancelAfterStartDateError, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, TeamDoesNotExistsError, TimeElapsedToJoinTeamError} from "../src/BitarenaChallengeErrors.sol";
+import {BalanceChallengePlayerError, ChallengeCancelAfterStartDateError, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, TeamDoesNotExistsError, TimeElapsedToJoinTeamError} from "../src/BitarenaChallengeErrors.sol";
 
 
 contract BitarenaTest is Test {
@@ -25,6 +25,7 @@ contract BitarenaTest is Test {
     address PLAYER1_CHALLENGE1 = makeAddr("player1Challenge1");
     address PLAYER2_CHALLENGE1 = makeAddr("player2Challenge1");
     address PLAYER3_CHALLENGE1 = makeAddr("player3Challenge1");
+    address PLAYER_WITH_NOT_SUFFICIENT_BALANCE = makeAddr("playerWithBalanceZero");
 
     bytes32 CHALLENGE1 = "Challenge 1";
     bytes32 CHALLENGE2 = "Challenge 2";
@@ -38,9 +39,11 @@ contract BitarenaTest is Test {
     uint16 TWO_PLAYERS = 2;
     uint16 THREE_PLAYERS = 3;
     uint AMOUNT_PER_PLAYER = 1 ether;
+    uint AMOUNT_NOT_SUFFICIENT = 1000 gwei;
 
 
     uint256 private constant STARTING_BALANCE_ETH = 10 ether; 
+    uint256 private constant STARTING_BALANCE_NOT_SUFFICIENT_ETH = 5000 gwei; 
 
     function setUp() public {
         //BitarenaToken bitarenaToken = new BitarenaToken();
@@ -50,6 +53,8 @@ contract BitarenaTest is Test {
         vm.deal(PLAYER1_CHALLENGE1, STARTING_BALANCE_ETH);
         vm.deal(PLAYER2_CHALLENGE1, STARTING_BALANCE_ETH);
         vm.deal(PLAYER3_CHALLENGE1, STARTING_BALANCE_ETH);
+        vm.deal(PLAYER_WITH_NOT_SUFFICIENT_BALANCE, STARTING_BALANCE_NOT_SUFFICIENT_ETH);
+
     }
 
     function deployFactory() public {
@@ -529,6 +534,34 @@ contract BitarenaTest is Test {
     }
 
     /**
+     * @dev Test challenge pool after challenge deployment.
+     * YThe value of the state var s_challengePoolafter deployment must be equal to 's_amountPerPlayer'
+     */
+    function testChallengePoolAfterChallengeDeployment() public {
+        deployFactory();
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
+            CHALLENGE1,
+            GAME1,
+            PLATFORM1,
+            TWO_TEAMS,
+            ONE_PLAYER,
+            AMOUNT_PER_PLAYER,
+            block.timestamp + 1 days,
+            false
+        );
+
+        vm.stopBroadcast();
+
+        vm.startBroadcast(ADMIN_FACTORY);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, 1);
+        vm.stopBroadcast();       
+
+        assertEq(bitarenaChallenge.getChallengePool(), bitarenaChallenge.getAmountPerPlayer());
+        assertEq(bitarenaChallenge.getChallengePool(), address(bitarenaChallenge).balance);
+    }
+
+    /**
      * @dev Test balance of challenge creator after intent challenge creation 
      */
     function testBalanceCreatorAfterIntentChallengeCreation8() public {
@@ -856,6 +889,95 @@ contract BitarenaTest is Test {
     }
 
     /**
+     * @dev Test that a player wirth balance zero or not enougn tokens cannot jon existing team
+     */
+    function testPlayersWithNullBalanceCanNotJoinExistingTeam() public {
+        deployFactory();
+        
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
+            CHALLENGE1,
+            GAME1,
+            PLATFORM1,
+            TWO_TEAMS,
+            TWO_PLAYERS,
+            AMOUNT_PER_PLAYER,
+            block.timestamp + 1 days,
+            false
+        );
+        vm.stopBroadcast();
+
+        vm.startBroadcast(ADMIN_FACTORY);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, 1);
+        vm.stopBroadcast();       
+
+        //send players some native tokens to enable them to jointeams
+        //A second player joins the team 1
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.joinOrCreateTeam{value: AMOUNT_PER_PLAYER}(1);
+        vm.stopBroadcast();               
+
+
+        //The PLAYER2 creates a new team : team with index 2 is created
+        vm.startBroadcast(PLAYER2_CHALLENGE1);
+        bitarenaChallenge.joinOrCreateTeam{value: AMOUNT_PER_PLAYER}(0);
+        vm.stopBroadcast();               
+
+        //The PLAYER_WITH_BALANCE_ZERO wants to join the team2
+        vm.expectRevert(BalanceChallengePlayerError.selector);
+        vm.startBroadcast(PLAYER_WITH_NOT_SUFFICIENT_BALANCE);
+        bitarenaChallenge.joinOrCreateTeam{value: AMOUNT_NOT_SUFFICIENT}(2);
+        vm.stopBroadcast();               
+
+    }
+
+    /**
+     * @dev Test that the challenge pool is correct after manyplayers join different teams
+     * Case of challenge that is set with 2 teams and 2 players per team. 
+     * So the challenge pool must be equal to 4 x s_amountPerPlayer
+     */
+    function testChallengePoolAfterPlayersJoinTeams() public {
+        deployFactory();
+        
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
+            CHALLENGE1,
+            GAME1,
+            PLATFORM1,
+            TWO_TEAMS,
+            TWO_PLAYERS,
+            AMOUNT_PER_PLAYER,
+            block.timestamp + 1 days,
+            false
+        );
+        vm.stopBroadcast();
+
+        vm.startBroadcast(ADMIN_FACTORY);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, 1);
+        vm.stopBroadcast();       
+
+        //send players some native tokens to enable them to jointeams
+        //A second player joins the team 1
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.joinOrCreateTeam{value: AMOUNT_PER_PLAYER}(1);
+        vm.stopBroadcast();               
+
+
+        //The PLAYER2 creates a new team : team with index 2 is created
+        vm.startBroadcast(PLAYER2_CHALLENGE1);
+        bitarenaChallenge.joinOrCreateTeam{value: AMOUNT_PER_PLAYER}(0);
+        vm.stopBroadcast();               
+
+        //The PLAYER3 joins the team2
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.joinOrCreateTeam{value: AMOUNT_PER_PLAYER}(2);
+        vm.stopBroadcast();               
+
+        assertEq(bitarenaChallenge.getChallengePool(), 4 * bitarenaChallenge.getAmountPerPlayer());
+        assertEq(bitarenaChallenge.getChallengePool(), address(bitarenaChallenge).balance);
+    }
+
+    /**
      * @dev Test that some players can not join team after challenge start date
      */
     function testPlayersCanNotJoinExistingTeamsAfterChallengeStartDate() public {
@@ -943,6 +1065,13 @@ contract BitarenaTest is Test {
     }
 
     //TODO : Tests balance of challenge smart contract after many joining teams
+
+    
+    //TODO : Test disputes
+
+
+
+
 
 
 }
