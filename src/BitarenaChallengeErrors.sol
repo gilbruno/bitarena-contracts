@@ -40,6 +40,11 @@ error NbPlayersPerTeamsLimitReachedError();
 /**
  * @dev 
  */
+error NotTeamMemberError();
+
+/**
+ * @dev 
+ */
 error SendMoneyBackToPlayersError();
 
 

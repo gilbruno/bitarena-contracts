@@ -5,7 +5,7 @@ pragma solidity 0.8.26;
 import {AccessControlDefaultAdminRules} from "openzeppelin-contracts/contracts/access/extensions/AccessControlDefaultAdminRules.sol";
 import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
 import {BalanceChallengePlayerError, ChallengeCanceledError, ChallengeCancelAfterStartDateError, ClaimVictoryNotAuthorized, DelayClaimVictoryNotSet, 
-    NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, SendMoneyBackToPlayersError, TeamDoesNotExistsError, 
+    NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, NotTeamMemberError, SendMoneyBackToPlayersError, TeamDoesNotExistsError, 
     TimeElapsedToClaimVictoryError, TimeElapsedToCreateDisputeError, TimeElapsedToJoinTeamError} from "./BitarenaChallengeErrors.sol";
 import {PlayerJoinsTeam, TeamCreated, Debug, VictoryClaimed} from "./BitarenaChallengeEvents.sol";
 import {ChallengeParams} from "./ChallengeParams.sol";
@@ -67,32 +67,14 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
         _grantRole(CHALLENGE_DISPUTE_ADMIN_ROLE, params.challengeDisputeAdmin);
     }
 
-
-    /**
-     * @dev Internal function to create a team
-     */
-    function createTeam() internal {
-        if (s_teamCounter == s_nbTeams) revert NbTeamsLimitReachedError();
-        unchecked {
-            ++s_teamCounter;
-        }
-        
-        //If a team is created for the first time, we add the creator in this team.
-        // Otherwise we add the creator of the team in the created team
-        address player = s_teamCounter == 1 ? s_creator : _msgSender();
-        s_teams[s_teamCounter].push(player);
-        s_winners[s_teamCounter] = false;
-        emit PlayerJoinsTeam(s_teamCounter, player);
-        emit TeamCreated(s_teamCounter);
-    }
-
-    function joinTeam(uint16 _teamIndex) internal {
+    modifier checkJoinTeam(uint16 _teamIndex) {
         if (s_teams[_teamIndex].length == s_nbTeamPlayers) revert NbPlayersPerTeamsLimitReachedError();
-        if (_teamIndex > s_teamCounter) revert TeamDoesNotExistsError();
-        s_teams[_teamIndex].push(_msgSender());
-        emit PlayerJoinsTeam(_teamIndex, _msgSender());
+        if (_teamIndex > s_teamCounter) revert TeamDoesNotExistsError();        
+        if (s_isCanceled) revert ChallengeCanceledError();
+        if (block.timestamp >= s_startAt) revert TimeElapsedToJoinTeamError();
+        if (msg.value < s_amountPerPlayer && _msgSender() != s_factory) revert BalanceChallengePlayerError();
+        _;
     }
-
     /**
      * @dev Function that will be callable by front end. 
      * If value of _teamIndex equals 0 then it's a creation team intent
@@ -101,22 +83,36 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
      * We have an exception when the factory call the function because that's the first team creation by the challenge creator 
      * and he already paid for the challenge.
      * We reject the Tx if a player wants to join a team afetr the challenge start date
-     * @param _teamIndex : index of the team
+     * 
      */
-    function joinOrCreateTeam(uint16 _teamIndex) public payable {
-        if (msg.value < s_amountPerPlayer && _msgSender() != s_factory) revert BalanceChallengePlayerError();
-        if (block.timestamp >= s_startAt) revert TimeElapsedToJoinTeamError();
-        if (s_isCanceled) revert ChallengeCanceledError();
-        //Intent to create a new team (and becomes automatically a member of the newly created team)
-        if (_teamIndex == 0) {
-            createTeam();
+    function joinTeam(uint16 _teamIndex) public payable checkJoinTeam(_teamIndex) {
+       joinTeamInternal(_teamIndex, _msgSender());
+        emit PlayerJoinsTeam(_teamIndex, _msgSender());
+    }
+
+    /**
+     * @dev Create a team
+     */    
+    function createTeam() public payable {
+        unchecked {
+            ++s_teamCounter;
         }
-        else {
-            joinTeam(_teamIndex);
-            _grantRole(GAMER_ROLE, _msgSender());
-        }
+        
+        //If a team is created for the first time, we add the creator of the challenge in this team.
+        // Otherwise we add the creator of the team in the created team
+        address player = s_teamCounter == 1 ? s_creator : _msgSender();
+        s_winners[s_teamCounter] = false;
+        joinTeamInternal(s_teamCounter, player);
+        emit TeamCreated(s_teamCounter);
+    }
+
+    function joinTeamInternal(uint16 _teamIndex, address _player) internal {
+        s_teams[_teamIndex].push(_player);
+        s_players[_player] = _teamIndex;
+        _grantRole(GAMER_ROLE, _msgSender());
         incrementChallengePool(s_amountPerPlayer);
     }
+
     
 
     /**
@@ -129,6 +125,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
         if (!hasRole(CHALLENGE_CREATOR_ROLE, _msgSender()) && !hasRole(GAMER_ROLE, _msgSender())) revert ClaimVictoryNotAuthorized();
         if (_teamIndex > s_teamCounter) revert TeamDoesNotExistsError();
         if (block.timestamp > (s_startAt + s_delayStartVictoryClaim + s_delayEndVictoryClaim)) revert TimeElapsedToClaimVictoryError();
+        if (s_players[_msgSender()] != _teamIndex) revert NotTeamMemberError();
         s_winners[_teamIndex] = true;
         emit VictoryClaimed(_teamIndex, _msgSender());
     }

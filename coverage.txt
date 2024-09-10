@@ -1,0 +1,1474 @@
+Compiling 53 files with Solc 0.8.26
+Solc 0.8.26 finished in 1.75s
+Compiler run successful with warnings:
+Warning (2018): Function state mutability can be restricted to view
+   --> src/BitarenaChallenge.sol:151:5:
+    |
+151 |     function createDispute() public onlyRole(GAMER_ROLE) onlyRole(CHALLENGE_CREATOR_ROLE) {
+    |     ^ (Relevant source part starts here and spans across multiple lines).
+
+Analysing contracts...
+Running tests...
+
+Ran 42 tests for test/BitarenaTest.t.sol:BitarenaTest
+[PASS] testBalanceCreatorAfterIntentChallengeCreation8() (gas: 5118893)
+[PASS] testBalanceFactoryAfterDeployingChallenge() (gas: 8176518)
+[PASS] testBalanceFactoryAfterIntentChallengeCreation8() (gas: 5118985)
+[PASS] testBalanceFactoryBeforeDeployingChallenge() (gas: 5119935)
+[PASS] testCancelChallenge1() (gas: 8386525)
+[PASS] testCancelChallenge2() (gas: 8178432)
+[PASS] testChallengeAddressInStateVariableStructAfterDeploying() (gas: 8179879)
+[PASS] testChallengeAddressInStateVariableStructBeforeDeploying() (gas: 5122015)
+[PASS] testChallengeCreationRevertIfBAdCounterIsProvided() (gas: 5126433)
+[PASS] testChallengePoolAfterChallengeDeployment() (gas: 8179934)
+[PASS] testChallengePoolAfterPlayersJoinTeams() (gas: 8365166)
+[PASS] testCounterChallengeAfterIntentChallengeCreation() (gas: 5119522)
+[PASS] testFirstTeamCreatedAfterChallengeDeployment() (gas: 8177330)
+[PASS] testFirstTeamCreatedAfterChallengeDeploymentContainsOnlyCreator() (gas: 8180860)
+[PASS] testIntentChallengeCreationError1() (gas: 4933707)
+[PASS] testIntentChallengeCreationError2() (gas: 4933736)
+[PASS] testIntentChallengeCreationError3() (gas: 4933766)
+[PASS] testIntentChallengeCreationError4() (gas: 4935874)
+[PASS] testIntentChallengeCreationError5() (gas: 4935971)
+[PASS] testIntentChallengeCreationError6() (gas: 4935842)
+[PASS] testIntentChallengeCreationError7() (gas: 4935933)
+[PASS] testPlayerCanCreateTeamIfNbTeamsLimitIsOk() (gas: 8257673)
+[PASS] testPlayerCanNotJoinTeamIfCreatorCreateChallengeWithOnlyOnePlayerPerTeam() (gas: 8187570)
+[PASS] testPlayersCanJoinExistingTeamsIfLimitIsOk() (gas: 8383790)
+[PASS] testPlayersCanNotJoinExistingTeamsAfterChallengeStartDate() (gas: 8311599)
+[PASS] testPlayersCanNotJoinNotExistingTeam() (gas: 8313609)
+[PASS] testPlayersWithNullBalanceCanNotJoinExistingTeam() (gas: 8312948)
+[PASS] testRolesAfterChallengeDeployment1() (gas: 8183918)
+[PASS] testStateVariableAfterChallengeDeployment1() (gas: 8177353)
+[PASS] testStateVariableAfterChallengeDeployment2() (gas: 8177350)
+[PASS] testStateVariableAfterChallengeDeployment3() (gas: 8177398)
+[PASS] testStateVariableAfterChallengeDeployment4() (gas: 8177362)
+[PASS] testStateVariableAfterChallengeDeployment5() (gas: 8177601)
+[PASS] testStateVariableAfterChallengeDeployment6() (gas: 8177735)
+[PASS] testStateVariableAfterIntentChallengeCreation1() (gas: 5125169)
+[PASS] testStateVariableAfterIntentChallengeCreation2() (gas: 5125214)
+[PASS] testStateVariableAfterIntentChallengeCreation3() (gas: 5125214)
+[PASS] testStateVariableAfterIntentChallengeCreation4() (gas: 5125269)
+[PASS] testStateVariableAfterIntentChallengeCreation5() (gas: 5125312)
+[PASS] testStateVariableAfterIntentChallengeCreation6() (gas: 5125171)
+[PASS] testStateVariableAfterIntentChallengeCreation7() (gas: 5125322)
+[PASS] testStateVariableAfterIntentChallengeCreation8() (gas: 5125104)
+Suite result: ok. 42 passed; 0 failed; 0 skipped; finished in 7.66ms (58.08ms CPU time)
+
+Ran 1 test suite in 14.02ms (7.66ms CPU time): 42 tests passed, 0 failed, 0 skipped (42 total tests)
+Uncovered for script/DeployBitarenaFactory.s.sol:
+- Function "setUp" (location: source ID 41, line 7, chars 166-192, hits: 0)
+- Function "run" (location: source ID 41, line 9, chars 198-285, hits: 0)
+- Line (location: source ID 41, line 10, chars 230-249, hits: 0)
+- Statement (location: source ID 41, line 10, chars 230-249, hits: 0)
+- Line (location: source ID 41, line 12, chars 260-278, hits: 0)
+- Statement (location: source ID 41, line 12, chars 260-278, hits: 0)
+
+Uncovered for src/BitarenaChallenge.sol:
+- Function "" (location: source ID 42, line 44, chars 2073-3002, hits: 0)
+- Line (location: source ID 42, line 45, chars 2188-2214, hits: 0)
+- Statement (location: source ID 42, line 45, chars 2188-2214, hits: 0)
+- Line (location: source ID 42, line 46, chars 2224-2255, hits: 0)
+- Statement (location: source ID 42, line 46, chars 2224-2255, hits: 0)
+- Line (location: source ID 42, line 47, chars 2265-2310, hits: 0)
+- Statement (location: source ID 42, line 47, chars 2265-2310, hits: 0)
+- Line (location: source ID 42, line 48, chars 2320-2355, hits: 0)
+- Statement (location: source ID 42, line 48, chars 2320-2355, hits: 0)
+- Line (location: source ID 42, line 49, chars 2365-2385, hits: 0)
+- Statement (location: source ID 42, line 49, chars 2365-2385, hits: 0)
+- Line (location: source ID 42, line 50, chars 2395-2415, hits: 0)
+- Statement (location: source ID 42, line 50, chars 2395-2415, hits: 0)
+- Line (location: source ID 42, line 51, chars 2425-2453, hits: 0)
+- Statement (location: source ID 42, line 51, chars 2425-2453, hits: 0)
+- Line (location: source ID 42, line 52, chars 2463-2489, hits: 0)
+- Statement (location: source ID 42, line 52, chars 2463-2489, hits: 0)
+- Line (location: source ID 42, line 53, chars 2499-2537, hits: 0)
+- Statement (location: source ID 42, line 53, chars 2499-2537, hits: 0)
+- Line (location: source ID 42, line 54, chars 2547-2589, hits: 0)
+- Statement (location: source ID 42, line 54, chars 2547-2589, hits: 0)
+- Line (location: source ID 42, line 55, chars 2599-2625, hits: 0)
+- Statement (location: source ID 42, line 55, chars 2599-2625, hits: 0)
+- Line (location: source ID 42, line 56, chars 2635-2665, hits: 0)
+- Statement (location: source ID 42, line 56, chars 2635-2665, hits: 0)
+- Line (location: source ID 42, line 57, chars 2675-2695, hits: 0)
+- Statement (location: source ID 42, line 57, chars 2675-2695, hits: 0)
+- Line (location: source ID 42, line 58, chars 2705-2722, hits: 0)
+- Statement (location: source ID 42, line 58, chars 2705-2722, hits: 0)
+- Line (location: source ID 42, line 59, chars 2732-2751, hits: 0)
+- Statement (location: source ID 42, line 59, chars 2732-2751, hits: 0)
+- Line (location: source ID 42, line 60, chars 2761-2781, hits: 0)
+- Statement (location: source ID 42, line 60, chars 2761-2781, hits: 0)
+- Line (location: source ID 42, line 61, chars 2791-2846, hits: 0)
+- Statement (location: source ID 42, line 61, chars 2791-2846, hits: 0)
+- Line (location: source ID 42, line 62, chars 2856-2915, hits: 0)
+- Statement (location: source ID 42, line 62, chars 2856-2915, hits: 0)
+- Line (location: source ID 42, line 63, chars 2925-2995, hits: 0)
+- Statement (location: source ID 42, line 63, chars 2925-2995, hits: 0)
+- Branch (branch: 0, path: 0) (location: source ID 42, line 71, chars 3113-3178, hits: 0)
+- Statement (location: source ID 42, line 71, chars 3145-3178, hits: 0)
+- Function "claimVictory" (location: source ID 42, line 122, chars 5458-5869, hits: 0)
+- Line (location: source ID 42, line 123, chars 5574-5600, hits: 0)
+- Statement (location: source ID 42, line 123, chars 5574-5600, hits: 0)
+- Branch (branch: 7, path: 0) (location: source ID 42, line 123, chars 5570-5633, hits: 0)
+- Branch (branch: 7, path: 1) (location: source ID 42, line 123, chars 5570-5633, hits: 0)
+- Statement (location: source ID 42, line 123, chars 5602-5633, hits: 0)
+- Line (location: source ID 42, line 124, chars 5647-5728, hits: 0)
+- Statement (location: source ID 42, line 124, chars 5647-5728, hits: 0)
+- Branch (branch: 8, path: 0) (location: source ID 42, line 124, chars 5643-5769, hits: 0)
+- Branch (branch: 8, path: 1) (location: source ID 42, line 124, chars 5643-5769, hits: 0)
+- Statement (location: source ID 42, line 124, chars 5730-5769, hits: 0)
+- Line (location: source ID 42, line 125, chars 5779-5807, hits: 0)
+- Statement (location: source ID 42, line 125, chars 5779-5807, hits: 0)
+- Line (location: source ID 42, line 126, chars 5817-5862, hits: 0)
+- Statement (location: source ID 42, line 126, chars 5817-5862, hits: 0)
+- Function "setFeePercentageDispute" (location: source ID 42, line 133, chars 5904-6048, hits: 0)
+- Line (location: source ID 42, line 134, chars 6005-6041, hits: 0)
+- Statement (location: source ID 42, line 134, chars 6005-6041, hits: 0)
+- Function "setFeePercentage" (location: source ID 42, line 140, chars 6082-6212, hits: 0)
+- Line (location: source ID 42, line 141, chars 6176-6205, hits: 0)
+- Statement (location: source ID 42, line 141, chars 6176-6205, hits: 0)
+- Function "createDispute" (location: source ID 42, line 151, chars 6484-6688, hits: 0)
+- Line (location: source ID 42, line 152, chars 6584-6639, hits: 0)
+- Statement (location: source ID 42, line 152, chars 6584-6639, hits: 0)
+- Statement (location: source ID 42, line 152, chars 6603-6639, hits: 0)
+- Branch (branch: 9, path: 0) (location: source ID 42, line 152, chars 6580-6681, hits: 0)
+- Branch (branch: 9, path: 1) (location: source ID 42, line 152, chars 6580-6681, hits: 0)
+- Statement (location: source ID 42, line 152, chars 6641-6681, hits: 0)
+- Function "setDelayStartForVictoryClaim" (location: source ID 42, line 161, chars 6813-6989, hits: 0)
+- Line (location: source ID 42, line 162, chars 6932-6982, hits: 0)
+- Statement (location: source ID 42, line 162, chars 6932-6982, hits: 0)
+- Function "setDelayEndForVictoryClaim" (location: source ID 42, line 171, chars 7130-7298, hits: 0)
+- Line (location: source ID 42, line 172, chars 7245-7291, hits: 0)
+- Statement (location: source ID 42, line 172, chars 7245-7291, hits: 0)
+- Function "" (location: source ID 42, line 184, chars 7410-7454, hits: 0)
+- Branch (branch: 10, path: 0) (location: source ID 42, line 199, chars 7806-7882, hits: 0)
+- Statement (location: source ID 42, line 199, chars 7839-7882, hits: 0)
+- Branch (branch: 11, path: 0) (location: source ID 42, line 214, chars 8494-8544, hits: 0)
+- Statement (location: source ID 42, line 214, chars 8508-8544, hits: 0)
+- Function "disputeExists" (location: source ID 42, line 226, chars 8846-8886, hits: 0)
+- Function "withdrawChallengePool" (location: source ID 42, line 234, chars 8974-9022, hits: 0)
+- Function "getNbTeamPlayers" (location: source ID 42, line 275, chars 9866-9964, hits: 0)
+- Line (location: source ID 42, line 276, chars 9935-9957, hits: 0)
+- Statement (location: source ID 42, line 276, chars 9935-9957, hits: 0)
+- Function "getChallengeStartDate" (location: source ID 42, line 282, chars 10034-10132, hits: 0)
+- Line (location: source ID 42, line 283, chars 10109-10125, hits: 0)
+- Statement (location: source ID 42, line 283, chars 10109-10125, hits: 0)
+- Function "getChallengeVisibility" (location: source ID 42, line 289, chars 10204-10302, hits: 0)
+- Line (location: source ID 42, line 290, chars 10277-10295, hits: 0)
+- Statement (location: source ID 42, line 290, chars 10277-10295, hits: 0)
+- Function "getIsCanceled" (location: source ID 42, line 296, chars 10375-10465, hits: 0)
+- Line (location: source ID 42, line 297, chars 10439-10458, hits: 0)
+- Statement (location: source ID 42, line 297, chars 10439-10458, hits: 0)
+- Function "getTeamOfPlayer" (location: source ID 42, line 333, chars 11314-11429, hits: 0)
+- Line (location: source ID 42, line 334, chars 11397-11422, hits: 0)
+- Statement (location: source ID 42, line 334, chars 11397-11422, hits: 0)
+- Function "getDelayStartVictoryClaim" (location: source ID 42, line 340, chars 11514-11631, hits: 0)
+- Line (location: source ID 42, line 341, chars 11593-11624, hits: 0)
+- Statement (location: source ID 42, line 341, chars 11593-11624, hits: 0)
+- Function "getDelayEndVictoryClaim" (location: source ID 42, line 347, chars 11714-11827, hits: 0)
+- Line (location: source ID 42, line 348, chars 11791-11820, hits: 0)
+- Statement (location: source ID 42, line 348, chars 11791-11820, hits: 0)
+- Function "getFeePercentageDispute" (location: source ID 42, line 354, chars 11910-12022, hits: 0)
+- Line (location: source ID 42, line 355, chars 11986-12015, hits: 0)
+- Statement (location: source ID 42, line 355, chars 11986-12015, hits: 0)
+- Function "getDisputePool" (location: source ID 42, line 368, chars 12271-12366, hits: 0)
+- Line (location: source ID 42, line 369, chars 12339-12359, hits: 0)
+- Statement (location: source ID 42, line 369, chars 12339-12359, hits: 0)
+- Function "getFeePercentage" (location: source ID 42, line 375, chars 12442-12540, hits: 0)
+- Line (location: source ID 42, line 376, chars 12511-12533, hits: 0)
+- Statement (location: source ID 42, line 376, chars 12511-12533, hits: 0)
+
+Uncovered for src/BitarenaFactory.sol:
+- Branch (branch: 8, path: 0) (location: source ID 46, line 77, chars 3216-3291, hits: 0)
+- Statement (location: source ID 46, line 77, chars 3260-3291, hits: 0)
+- Branch (branch: 9, path: 0) (location: source ID 46, line 81, chars 3376-3462, hits: 0)
+- Statement (location: source ID 46, line 81, chars 3421-3462, hits: 0)
+- Branch (branch: 10, path: 0) (location: source ID 46, line 82, chars 3472-3545, hits: 0)
+- Statement (location: source ID 46, line 82, chars 3506-3545, hits: 0)
+- Branch (branch: 11, path: 0) (location: source ID 46, line 83, chars 3555-3642, hits: 0)
+- Statement (location: source ID 46, line 83, chars 3596-3642, hits: 0)
+- Branch (branch: 12, path: 0) (location: source ID 46, line 112, chars 4843-4888, hits: 0)
+- Statement (location: source ID 46, line 112, chars 4854-4888, hits: 0)
+- Function "getChallengesArray" (location: source ID 46, line 137, chars 5499-5606, hits: 0)
+- Line (location: source ID 46, line 138, chars 5580-5599, hits: 0)
+- Statement (location: source ID 46, line 138, chars 5580-5599, hits: 0)
+
+Uncovered for src/BitarenaToken.sol:
+- Function "" (location: source ID 49, line 12, chars 444-625, hits: 0)
+- Line (location: source ID 49, line 14, chars 531-578, hits: 0)
+- Statement (location: source ID 49, line 14, chars 531-578, hits: 0)
+- Statement (location: source ID 49, line 14, chars 550-578, hits: 0)
+- Statement (location: source ID 49, line 14, chars 562-578, hits: 0)
+- Statement (location: source ID 49, line 14, chars 568-578, hits: 0)
+- Line (location: source ID 49, line 15, chars 588-618, hits: 0)
+- Statement (location: source ID 49, line 15, chars 588-618, hits: 0)
+- Function "pause" (location: source ID 49, line 18, chars 631-690, hits: 0)
+- Line (location: source ID 49, line 19, chars 675-683, hits: 0)
+- Statement (location: source ID 49, line 19, chars 675-683, hits: 0)
+- Function "unpause" (location: source ID 49, line 22, chars 696-759, hits: 0)
+- Line (location: source ID 49, line 23, chars 742-752, hits: 0)
+- Statement (location: source ID 49, line 23, chars 742-752, hits: 0)
+- Function "_update" (location: source ID 49, line 27, chars 832-982, hits: 0)
+- Line (location: source ID 49, line 29, chars 945-975, hits: 0)
+- Statement (location: source ID 49, line 29, chars 945-975, hits: 0)
+
+Anchors for Contract "BitarenaChallenge" (solc 0.8.26, source ID 42):
+- IC 234 -> Item 158
+- Runtime code
+  - Refers to item: Statement (location: source ID 42, line 45, chars 2188-2214, hits: 0)
+- IC 573 -> Item 177
+- Runtime code
+  - Refers to item: Line (location: source ID 42, line 55, chars 2599-2625, hits: 0)
+- IC 674 -> Item 185
+- Runtime code
+  - Refers to item: Line (location: source ID 42, line 59, chars 2732-2751, hits: 0)
+- IC 617 -> Item 182
+- Runtime code
+  - Refers to item: Statement (location: source ID 42, line 57, chars 2675-2695, hits: 0)
+- IC 539 -> Item 174
+- Runtime code
+  - Refers to item: Statement (location: source ID 42, line 53, chars 2499-2537, hits: 0)
+- IC 291 -> Item 159
+- Runtime code
+  - Refers to item: Line (location: source ID 42, line 46, chars 2224-2255, hits: 0)
+- IC 586 -> Item 180
+- Runtime code
+  - Refers to item: Statement (location: source ID 42, line 56, chars 2635-2665, hits: 0)
+- IC 682 -> Item 188
+- Runtime code
+  - Refers to item: Statement (location: source ID 42, line 60, chars 2761-2781, hits: 0)
+- IC 429 -> Item 164
+- Runtime code
+  - Refers to item: Statement (location: source ID 42, line 48, chars 2320-2355, hits: 0)
+- IC 644 -> Item 184
+- Runtime code
+  - Refers to item: Statement (location: source ID 42, line 58, chars 2705-2722, hits: 0)
+- IC 586 -> Item 179
+- Runtime code
+  - Refers to item: Line (location: source ID 42, line 56, chars 2635-2665, hits: 0)
+- IC 486 -> Item 165
+- Runtime code
+  - Refers to item: Line (location: source ID 42, line 49, chars 2365-2385, hits: 0)
+- IC 644 -> Item 183
+- Runtime code
+  - Refers to item: Line (location: source ID 42, line 58, chars 2705-2722, hits: 0)
+- IC 682 -> Item 187
+- Runtime code
+  - Refers to item: Line (location: source ID 42, line 60, chars 2761-2781, hits: 0)
+- IC 560 -> Item 176
+- Runtime code
+  - Refers to item: Statement (location: source ID 42, line 54, chars 2547-2589, hits: 0)
+- IC 234 -> Item 157
+- Runtime code
+  - Refers to item: Line (location: source ID 42, line 45, chars 2188-2214, hits: 0)
+- IC 519 -> Item 172
+- Runtime code
+  - Refers to item: Statement (location: source ID 42, line 52, chars 2463-2489, hits: 0)
+- IC 674 -> Item 186
+- Runtime code
+  - Refers to item: Statement (location: source ID 42, line 59, chars 2732-2751, hits: 0)
+- IC 765 -> Item 191
+- Runtime code
+  - Refers to item: Line (location: source ID 42, line 62, chars 2856-2915, hits: 0)
+- IC 497 -> Item 167
+- Runtime code
+  - Refers to item: Line (location: source ID 42, line 50, chars 2395-2415, hits: 0)
+- IC 519 -> Item 171
+- Runtime code
+  - Refers to item: Line (location: source ID 42, line 52, chars 2463-2489, hits: 0)
+- IC 617 -> Item 181
+- Runtime code
+  - Refers to item: Line (location: source ID 42, line 57, chars 2675-2695, hits: 0)
+- IC 508 -> Item 169
+- Runtime code
+  - Refers to item: Line (location: source ID 42, line 51, chars 2425-2453, hits: 0)
+- IC 818 -> Item 194
+- Runtime code
+  - Refers to item: Statement (location: source ID 42, line 63, chars 2925-2995, hits: 0)
+- IC 573 -> Item 178
+- Runtime code
+  - Refers to item: Statement (location: source ID 42, line 55, chars 2599-2625, hits: 0)
+- IC 712 -> Item 189
+- Runtime code
+  - Refers to item: Line (location: source ID 42, line 61, chars 2791-2846, hits: 0)
+- IC 712 -> Item 190
+- Runtime code
+  - Refers to item: Statement (location: source ID 42, line 61, chars 2791-2846, hits: 0)
+- IC 6 -> Item 156
+- Runtime code
+  - Refers to item: Function "" (location: source ID 42, line 44, chars 2073-3002, hits: 0)
+- IC 508 -> Item 170
+- Runtime code
+  - Refers to item: Statement (location: source ID 42, line 51, chars 2425-2453, hits: 0)
+- IC 291 -> Item 160
+- Runtime code
+  - Refers to item: Statement (location: source ID 42, line 46, chars 2224-2255, hits: 0)
+- IC 497 -> Item 168
+- Runtime code
+  - Refers to item: Statement (location: source ID 42, line 50, chars 2395-2415, hits: 0)
+- IC 360 -> Item 161
+- Runtime code
+  - Refers to item: Line (location: source ID 42, line 47, chars 2265-2310, hits: 0)
+- IC 818 -> Item 193
+- Runtime code
+  - Refers to item: Line (location: source ID 42, line 63, chars 2925-2995, hits: 0)
+- IC 765 -> Item 192
+- Runtime code
+  - Refers to item: Statement (location: source ID 42, line 62, chars 2856-2915, hits: 0)
+- IC 486 -> Item 166
+- Runtime code
+  - Refers to item: Statement (location: source ID 42, line 49, chars 2365-2385, hits: 0)
+- IC 560 -> Item 175
+- Runtime code
+  - Refers to item: Line (location: source ID 42, line 54, chars 2547-2589, hits: 0)
+- IC 539 -> Item 173
+- Runtime code
+  - Refers to item: Line (location: source ID 42, line 53, chars 2499-2537, hits: 0)
+- IC 360 -> Item 162
+- Runtime code
+  - Refers to item: Statement (location: source ID 42, line 47, chars 2265-2310, hits: 0)
+- IC 429 -> Item 163
+- Runtime code
+  - Refers to item: Line (location: source ID 42, line 48, chars 2320-2355, hits: 0)
+- IC 1481 -> Item 277
+- Creation code
+  - Refers to item: Function "setFeePercentage" (location: source ID 42, line 140, chars 6082-6212, hits: 0)
+- IC 1037 -> Item 391
+- Creation code
+  - Refers to item: Function "getFeePercentage" (location: source ID 42, line 375, chars 12442-12540, hits: 0)
+- IC 2331 -> Item 385
+- Creation code
+  - Refers to item: Function "getChallengePool" (location: source ID 42, line 361, chars 12098-12197, hits: 4)
+- IC 1563 -> Item 340
+- Creation code
+  - Refers to item: Function "getGame" (location: source ID 42, line 255, chars 9394-9475, hits: 1)
+- IC 7386 -> Item 200
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 71, chars 3145-3178, hits: 0)
+- IC 1522 -> Item 287
+- Creation code
+  - Refers to item: Function "setDelayStartForVictoryClaim" (location: source ID 42, line 161, chars 6813-6989, hits: 0)
+- IC 7484 -> Item 203
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 78, chars 3412-3474, hits: 28)
+- IC 5224 -> Item 239
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 104, chars 4781-4809, hits: 41)
+- IC 8038 -> Item 220
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 87, chars 3832-3858, hits: 10)
+- IC 6421 -> Item 312
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 209, chars 8210-8224, hits: 5)
+- IC 3819 -> Item 360
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 297, chars 10439-10458, hits: 0)
+- IC 5031 -> Item 390
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 369, chars 12339-12359, hits: 0)
+- IC 5334 -> Item 244
+- Creation code
+  - Refers to item: Branch (branch: 5, path: 0) (location: source ID 42, line 105, chars 4856-4905, hits: 1)
+- IC 1080 -> Item 334
+- Creation code
+  - Refers to item: Function "getName" (location: source ID 42, line 241, chars 9089-9170, hits: 1)
+- IC 4527 -> Item 291
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 172, chars 7245-7291, hits: 0)
+- IC 5384 -> Item 247
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 107, chars 5020-5035, hits: 39)
+- IC 5263 -> Item 242
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 104, chars 4811-4846, hits: 1)
+- IC 7484 -> Item 204
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 78, chars 3412-3474, hits: 28)
+- IC 6783 -> Item 325
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 214, chars 8498-8506, hits: 5)
+- IC 7703 -> Item 209
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 80, chars 3529-3561, hits: 28)
+- IC 4253 -> Item 278
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 141, chars 6176-6205, hits: 0)
+- IC 7563 -> Item 207
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 79, chars 3484-3519, hits: 28)
+- IC 3511 -> Item 299
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 199, chars 7810-7837, hits: 2)
+- IC 2460 -> Item 382
+- Creation code
+  - Refers to item: Function "getFeePercentageDispute" (location: source ID 42, line 354, chars 11910-12022, hits: 0)
+- IC 3648 -> Item 338
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 249, chars 9304-9320, hits: 3)
+- IC 5469 -> Item 257
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 114, chars 5192-5233, hits: 37)
+- IC 8119 -> Item 223
+- Creation code
+  - Refers to item: Branch (branch: 2, path: 1) (location: source ID 42, line 87, chars 3828-3891, hits: 9)
+- IC 5418 -> Item 256
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 112, chars 5136-5172, hits: 9)
+- IC 4328 -> Item 288
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 162, chars 6932-6982, hits: 0)
+- IC 3777 -> Item 399
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 390, chars 12844-12865, hits: 1)
+- IC 3182 -> Item 262
+- Creation code
+  - Refers to item: Branch (branch: 7, path: 0) (location: source ID 42, line 123, chars 5570-5633, hits: 0)
+- IC 8070 -> Item 222
+- Creation code
+  - Refers to item: Branch (branch: 2, path: 0) (location: source ID 42, line 87, chars 3828-3891, hits: 1)
+- IC 4540 -> Item 347
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 269, chars 9767-9783, hits: 1)
+- IC 3819 -> Item 359
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 297, chars 10439-10458, hits: 0)
+- IC 5515 -> Item 387
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 362, chars 12168-12190, hits: 4)
+- IC 5031 -> Item 389
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 369, chars 12339-12359, hits: 0)
+- IC 5396 -> Item 251
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 108, chars 5051-5063, hits: 28)
+- IC 8038 -> Item 221
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 87, chars 3832-3858, hits: 10)
+- IC 2303 -> Item 229
+- Creation code
+  - Refers to item: Function "joinOrCreateTeam" (location: source ID 42, line 102, chars 4597-5240, hits: 42)
+- IC 7386 -> Item 198
+- Creation code
+  - Refers to item: Branch (branch: 0, path: 0) (location: source ID 42, line 71, chars 3113-3178, hits: 0)
+- IC 7914 -> Item 214
+- Creation code
+  - Refers to item: Function "joinTeam" (location: source ID 42, line 85, chars 3668-4002, hits: 11)
+- IC 7323 -> Item 197
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 71, chars 3117-3143, hits: 28)
+- IC 6788 -> Item 329
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 214, chars 8508-8544, hits: 0)
+- IC 3298 -> Item 269
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 124, chars 5730-5769, hits: 0)
+- IC 4996 -> Item 276
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 134, chars 6005-6041, hits: 0)
+- IC 7915 -> Item 216
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 86, chars 3728-3773, hits: 11)
+- IC 4353 -> Item 395
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 383, chars 12679-12693, hits: 1)
+- IC 4328 -> Item 289
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 162, chars 6932-6982, hits: 0)
+- IC 6643 -> Item 322
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 213, chars 8416-8476, hits: 5)
+- IC 3688 -> Item 392
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 376, chars 12511-12533, hits: 0)
+- IC 7847 -> Item 212
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 82, chars 3624-3655, hits: 28)
+- IC 5383 -> Item 245
+- Creation code
+  - Refers to item: Branch (branch: 5, path: 1) (location: source ID 42, line 105, chars 4856-4905, hits: 39)
+- IC 2899 -> Item 371
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 326, chars 11160-11186, hits: 9)
+- IC 4395 -> Item 350
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 276, chars 9935-9957, hits: 0)
+- IC 6364 -> Item 362
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 304, chars 10598-10624, hits: 2)
+- IC 1629 -> Item 394
+- Creation code
+  - Refers to item: Function "getChallengeAdmin" (location: source ID 42, line 382, chars 12608-12700, hits: 1)
+- IC 5223 -> Item 236
+- Creation code
+  - Refers to item: Branch (branch: 3, path: 1) (location: source ID 42, line 103, chars 4667-4767, hits: 41)
+- IC 1227 -> Item 397
+- Creation code
+  - Refers to item: Function "getDisputeAdmin" (location: source ID 42, line 389, chars 12775-12872, hits: 1)
+- IC 3400 -> Item 273
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 126, chars 5817-5862, hits: 0)
+- IC 6363 -> Item 361
+- Creation code
+  - Refers to item: Function "setIsCanceled" (location: source ID 42, line 303, chars 10538-10631, hits: 2)
+- IC 4253 -> Item 279
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 141, chars 6176-6205, hits: 0)
+- IC 8525 -> Item 294
+- Creation code
+  - Refers to item: Function "incrementChallengePool" (location: source ID 42, line 191, chars 7521-7622, hits: 37)
+- IC 5409 -> Item 253
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 111, chars 5102-5122, hits: 11)
+- IC 2634 -> Item 332
+- Creation code
+  - Refers to item: Function "disputeExists" (location: source ID 42, line 226, chars 8846-8886, hits: 0)
+- IC 1672 -> Item 349
+- Creation code
+  - Refers to item: Function "getNbTeamPlayers" (location: source ID 42, line 275, chars 9866-9964, hits: 0)
+- IC 7771 -> Item 210
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 81, chars 3571-3614, hits: 28)
+- IC 3611 -> Item 306
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 201, chars 7921-7958, hits: 2)
+- IC 1797 -> Item 290
+- Creation code
+  - Refers to item: Function "setDelayEndForVictoryClaim" (location: source ID 42, line 171, chars 7130-7298, hits: 0)
+- IC 6414 -> Item 311
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 209, chars 8196-8208, hits: 2)
+- IC 1354 -> Item 343
+- Creation code
+  - Refers to item: Function "getPlatform" (location: source ID 42, line 262, chars 9546-9635, hits: 1)
+- IC 7563 -> Item 206
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 79, chars 3484-3519, hits: 28)
+- IC 6612 -> Item 321
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 212, chars 8367-8398, hits: 5)
+- IC 6612 -> Item 320
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 212, chars 8367-8398, hits: 5)
+- IC 3150 -> Item 260
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 123, chars 5574-5600, hits: 0)
+- IC 5418 -> Item 255
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 112, chars 5136-5172, hits: 9)
+- IC 2726 -> Item 354
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 283, chars 10109-10125, hits: 0)
+- IC 6414 -> Item 310
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 209, chars 8196-8208, hits: 2)
+- IC 6875 -> Item 331
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 218, chars 8613-8632, hits: 2)
+- IC 5525 -> Item 381
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 348, chars 11791-11820, hits: 0)
+- IC 5409 -> Item 254
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 111, chars 5102-5122, hits: 11)
+- IC 3611 -> Item 305
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 201, chars 7921-7958, hits: 2)
+- IC 3347 -> Item 268
+- Creation code
+  - Refers to item: Branch (branch: 8, path: 1) (location: source ID 42, line 124, chars 5643-5769, hits: 0)
+- IC 8526 -> Item 295
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 192, chars 7589-7615, hits: 37)
+- IC 7322 -> Item 195
+- Creation code
+  - Refers to item: Function "createTeam" (location: source ID 42, line 70, chars 3072-3662, hits: 28)
+- IC 5039 -> Item 230
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 103, chars 4671-4729, hits: 42)
+- IC 6436 -> Item 314
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 210, chars 8245-8286, hits: 3)
+- IC 4996 -> Item 275
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 134, chars 6005-6041, hits: 0)
+- IC 6436 -> Item 315
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 210, chars 8245-8286, hits: 3)
+- IC 8251 -> Item 228
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 89, chars 3949-3995, hits: 9)
+- IC 3916 -> Item 344
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 263, chars 9611-9628, hits: 1)
+- IC 1123 -> Item 367
+- Creation code
+  - Refers to item: Function "getTeamCounter" (location: source ID 42, line 318, chars 10891-10985, hits: 3)
+- IC 8526 -> Item 296
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 192, chars 7589-7615, hits: 37)
+- IC 5334 -> Item 246
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 105, chars 4874-4905, hits: 1)
+- IC 6393 -> Item 309
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 208, chars 8149-8181, hits: 2)
+- IC 6855 -> Item 313
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 209, chars 8226-8229, hits: 3)
+- IC 5263 -> Item 240
+- Creation code
+  - Refers to item: Branch (branch: 4, path: 0) (location: source ID 42, line 104, chars 4777-4846, hits: 1)
+- IC 6600 -> Item 316
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 211, chars 8305-8318, hits: 3)
+- IC 7436 -> Item 202
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 73, chars 3212-3227, hits: 28)
+- IC 5039 -> Item 232
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 103, chars 4671-4700, hits: 42)
+- IC 4637 -> Item 375
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 334, chars 11397-11422, hits: 0)
+- IC 5039 -> Item 231
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 103, chars 4671-4729, hits: 42)
+- IC 3926 -> Item 378
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 341, chars 11593-11624, hits: 0)
+- IC 5515 -> Item 386
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 362, chars 12168-12190, hits: 4)
+- IC 5396 -> Item 249
+- Creation code
+  - Refers to item: Branch (branch: 6, path: 0) (location: source ID 42, line 107, chars 5016-5074, hits: 28)
+- IC 1397 -> Item 376
+- Creation code
+  - Refers to item: Function "getDelayStartVictoryClaim" (location: source ID 42, line 340, chars 11514-11631, hits: 0)
+- IC 4527 -> Item 292
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 172, chars 7245-7291, hits: 0)
+- IC 3232 -> Item 266
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 124, chars 5647-5728, hits: 0)
+- IC 846 -> Item 370
+- Creation code
+  - Refers to item: Function "getTeamsByTeamIndex" (location: source ID 42, line 325, chars 11061-11193, hits: 9)
+- IC 8120 -> Item 225
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 88, chars 3901-3939, hits: 9)
+- IC 3348 -> Item 270
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 125, chars 5779-5807, hits: 0)
+- IC 6392 -> Item 307
+- Creation code
+  - Refers to item: Function "returnMoneyBackDueToChallengeCancel" (location: source ID 42, line 207, chars 8083-8639, hits: 2)
+- IC 948 -> Item 297
+- Creation code
+  - Refers to item: Function "cancelChallenge" (location: source ID 42, line 198, chars 7729-7965, hits: 2)
+- IC 4540 -> Item 348
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 269, chars 9767-9783, hits: 1)
+- IC 2899 -> Item 372
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 326, chars 11160-11186, hits: 9)
+- IC 6645 -> Item 324
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 213, chars 8435-8476, hits: 5)
+- IC 3298 -> Item 267
+- Creation code
+  - Refers to item: Branch (branch: 8, path: 0) (location: source ID 42, line 124, chars 5643-5769, hits: 0)
+- IC 3551 -> Item 302
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 199, chars 7839-7882, hits: 0)
+- IC 699 -> Item 352
+- Creation code
+  - Refers to item: Function "getChallengeStartDate" (location: source ID 42, line 282, chars 10034-10132, hits: 0)
+- IC 3600 -> Item 301
+- Creation code
+  - Refers to item: Branch (branch: 10, path: 1) (location: source ID 42, line 199, chars 7806-7882, hits: 2)
+- IC 3551 -> Item 300
+- Creation code
+  - Refers to item: Branch (branch: 10, path: 0) (location: source ID 42, line 199, chars 7806-7882, hits: 0)
+- IC 5986 -> Item 366
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 311, chars 10781-10805, hits: 2)
+- IC 7988 -> Item 219
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 86, chars 3775-3818, hits: 1)
+- IC 6643 -> Item 323
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 213, chars 8416-8476, hits: 5)
+- IC 5114 -> Item 234
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 103, chars 4704-4716, hits: 22)
+- IC 3182 -> Item 264
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 123, chars 5602-5633, hits: 0)
+- IC 5312 -> Item 241
+- Creation code
+  - Refers to item: Branch (branch: 4, path: 1) (location: source ID 42, line 104, chars 4777-4846, hits: 40)
+- IC 4341 -> Item 342
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 256, chars 9455-9468, hits: 1)
+- IC 5081 -> Item 233
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 103, chars 4704-4729, hits: 22)
+- IC 5408 -> Item 250
+- Creation code
+  - Refers to item: Branch (branch: 6, path: 1) (location: source ID 42, line 107, chars 5016-5074, hits: 11)
+- IC 7771 -> Item 211
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 81, chars 3571-3614, hits: 28)
+- IC 8251 -> Item 227
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 89, chars 3949-3995, hits: 9)
+- IC 4395 -> Item 351
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 276, chars 9935-9957, hits: 0)
+- IC 3231 -> Item 263
+- Creation code
+  - Refers to item: Branch (branch: 7, path: 1) (location: source ID 42, line 123, chars 5570-5633, hits: 0)
+- IC 3601 -> Item 304
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 200, chars 7892-7911, hits: 2)
+- IC 6108 -> Item 283
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 152, chars 6603-6639, hits: 0)
+- IC 1606 -> Item 333
+- Creation code
+  - Refers to item: Function "withdrawChallengePool" (location: source ID 42, line 234, chars 8974-9022, hits: 0)
+- IC 7486 -> Item 205
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 78, chars 3429-3474, hits: 28)
+- IC 3916 -> Item 345
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 263, chars 9611-9628, hits: 1)
+- IC 5986 -> Item 365
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 311, chars 10781-10805, hits: 2)
+- IC 7323 -> Item 196
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 71, chars 3117-3143, hits: 28)
+- IC 4353 -> Item 396
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 383, chars 12679-12693, hits: 1)
+- IC 3688 -> Item 393
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 376, chars 12511-12533, hits: 0)
+- IC 1967 -> Item 373
+- Creation code
+  - Refers to item: Function "getTeamOfPlayer" (location: source ID 42, line 333, chars 11314-11429, hits: 0)
+- IC 5396 -> Item 252
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 108, chars 5051-5063, hits: 28)
+- IC 3601 -> Item 303
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 200, chars 7892-7911, hits: 2)
+- IC 994 -> Item 337
+- Creation code
+  - Refers to item: Function "getCreator" (location: source ID 42, line 248, chars 9240-9327, hits: 3)
+- IC 7436 -> Item 201
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 73, chars 3212-3227, hits: 28)
+- IC 5469 -> Item 258
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 114, chars 5192-5233, hits: 37)
+- IC 6603 -> Item 318
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 211, chars 8320-8342, hits: 8)
+- IC 7703 -> Item 208
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 80, chars 3529-3561, hits: 28)
+- IC 3150 -> Item 261
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 123, chars 5574-5600, hits: 0)
+- IC 3722 -> Item 368
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 319, chars 10958-10978, hits: 3)
+- IC 6393 -> Item 308
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 208, chars 8149-8181, hits: 2)
+- IC 5174 -> Item 237
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 103, chars 4731-4767, hits: 1)
+- IC 907 -> Item 259
+- Creation code
+  - Refers to item: Function "claimVictory" (location: source ID 42, line 122, chars 5458-5869, hits: 0)
+- IC 6160 -> Item 286
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 152, chars 6641-6681, hits: 0)
+- IC 6160 -> Item 284
+- Creation code
+  - Refers to item: Branch (branch: 9, path: 0) (location: source ID 42, line 152, chars 6580-6681, hits: 0)
+- IC 7988 -> Item 217
+- Creation code
+  - Refers to item: Branch (branch: 1, path: 0) (location: source ID 42, line 86, chars 3724-3818, hits: 1)
+- IC 8070 -> Item 224
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 87, chars 3860-3891, hits: 1)
+- IC 6108 -> Item 281
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 152, chars 6584-6639, hits: 0)
+- IC 6875 -> Item 330
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 218, chars 8613-8632, hits: 2)
+- IC 3722 -> Item 369
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 319, chars 10958-10978, hits: 3)
+- IC 5384 -> Item 248
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 107, chars 5020-5035, hits: 39)
+- IC 3232 -> Item 265
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 124, chars 5647-5728, hits: 0)
+- IC 6600 -> Item 317
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 211, chars 8305-8318, hits: 3)
+- IC 6840 -> Item 319
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 211, chars 8344-8347, hits: 5)
+- IC 4637 -> Item 374
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 334, chars 11397-11422, hits: 0)
+- IC 6837 -> Item 328
+- Creation code
+  - Refers to item: Branch (branch: 11, path: 1) (location: source ID 42, line 214, chars 8494-8544, hits: 5)
+- IC 6364 -> Item 363
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 304, chars 10598-10624, hits: 2)
+- IC 6209 -> Item 285
+- Creation code
+  - Refers to item: Branch (branch: 9, path: 1) (location: source ID 42, line 152, chars 6580-6681, hits: 0)
+- IC 8120 -> Item 226
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 88, chars 3901-3939, hits: 9)
+- IC 6788 -> Item 327
+- Creation code
+  - Refers to item: Branch (branch: 11, path: 0) (location: source ID 42, line 214, chars 8494-8544, hits: 0)
+- IC 2726 -> Item 353
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 283, chars 10109-10125, hits: 0)
+- IC 3712 -> Item 336
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 242, chars 9150-9163, hits: 1)
+- IC 7435 -> Item 199
+- Creation code
+  - Refers to item: Branch (branch: 0, path: 1) (location: source ID 42, line 71, chars 3113-3178, hits: 28)
+- IC 3777 -> Item 398
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 390, chars 12844-12865, hits: 1)
+- IC 3400 -> Item 272
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 126, chars 5817-5862, hits: 0)
+- IC 4341 -> Item 341
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 256, chars 9455-9468, hits: 1)
+- IC 2260 -> Item 388
+- Creation code
+  - Refers to item: Function "getDisputePool" (location: source ID 42, line 368, chars 12271-12366, hits: 0)
+- IC 5645 -> Item 384
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 355, chars 11986-12015, hits: 0)
+- IC 5224 -> Item 238
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 104, chars 4781-4809, hits: 41)
+- IC 1838 -> Item 346
+- Creation code
+  - Refers to item: Function "getNbTeams" (location: source ID 42, line 268, chars 9704-9790, hits: 1)
+- IC 8037 -> Item 218
+- Creation code
+  - Refers to item: Branch (branch: 1, path: 1) (location: source ID 42, line 86, chars 3724-3818, hits: 10)
+- IC 5313 -> Item 243
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 105, chars 4856-4905, hits: 40)
+- IC 2219 -> Item 274
+- Creation code
+  - Refers to item: Function "setFeePercentageDispute" (location: source ID 42, line 133, chars 5904-6048, hits: 0)
+- IC 6108 -> Item 282
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 152, chars 6584-6639, hits: 0)
+- IC 3712 -> Item 335
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 242, chars 9150-9163, hits: 1)
+- IC 2089 -> Item 355
+- Creation code
+  - Refers to item: Function "getChallengeVisibility" (location: source ID 42, line 289, chars 10204-10302, hits: 0)
+- IC 5525 -> Item 380
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 348, chars 11791-11820, hits: 0)
+- IC 3511 -> Item 298
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 199, chars 7810-7837, hits: 2)
+- IC 4830 -> Item 357
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 290, chars 10277-10295, hits: 0)
+- IC 3926 -> Item 377
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 341, chars 11593-11624, hits: 0)
+- IC 6783 -> Item 326
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 214, chars 8498-8506, hits: 5)
+- IC 7915 -> Item 215
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 86, chars 3728-3773, hits: 11)
+- IC 1270 -> Item 358
+- Creation code
+  - Refers to item: Function "getIsCanceled" (location: source ID 42, line 296, chars 10375-10465, hits: 0)
+- IC 5645 -> Item 383
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 355, chars 11986-12015, hits: 0)
+- IC 4830 -> Item 356
+- Creation code
+  - Refers to item: Line (location: source ID 42, line 290, chars 10277-10295, hits: 0)
+- IC 2657 -> Item 364
+- Creation code
+  - Refers to item: Function "getAmountPerPlayer" (location: source ID 42, line 310, chars 10709-10812, hits: 2)
+- IC 3348 -> Item 271
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 125, chars 5779-5807, hits: 0)
+- IC 5174 -> Item 235
+- Creation code
+  - Refers to item: Branch (branch: 3, path: 0) (location: source ID 42, line 103, chars 4667-4767, hits: 1)
+- IC 7847 -> Item 213
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 82, chars 3624-3655, hits: 28)
+- IC 2700 -> Item 280
+- Creation code
+  - Refers to item: Function "createDispute" (location: source ID 42, line 151, chars 6484-6688, hits: 0)
+- IC 3648 -> Item 339
+- Creation code
+  - Refers to item: Statement (location: source ID 42, line 249, chars 9304-9320, hits: 3)
+- IC 2374 -> Item 379
+- Creation code
+  - Refers to item: Function "getDelayEndVictoryClaim" (location: source ID 42, line 347, chars 11714-11827, hits: 0)
+
+Anchors for Contract "stdJson" (solc 0.8.26, source ID 7):
+
+Anchors for Contract "safeconsole" (solc 0.8.26, source ID 23):
+
+Anchors for Contract "stdError" (solc 0.8.26, source ID 5):
+
+Anchors for Contract "stdStorage" (solc 0.8.26, source ID 9):
+
+Anchors for Contract "BitarenaFactory" (solc 0.8.26, source ID 46):
+- IC 149 -> Item 19
+- Runtime code
+  - Refers to item: Statement (location: source ID 46, line 28, chars 1319-1341, hits: 42)
+- IC 157 -> Item 20
+- Runtime code
+  - Refers to item: Line (location: source ID 46, line 29, chars 1345-1391, hits: 42)
+- IC 157 -> Item 21
+- Runtime code
+  - Refers to item: Statement (location: source ID 46, line 29, chars 1345-1391, hits: 42)
+- IC 149 -> Item 18
+- Runtime code
+  - Refers to item: Line (location: source ID 46, line 28, chars 1319-1341, hits: 42)
+- IC 5 -> Item 17
+- Runtime code
+  - Refers to item: Function "" (location: source ID 46, line 27, chars 1274-1395, hits: 63)
+- IC 3944 -> Item 119
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 86, chars 3703-4279, hits: 21)
+- IC 2808 -> Item 151
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 142, chars 5692-5754, hits: 23)
+- IC 1434 -> Item 47
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 46, chars 1935-1966, hits: 1)
+- IC 1237 -> Item 26
+- Creation code
+  - Refers to item: Branch (branch: 0, path: 1) (location: source ID 46, line 42, chars 1688-1740, hits: 41)
+- IC 4164 -> Item 121
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 101, chars 4290-4366, hits: 21)
+- IC 5164 -> Item 148
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 138, chars 5580-5599, hits: 0)
+- IC 3283 -> Item 95
+- Creation code
+  - Refers to item: Branch (branch: 8, path: 1) (location: source ID 46, line 77, chars 3216-3291, hits: 21)
+- IC 4922 -> Item 137
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 114, chars 4899-4983, hits: 21)
+- IC 3160 -> Item 88
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 76, chars 3136-3174, hits: 22)
+- IC 4220 -> Item 123
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 104, chars 4412-4492, hits: 21)
+- IC 1842 -> Item 80
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 63, chars 2707-2742, hits: 35)
+- IC 1831 -> Item 79
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 62, chars 2666-2697, hits: 35)
+- IC 910 -> Item 86
+- Creation code
+  - Refers to item: Function "createChallenge" (location: source ID 46, line 71, chars 2916-5025, hits: 22)
+- IC 1308 -> Item 35
+- Creation code
+  - Refers to item: Branch (branch: 2, path: 0) (location: source ID 46, line 44, chars 1803-1854, hits: 1)
+- IC 1491 -> Item 50
+- Creation code
+  - Refers to item: Branch (branch: 5, path: 0) (location: source ID 46, line 47, chars 1976-2041, hits: 1)
+- IC 1541 -> Item 54
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 48, chars 2055-2083, hits: 36)
+- IC 3840 -> Item 111
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 83, chars 3558-3594, hits: 21)
+- IC 2820 -> Item 155
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 143, chars 5764-5820, hits: 23)
+- IC 1484 -> Item 48
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 47, chars 1980-2007, hits: 37)
+- IC 4220 -> Item 124
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 104, chars 4412-4492, hits: 21)
+- IC 1751 -> Item 66
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 56, chars 2384-2427, hits: 35)
+- IC 3738 -> Item 106
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 82, chars 3475-3504, hits: 21)
+- IC 1541 -> Item 53
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 48, chars 2055-2083, hits: 36)
+- IC 1358 -> Item 39
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 45, chars 1867-1879, hits: 39)
+- IC 1751 -> Item 67
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 56, chars 2384-2427, hits: 35)
+- IC 1188 -> Item 25
+- Creation code
+  - Refers to item: Branch (branch: 0, path: 0) (location: source ID 46, line 42, chars 1688-1740, hits: 1)
+- IC 3688 -> Item 102
+- Creation code
+  - Refers to item: Branch (branch: 9, path: 0) (location: source ID 46, line 81, chars 3376-3462, hits: 0)
+- IC 1623 -> Item 61
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 53, chars 2239-2268, hits: 35)
+- IC 5013 -> Item 139
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 116, chars 4994-5018, hits: 21)
+- IC 1781 -> Item 72
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 59, chars 2515-2546, hits: 35)
+- IC 3892 -> Item 116
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 83, chars 3596-3642, hits: 0)
+- IC 3840 -> Item 113
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 83, chars 3584-3594, hits: 21)
+- IC 1248 -> Item 30
+- Creation code
+  - Refers to item: Branch (branch: 1, path: 0) (location: source ID 46, line 43, chars 1750-1793, hits: 1)
+- IC 3738 -> Item 105
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 82, chars 3475-3504, hits: 21)
+- IC 1631 -> Item 62
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 54, chars 2278-2322, hits: 35)
+- IC 4755 -> Item 129
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 111, chars 4748-4833, hits: 21)
+- IC 1371 -> Item 40
+- Creation code
+  - Refers to item: Branch (branch: 3, path: 0) (location: source ID 46, line 45, chars 1864-1902, hits: 1)
+- IC 1801 -> Item 75
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 60, chars 2556-2599, hits: 35)
+- IC 1420 -> Item 41
+- Creation code
+  - Refers to item: Branch (branch: 3, path: 1) (location: source ID 46, line 45, chars 1864-1902, hits: 38)
+- IC 3284 -> Item 98
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 79, chars 3302-3365, hits: 21)
+- IC 2809 -> Item 153
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 142, chars 5728-5754, hits: 23)
+- IC 1298 -> Item 33
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 44, chars 1807-1821, hits: 40)
+- IC 1831 -> Item 78
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 62, chars 2666-2697, hits: 35)
+- IC 4757 -> Item 131
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 111, chars 4764-4833, hits: 21)
+- IC 5164 -> Item 149
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 138, chars 5580-5599, hits: 0)
+- IC 3284 -> Item 97
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 79, chars 3302-3365, hits: 21)
+- IC 1821 -> Item 76
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 61, chars 2609-2656, hits: 35)
+- IC 4867 -> Item 133
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 112, chars 4847-4852, hits: 21)
+- IC 1358 -> Item 38
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 45, chars 1867-1879, hits: 39)
+- IC 1694 -> Item 65
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 55, chars 2332-2374, hits: 35)
+- IC 5013 -> Item 140
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 116, chars 4994-5018, hits: 21)
+- IC 3219 -> Item 90
+- Creation code
+  - Refers to item: Branch (branch: 7, path: 1) (location: source ID 46, line 76, chars 3132-3206, hits: 21)
+- IC 1781 -> Item 73
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 59, chars 2515-2546, hits: 35)
+- IC 1178 -> Item 24
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 42, chars 1692-1711, hits: 42)
+- IC 3234 -> Item 96
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 77, chars 3260-3291, hits: 0)
+- IC 3790 -> Item 110
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 82, chars 3506-3545, hits: 0)
+- IC 867 -> Item 141
+- Creation code
+  - Refers to item: Function "getChallengeCounter" (location: source ID 46, line 122, chars 5091-5194, hits: 1)
+- IC 1859 -> Item 82
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 65, chars 2793-2843, hits: 35)
+- IC 3840 -> Item 112
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 83, chars 3558-3594, hits: 21)
+- IC 1434 -> Item 45
+- Creation code
+  - Refers to item: Branch (branch: 4, path: 0) (location: source ID 46, line 46, chars 1912-1966, hits: 1)
+- IC 4922 -> Item 138
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 114, chars 4899-4983, hits: 21)
+- IC 1842 -> Item 81
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 63, chars 2707-2742, hits: 35)
+- IC 4647 -> Item 127
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 108, chars 4628-4665, hits: 21)
+- IC 4921 -> Item 135
+- Creation code
+  - Refers to item: Branch (branch: 12, path: 1) (location: source ID 46, line 112, chars 4843-4888, hits: 21)
+- IC 2180 -> Item 84
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 67, chars 2854-2902, hits: 35)
+- IC 1623 -> Item 60
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 53, chars 2239-2268, hits: 35)
+- IC 1771 -> Item 70
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 58, chars 2472-2505, hits: 35)
+- IC 3108 -> Item 142
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 123, chars 5162-5187, hits: 1)
+- IC 3220 -> Item 92
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 77, chars 3220-3258, hits: 21)
+- IC 3738 -> Item 107
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 82, chars 3494-3504, hits: 21)
+- IC 3160 -> Item 87
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 76, chars 3136-3174, hits: 22)
+- IC 1598 -> Item 56
+- Creation code
+  - Refers to item: Branch (branch: 6, path: 1) (location: source ID 46, line 48, chars 2051-2122, hits: 35)
+- IC 3170 -> Item 91
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 76, chars 3176-3206, hits: 1)
+- IC 4755 -> Item 130
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 111, chars 4748-4833, hits: 21)
+- IC 1549 -> Item 57
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 48, chars 2085-2122, hits: 1)
+- IC 3688 -> Item 104
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 81, chars 3421-3462, hits: 0)
+- IC 4647 -> Item 128
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 108, chars 4628-4665, hits: 21)
+- IC 1178 -> Item 23
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 42, chars 1692-1711, hits: 42)
+- IC 1801 -> Item 74
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 60, chars 2556-2599, hits: 35)
+- IC 3220 -> Item 93
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 77, chars 3220-3258, hits: 21)
+- IC 1297 -> Item 31
+- Creation code
+  - Refers to item: Branch (branch: 1, path: 1) (location: source ID 46, line 43, chars 1750-1793, hits: 40)
+- IC 1483 -> Item 46
+- Creation code
+  - Refers to item: Branch (branch: 4, path: 1) (location: source ID 46, line 46, chars 1912-1966, hits: 37)
+- IC 2180 -> Item 85
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 67, chars 2854-2902, hits: 35)
+- IC 3892 -> Item 114
+- Creation code
+  - Refers to item: Branch (branch: 11, path: 0) (location: source ID 46, line 83, chars 3555-3642, hits: 0)
+- IC 1491 -> Item 52
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 47, chars 2009-2041, hits: 1)
+- IC 1248 -> Item 32
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 43, chars 1766-1793, hits: 1)
+- IC 1599 -> Item 58
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 51, chars 2175-2195, hits: 35)
+- IC 1771 -> Item 71
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 58, chars 2472-2505, hits: 35)
+- IC 2246 -> Item 145
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 131, chars 5405-5434, hits: 31)
+- IC 1599 -> Item 59
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 51, chars 2175-2195, hits: 35)
+- IC 1549 -> Item 55
+- Creation code
+  - Refers to item: Branch (branch: 6, path: 0) (location: source ID 46, line 48, chars 2051-2122, hits: 1)
+- IC 3737 -> Item 103
+- Creation code
+  - Refers to item: Branch (branch: 9, path: 1) (location: source ID 46, line 81, chars 3376-3462, hits: 21)
+- IC 4872 -> Item 136
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 112, chars 4854-4888, hits: 0)
+- IC 2820 -> Item 154
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 143, chars 5764-5820, hits: 23)
+- IC 3234 -> Item 94
+- Creation code
+  - Refers to item: Branch (branch: 8, path: 0) (location: source ID 46, line 77, chars 3216-3291, hits: 0)
+- IC 2808 -> Item 152
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 142, chars 5692-5754, hits: 23)
+- IC 1421 -> Item 44
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 46, chars 1915-1933, hits: 38)
+- IC 4872 -> Item 134
+- Creation code
+  - Refers to item: Branch (branch: 12, path: 0) (location: source ID 46, line 112, chars 4843-4888, hits: 0)
+- IC 3942 -> Item 118
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 86, chars 3662-4279, hits: 21)
+- IC 4305 -> Item 125
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 105, chars 4502-4530, hits: 21)
+- IC 3790 -> Item 108
+- Creation code
+  - Refers to item: Branch (branch: 10, path: 0) (location: source ID 46, line 82, chars 3472-3545, hits: 0)
+- IC 1012 -> Item 147
+- Creation code
+  - Refers to item: Function "getChallengesArray" (location: source ID 46, line 137, chars 5499-5606, hits: 0)
+- IC 320 -> Item 22
+- Creation code
+  - Refers to item: Function "intentChallengeCreation" (location: source ID 46, line 32, chars 1401-2909, hits: 42)
+- IC 1821 -> Item 77
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 61, chars 2609-2656, hits: 35)
+- IC 4166 -> Item 122
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 101, chars 4328-4366, hits: 21)
+- IC 2246 -> Item 146
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 131, chars 5405-5434, hits: 31)
+- IC 1421 -> Item 43
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 46, chars 1915-1933, hits: 38)
+- IC 1308 -> Item 37
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 44, chars 1823-1854, hits: 1)
+- IC 1371 -> Item 42
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 45, chars 1881-1902, hits: 1)
+- IC 3108 -> Item 143
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 123, chars 5162-5187, hits: 1)
+- IC 1188 -> Item 27
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 42, chars 1713-1740, hits: 1)
+- IC 1484 -> Item 49
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 47, chars 1980-2007, hits: 37)
+- IC 1631 -> Item 63
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 54, chars 2278-2322, hits: 35)
+- IC 1694 -> Item 64
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 55, chars 2332-2374, hits: 35)
+- IC 1761 -> Item 68
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 57, chars 2437-2462, hits: 35)
+- IC 1761 -> Item 69
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 57, chars 2437-2462, hits: 35)
+- IC 3632 -> Item 100
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 81, chars 3379-3419, hits: 21)
+- IC 348 -> Item 144
+- Creation code
+  - Refers to item: Function "getChallengeByIndex" (location: source ID 46, line 130, chars 5313-5441, hits: 8)
+- IC 1357 -> Item 36
+- Creation code
+  - Refers to item: Branch (branch: 2, path: 1) (location: source ID 46, line 44, chars 1803-1854, hits: 39)
+- IC 3632 -> Item 99
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 81, chars 3379-3419, hits: 21)
+- IC 3632 -> Item 101
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 81, chars 3409-3419, hits: 21)
+- IC 4305 -> Item 126
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 105, chars 4502-4530, hits: 21)
+- IC 4867 -> Item 132
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 112, chars 4847-4852, hits: 21)
+- IC 1859 -> Item 83
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 65, chars 2793-2843, hits: 35)
+- IC 3941 -> Item 115
+- Creation code
+  - Refers to item: Branch (branch: 11, path: 1) (location: source ID 46, line 83, chars 3555-3642, hits: 21)
+- IC 4164 -> Item 120
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 101, chars 4290-4366, hits: 21)
+- IC 575 -> Item 150
+- Creation code
+  - Refers to item: Function "isChallengeDeployed" (location: source ID 46, line 141, chars 5612-5827, hits: 2)
+- IC 1298 -> Item 34
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 44, chars 1807-1821, hits: 40)
+- IC 1540 -> Item 51
+- Creation code
+  - Refers to item: Branch (branch: 5, path: 1) (location: source ID 46, line 47, chars 1976-2041, hits: 36)
+- IC 3839 -> Item 109
+- Creation code
+  - Refers to item: Branch (branch: 10, path: 1) (location: source ID 46, line 82, chars 3472-3545, hits: 21)
+- IC 1238 -> Item 29
+- Creation code
+  - Refers to item: Statement (location: source ID 46, line 43, chars 1754-1764, hits: 41)
+- IC 3942 -> Item 117
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 86, chars 3662-4279, hits: 21)
+- IC 1238 -> Item 28
+- Creation code
+  - Refers to item: Line (location: source ID 46, line 43, chars 1754-1764, hits: 41)
+- IC 3170 -> Item 89
+- Creation code
+  - Refers to item: Branch (branch: 7, path: 0) (location: source ID 46, line 76, chars 3132-3206, hits: 1)
+
+Anchors for Contract "stdToml" (solc 0.8.26, source ID 11):
+
+Anchors for Contract "MockERC721" (solc 0.8.26, source ID 22):
+
+Anchors for Contract "StdStyle" (solc 0.8.26, source ID 10):
+
+Anchors for Contract "MockERC20" (solc 0.8.26, source ID 21):
+
+Anchors for Contract "BitarenaToken" (solc 0.8.26, source ID 49):
+- IC 350 -> Item 6
+- Runtime code
+  - Refers to item: Line (location: source ID 49, line 15, chars 588-618, hits: 0)
+- IC 305 -> Item 2
+- Runtime code
+  - Refers to item: Statement (location: source ID 49, line 14, chars 531-578, hits: 0)
+- IC 5 -> Item 0
+- Runtime code
+  - Refers to item: Function "" (location: source ID 49, line 12, chars 444-625, hits: 0)
+- IC 305 -> Item 1
+- Runtime code
+  - Refers to item: Line (location: source ID 49, line 14, chars 531-578, hits: 0)
+- IC 714 -> Item 14
+- Runtime code
+  - Refers to item: Function "_update" (location: source ID 49, line 27, chars 832-982, hits: 0)
+- IC 715 -> Item 15
+- Runtime code
+  - Refers to item: Line (location: source ID 49, line 29, chars 945-975, hits: 0)
+- IC 307 -> Item 5
+- Runtime code
+  - Refers to item: Statement (location: source ID 49, line 14, chars 568-578, hits: 0)
+- IC 307 -> Item 4
+- Runtime code
+  - Refers to item: Statement (location: source ID 49, line 14, chars 562-578, hits: 0)
+- IC 350 -> Item 7
+- Runtime code
+  - Refers to item: Statement (location: source ID 49, line 15, chars 588-618, hits: 0)
+- IC 715 -> Item 16
+- Runtime code
+  - Refers to item: Statement (location: source ID 49, line 29, chars 945-975, hits: 0)
+- IC 307 -> Item 3
+- Runtime code
+  - Refers to item: Statement (location: source ID 49, line 14, chars 550-578, hits: 0)
+- IC 984 -> Item 12
+- Creation code
+  - Refers to item: Line (location: source ID 49, line 23, chars 742-752, hits: 0)
+- IC 534 -> Item 8
+- Creation code
+  - Refers to item: Function "pause" (location: source ID 49, line 18, chars 631-690, hits: 0)
+- IC 1117 -> Item 10
+- Creation code
+  - Refers to item: Statement (location: source ID 49, line 19, chars 675-683, hits: 0)
+- IC 436 -> Item 11
+- Creation code
+  - Refers to item: Function "unpause" (location: source ID 49, line 22, chars 696-759, hits: 0)
+- IC 984 -> Item 13
+- Creation code
+  - Refers to item: Statement (location: source ID 49, line 23, chars 742-752, hits: 0)
+- IC 3039 -> Item 15
+- Creation code
+  - Refers to item: Line (location: source ID 49, line 29, chars 945-975, hits: 0)
+- IC 3038 -> Item 14
+- Creation code
+  - Refers to item: Function "_update" (location: source ID 49, line 27, chars 832-982, hits: 0)
+- IC 1117 -> Item 9
+- Creation code
+  - Refers to item: Line (location: source ID 49, line 19, chars 675-683, hits: 0)
+- IC 3039 -> Item 16
+- Creation code
+  - Refers to item: Statement (location: source ID 49, line 29, chars 945-975, hits: 0)
+
+Anchors for Contract "DeployBitarenaFactory" (solc 0.8.26, source ID 41):
+- IC 159 -> Item 402
+- Creation code
+  - Refers to item: Line (location: source ID 41, line 10, chars 230-249, hits: 0)
+- IC 159 -> Item 403
+- Creation code
+  - Refers to item: Statement (location: source ID 41, line 10, chars 230-249, hits: 0)
+- IC 290 -> Item 404
+- Creation code
+  - Refers to item: Line (location: source ID 41, line 12, chars 260-278, hits: 0)
+- IC 80 -> Item 401
+- Creation code
+  - Refers to item: Function "run" (location: source ID 41, line 9, chars 198-285, hits: 0)
+- IC 290 -> Item 405
+- Creation code
+  - Refers to item: Statement (location: source ID 41, line 12, chars 260-278, hits: 0)
+- IC 70 -> Item 400
+- Creation code
+  - Refers to item: Function "setUp" (location: source ID 41, line 7, chars 166-192, hits: 0)
+
+Anchors for Contract "console" (solc 0.8.26, source ID 15):
+
+Anchors for Contract "BitarenaTest" (solc 0.8.26, source ID 52):
+
+Anchors for Contract "stdStorageSafe" (solc 0.8.26, source ID 9):
+
+Anchors for Contract "stdMath" (solc 0.8.26, source ID 8):
+
+Anchors for Contract "SafeCast" (solc 0.8.26, source ID 40):
+
+Anchors for Contract "Math" (solc 0.8.26, source ID 39):
+
