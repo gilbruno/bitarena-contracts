@@ -11,7 +11,7 @@ import {BalanceChallengeCreatorError, ChallengeAdminAddressZeroError,
     ChallengeStartDateError, NbTeamsError, NbPlayersPerTeamsError, SendMoneyToChallengeError} from '../src/BitarenaFactoryErrors.sol';
 import {Challenge} from '../src/ChallengeStruct.sol';
 import {BitarenaChallenge} from '../src/BitarenaChallenge.sol';
-import {BalanceChallengePlayerError, ChallengeCancelAfterStartDateError, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, TeamDoesNotExistsError, TimeElapsedToJoinTeamError} from "../src/BitarenaChallengeErrors.sol";
+import {BalanceChallengePlayerError, ChallengeCancelAfterStartDateError, ChallengeCanceledError, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, TeamDoesNotExistsError, TimeElapsedToJoinTeamError} from "../src/BitarenaChallengeErrors.sol";
 
 
 contract BitarenaTest is Test {
@@ -1146,14 +1146,114 @@ contract BitarenaTest is Test {
 
     }
 
+    /**
+     * @dev Test that native tokens are sent back to players that jointeam after the creator cancel the challenge
+     */
+    function testCancelChallenge1() public {
+        deployFactory();
+        
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
+            CHALLENGE1,
+            GAME1,
+            PLATFORM1,
+            TWO_TEAMS,
+            TWO_PLAYERS,
+            AMOUNT_PER_PLAYER,
+            block.timestamp + 1 days,
+            false
+        );
+        vm.stopBroadcast();
+
+        uint256 balanceCreatorAfterJoiningTeam = CREATOR_CHALLENGE1.balance;
+
+        vm.startBroadcast(ADMIN_FACTORY);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, 1);
+        vm.stopBroadcast();       
+
+        //A second player joins the team 1
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.joinOrCreateTeam{value: AMOUNT_PER_PLAYER}(1);
+        vm.stopBroadcast();               
+        uint256 balancePlayer1AfterJoiningTeam = PLAYER1_CHALLENGE1.balance;
+        
+        //The PLAYER2 creates a new team : team with index 2 is created
+        vm.startBroadcast(PLAYER2_CHALLENGE1);
+        bitarenaChallenge.joinOrCreateTeam{value: AMOUNT_PER_PLAYER}(0);
+        vm.stopBroadcast();               
+        uint256 balancePlayer2AfterJoiningTeam = PLAYER2_CHALLENGE1.balance;
+
+        //The PLAYER3 joins the team2 (with index 2) 
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.joinOrCreateTeam{value: AMOUNT_PER_PLAYER}(2);
+        vm.stopBroadcast();               
+        uint256 balancePlayer3AfterJoiningTeam = PLAYER3_CHALLENGE1.balance;
+
+        uint256 balanceSmartContractChallengeAfterAllPlayersJoinTeams = address(bitarenaChallenge).balance;
+        console.log('balanceSmartContractChallengeAfterAllPlayersJoinTeams : ', balanceSmartContractChallengeAfterAllPlayersJoinTeams);
+
+        //The creator cancels the challenge
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaChallenge.cancelChallenge();
+        vm.stopBroadcast();
+
+        uint256 balancePlayer1AfterChallengeCancel = PLAYER1_CHALLENGE1.balance;
+        uint256 balancePlayer2AfterChallengeCancel = PLAYER2_CHALLENGE1.balance;
+        uint256 balancePlayer3AfterChallengeCancel = PLAYER3_CHALLENGE1.balance;
+        uint256 balanceCreatorAfterChallengeCancel = CREATOR_CHALLENGE1.balance;
+        uint256 balanceSmartContractChallengeChallengeCancel = address(bitarenaChallenge).balance;
+        console.log('balanceSmartContractChallengeChallengeCancel : ', balanceSmartContractChallengeChallengeCancel);
+
+        //Every player is sent back with 'AMOUNT_PER_PLAYER'
+        assertEq(balancePlayer1AfterChallengeCancel, balancePlayer1AfterJoiningTeam + AMOUNT_PER_PLAYER);
+        assertEq(balancePlayer2AfterChallengeCancel, balancePlayer2AfterJoiningTeam + AMOUNT_PER_PLAYER);
+        assertEq(balancePlayer3AfterChallengeCancel, balancePlayer3AfterJoiningTeam + AMOUNT_PER_PLAYER);
+        assertEq(balanceCreatorAfterChallengeCancel, balanceCreatorAfterJoiningTeam + AMOUNT_PER_PLAYER);
+        //The smart contract sent back 4 times AMOUNT_PER_PLAYER because there are 4 players and its balance decreased with that amount
+        assertEq(balanceSmartContractChallengeChallengeCancel, balanceSmartContractChallengeAfterAllPlayersJoinTeams - (4 *AMOUNT_PER_PLAYER));
+    }   
+
+
+    /**
+     * @dev Test that it's impossible to join a team after a challange was cancelled by the creator
+     */
+    function testCancelChallenge2() public {
+        deployFactory();
+        
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
+            CHALLENGE1,
+            GAME1,
+            PLATFORM1,
+            TWO_TEAMS,
+            TWO_PLAYERS,
+            AMOUNT_PER_PLAYER,
+            block.timestamp + 1 days,
+            false
+        );
+        vm.stopBroadcast();
+
+        vm.startBroadcast(ADMIN_FACTORY);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, 1);
+        vm.stopBroadcast();       
+
+        //The creator cancels the challenge
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaChallenge.cancelChallenge();
+        vm.stopBroadcast();
+
+        //A second player joins the team 1
+        vm.expectRevert(ChallengeCanceledError.selector);
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.joinOrCreateTeam{value: AMOUNT_PER_PLAYER}(1);
+        vm.stopBroadcast();               
+
+    }   
+
     //TODO : Tests balance of challenge smart contract after many joining teams
 
     
     //TODO : Test disputes
-
-
-
-
 
 
 }

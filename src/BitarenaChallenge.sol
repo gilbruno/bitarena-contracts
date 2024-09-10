@@ -198,6 +198,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
     function cancelChallenge() public onlyRole(CHALLENGE_CREATOR_ROLE) {
         if (block.timestamp > s_startAt) revert ChallengeCancelAfterStartDateError();
         setIsCanceled(true);
+        returnMoneyBackDueToChallengeCancel();
     }
 
     /**
