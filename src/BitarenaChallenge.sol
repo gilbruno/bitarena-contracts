@@ -4,7 +4,9 @@ pragma solidity 0.8.26;
 
 import {AccessControlDefaultAdminRules} from "openzeppelin-contracts/contracts/access/extensions/AccessControlDefaultAdminRules.sol";
 import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
-import {BalanceChallengePlayerError, ChallengeCanceledError, ChallengeCancelAfterStartDateError, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, SendMoneyBackToPlayersError, TeamDoesNotExistsError, TimeElapsedToClaimVictoryError, TimeElapsedToCreateDisputeError, TimeElapsedToJoinTeamError} from "./BitarenaChallengeErrors.sol";
+import {BalanceChallengePlayerError, ChallengeCanceledError, ChallengeCancelAfterStartDateError, ClaimVictoryNotAuthorized, DelayClaimVictoryNotSet, 
+    NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, SendMoneyBackToPlayersError, TeamDoesNotExistsError, 
+    TimeElapsedToClaimVictoryError, TimeElapsedToCreateDisputeError, TimeElapsedToJoinTeamError} from "./BitarenaChallengeErrors.sol";
 import {PlayerJoinsTeam, TeamCreated, Debug, VictoryClaimed} from "./BitarenaChallengeEvents.sol";
 import {ChallengeParams} from "./ChallengeParams.sol";
 import {CHALLENGE_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_CREATOR_ROLE, GAMER_ROLE} from "./BitarenaChallengeConstants.sol";
@@ -58,6 +60,8 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
         s_teamCounter = 0;
         s_challengePool = 0;
         s_feePercentage = 10;
+        s_delayStartVictoryClaim = 0;
+        s_delayEndVictoryClaim = 0;
         _grantRole(CHALLENGE_ADMIN_ROLE, params.challengeAdmin);
         _grantRole(CHALLENGE_CREATOR_ROLE, params.challengeCreator);
         _grantRole(CHALLENGE_DISPUTE_ADMIN_ROLE, params.challengeDisputeAdmin);
@@ -117,9 +121,12 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
 
     /**
      * @dev It can be done only between (s_startAt + s_delayStartVictoryClaim) and (s_startAt + s_delayStartVictoryClaim + s_delayEndVictoryClaim)
-     * @param _teamIndex : indexof the team
+     * @param _teamIndex : index of the team
+     * //TODO : Revert with error if a player claimVictory for a team that is not his team
      */
-    function claimVictory(uint16 _teamIndex) public onlyRole(GAMER_ROLE) onlyRole(CHALLENGE_CREATOR_ROLE) {
+    function claimVictory(uint16 _teamIndex) public {
+        if (s_delayStartVictoryClaim == 0 || s_delayEndVictoryClaim == 0) revert DelayClaimVictoryNotSet();
+        if (!hasRole(CHALLENGE_CREATOR_ROLE, _msgSender()) && !hasRole(GAMER_ROLE, _msgSender())) revert ClaimVictoryNotAuthorized();
         if (_teamIndex > s_teamCounter) revert TeamDoesNotExistsError();
         if (block.timestamp > (s_startAt + s_delayStartVictoryClaim + s_delayEndVictoryClaim)) revert TimeElapsedToClaimVictoryError();
         s_winners[_teamIndex] = true;

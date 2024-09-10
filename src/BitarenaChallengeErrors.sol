@@ -12,11 +12,20 @@ error BalanceChallengePlayerError();
  */
 error ChallengeCanceledError();
 
-
 /**
  * @dev 
  */
 error ChallengeCancelAfterStartDateError();
+
+/**
+ * @dev 
+ */
+error ClaimVictoryNotAuthorized();
+
+/**
+ * @dev 
+ */
+error DelayClaimVictoryNotSet();
 
 /**
  * @dev 
