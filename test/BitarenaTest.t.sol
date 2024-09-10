@@ -567,7 +567,6 @@ contract BitarenaTest is Test {
 
         vm.startBroadcast(PLAYER1_CHALLENGE1);
         bitarenaChallenge.createTeam{value: AMOUNT_PER_PLAYER}();
-        //bitarenaChallenge.joinTeam{value: AMOUNT_PER_PLAYER}(0);
         vm.stopBroadcast();               
 
         //Test that data are OK : 
@@ -598,7 +597,6 @@ contract BitarenaTest is Test {
         //The PLAYER2 creates a new team : team with index 2 is created
         vm.startBroadcast(PLAYER2_CHALLENGE1);
         bitarenaChallenge.createTeam{value: AMOUNT_PER_PLAYER}();
-        // bitarenaChallenge.joinTeam{value: AMOUNT_PER_PLAYER}(0);
         vm.stopBroadcast();               
 
         //The PLAYER3 joins the team2
@@ -633,7 +631,6 @@ contract BitarenaTest is Test {
         //The PLAYER2 creates a new team : team with index 2 is created
         vm.startBroadcast(PLAYER2_CHALLENGE1);
         bitarenaChallenge.createTeam{value: AMOUNT_PER_PLAYER}();
-        // bitarenaChallenge.joinTeam{value: AMOUNT_PER_PLAYER}(0);
         vm.stopBroadcast();               
 
         //The PLAYER_WITH_BALANCE_ZERO wants to join the team2
@@ -662,7 +659,6 @@ contract BitarenaTest is Test {
         //The PLAYER2 creates a new team : team with index 2 is created
         vm.startBroadcast(PLAYER2_CHALLENGE1);
         bitarenaChallenge.createTeam{value: AMOUNT_PER_PLAYER}();
-        // bitarenaChallenge.joinTeam{value: AMOUNT_PER_PLAYER}(0);
         vm.stopBroadcast();               
 
         //The PLAYER3 joins the team2
@@ -690,7 +686,6 @@ contract BitarenaTest is Test {
         //The PLAYER2 creates a new team : team with index 2 is created
         vm.startBroadcast(PLAYER2_CHALLENGE1);
         bitarenaChallenge.createTeam{value: AMOUNT_PER_PLAYER}();
-        // bitarenaChallenge.joinTeam{value: AMOUNT_PER_PLAYER}(0);
         vm.stopBroadcast();               
 
         //The PLAYER3 joins the team2 2 days leter (we define the startAt 1 day in the future)
@@ -717,7 +712,7 @@ contract BitarenaTest is Test {
 
         //The PLAYER2 creates a new team : team with index 2 is created
         vm.startBroadcast(PLAYER2_CHALLENGE1);
-        bitarenaChallenge.joinTeam{value: AMOUNT_PER_PLAYER}(0);
+        bitarenaChallenge.createTeam{value: AMOUNT_PER_PLAYER}();
         vm.stopBroadcast();               
 
         //The PLAYER3 joins the team3 (with index 3) that does not exist
@@ -744,7 +739,6 @@ contract BitarenaTest is Test {
         //The PLAYER2 creates a new team : team with index 2 is created
         vm.startBroadcast(PLAYER2_CHALLENGE1);
         bitarenaChallenge.createTeam{value: AMOUNT_PER_PLAYER}();
-        // bitarenaChallenge.joinTeam{value: AMOUNT_PER_PLAYER}(0);
         vm.stopBroadcast();               
         uint256 balancePlayer2AfterJoiningTeam = PLAYER2_CHALLENGE1.balance;
 
@@ -815,7 +809,6 @@ contract BitarenaTest is Test {
         //The PLAYER2 creates a new team : team with index 2 is created
         vm.startBroadcast(PLAYER2_CHALLENGE1);
         bitarenaChallenge.createTeam{value: AMOUNT_PER_PLAYER}();
-        // bitarenaChallenge.joinTeam{value: AMOUNT_PER_PLAYER}(0);
         vm.stopBroadcast();               
 
         //The PLAYER3 joins the team2 (with index 2) 
@@ -858,7 +851,6 @@ contract BitarenaTest is Test {
         //The PLAYER2 creates a new team : team with index 2 is created
         vm.startBroadcast(PLAYER2_CHALLENGE1);
         bitarenaChallenge.createTeam{value: AMOUNT_PER_PLAYER}();
-        // bitarenaChallenge.joinTeam{value: AMOUNT_PER_PLAYER}(0);
         vm.stopBroadcast();               
 
         //The PLAYER3 joins the team2 (with index 2) 
@@ -898,7 +890,6 @@ contract BitarenaTest is Test {
         //The PLAYER2 creates a new team : team with index 2 is created
         vm.startBroadcast(PLAYER2_CHALLENGE1);
         bitarenaChallenge.createTeam{value: AMOUNT_PER_PLAYER}();
-        // bitarenaChallenge.joinTeam{value: AMOUNT_PER_PLAYER}(0);
         vm.stopBroadcast();               
 
         //The PLAYER3 joins the team2 (with index 2) 
@@ -937,7 +928,6 @@ contract BitarenaTest is Test {
         //The PLAYER2 creates a new team : team with index 2 is created
         vm.startBroadcast(PLAYER2_CHALLENGE1);
         bitarenaChallenge.createTeam{value: AMOUNT_PER_PLAYER}();
-        // bitarenaChallenge.joinTeam{value: AMOUNT_PER_PLAYER}(0);
         vm.stopBroadcast();               
 
         //The PLAYER3 joins the team2 (with index 2) 
@@ -976,7 +966,6 @@ contract BitarenaTest is Test {
         //The PLAYER2 creates a new team : team with index 2 is created
         vm.startBroadcast(PLAYER2_CHALLENGE1);
         bitarenaChallenge.createTeam{value: AMOUNT_PER_PLAYER}();
-        // bitarenaChallenge.joinTeam{value: AMOUNT_PER_PLAYER}(0);
         vm.stopBroadcast();               
 
         //The PLAYER3 joins the team2 (with index 2) 
