@@ -30,6 +30,12 @@ error DelayClaimVictoryNotSet();
 /**
  * @dev 
  */
+error DelayUnclaimVictoryNotSet();
+
+
+/**
+ * @dev 
+ */
 error DisputeExistsError();
 /**
  * @dev 
@@ -71,6 +77,17 @@ error TimeElapsedToCreateDisputeError();
  * @dev 
  */
 error TimeElapsedToClaimVictoryError();
+
+/**
+ * @dev 
+ */
+error TimeElapsedToUnclaimVictoryError();
+
+/**
+ * @dev 
+ */
+error UnclaimVictoryNotAuthorized();
+
 
 /**
  * @dev 

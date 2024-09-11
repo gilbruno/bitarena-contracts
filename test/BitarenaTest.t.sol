@@ -4,7 +4,6 @@ pragma solidity ^0.8.13;
 import {Test, console} from "forge-std/Test.sol";
 import {IAccessControl} from "openzeppelin-contracts/contracts/access/IAccessControl.sol";
 import {BitarenaFactory} from "../src/BitarenaFactory.sol";
-import {BitarenaToken} from "../src/BitarenaToken.sol";
 import {CHALLENGE_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_CREATOR_ROLE, GAMER_ROLE, FEE_PERCENTAGE_AMOUNT_BY_DEFAULT} from "../src/BitarenaChallengeConstants.sol";
 import {BalanceChallengeCreatorError, ChallengeAdminAddressZeroError, 
     ChallengeCounterError, ChallengeCreatorAddressZeroError, ChallengeDisputeAdminAddressZeroError, ChallengeGameError, 
@@ -13,8 +12,9 @@ import {BalanceChallengeCreatorError, ChallengeAdminAddressZeroError,
 import {Challenge} from '../src/ChallengeStruct.sol';
 import {BitarenaChallenge} from '../src/BitarenaChallenge.sol';
 import {BalanceChallengePlayerError, ChallengeCancelAfterStartDateError, ChallengeCanceledError, ClaimVictoryNotAuthorized, 
-    DelayClaimVictoryNotSet, DisputeExistsError, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, NotTeamMemberError,
-    TeamDoesNotExistsError, TimeElapsedToJoinTeamError, TimeElapsedToClaimVictoryError, WithdrawPoolNotAuthorized} from "../src/BitarenaChallengeErrors.sol";
+    DelayClaimVictoryNotSet, DelayUnclaimVictoryNotSet, DisputeExistsError, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, NotTeamMemberError,
+    TeamDoesNotExistsError, TimeElapsedToJoinTeamError, TimeElapsedToClaimVictoryError, TimeElapsedToUnclaimVictoryError, 
+    UnclaimVictoryNotAuthorized, WithdrawPoolNotAuthorized} from "../src/BitarenaChallengeErrors.sol";
 
 
 contract BitarenaTest is Test {
@@ -848,7 +848,20 @@ contract BitarenaTest is Test {
         vm.startBroadcast(PLAYER1_CHALLENGE1);
         bitarenaChallenge.joinTeam{value: AMOUNT_PER_PLAYER}(1);
         vm.stopBroadcast();               
+    }   
 
+    /**
+     * @dev Test that it's impossible to cancel the challenge after start date of the challenge
+     */
+    function testCancelChallenge3() public {
+        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+
+        //The creator cancels the challenge in 2 days so after the start date of the challenge
+        vm.warp(block.timestamp + 2 days);
+        vm.expectRevert(ChallengeCancelAfterStartDateError.selector);
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaChallenge.cancelChallenge();
+        vm.stopBroadcast();
     }   
 
     /********  TESTS ON CLAIM VICTORY ***************/
@@ -859,8 +872,6 @@ contract BitarenaTest is Test {
         BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
         joinTeamWith2PlayersPerTeam(bitarenaChallenge);
 
-        console.log('TEAM NUMBER OF PLAYER 2 : ', bitarenaChallenge.getTeamOfPlayer(PLAYER2_CHALLENGE1));
-        console.log('TEAM NUMBER OF PLAYER 3 : ', bitarenaChallenge.getTeamOfPlayer(PLAYER3_CHALLENGE1));
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
@@ -1022,7 +1033,7 @@ contract BitarenaTest is Test {
     /** 
      * @dev Test that it's impossible to claim victory for a team that is not yours
      */
-    function testClaimVictory10() public {
+    function testClaimVictory8() public {
         BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
         joinTeamWith2PlayersPerTeam(bitarenaChallenge);
 
@@ -1043,6 +1054,195 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
     }   
 
+    /********  TESTS ON UNCLAIM VICTORY ***************/
+    /**
+     * @dev Test that it's possible to unclaim victory if the claiming period is ok
+     */
+    function testUnclaimVictory1() public {
+        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+
+        //The admin of the challenge set delay for victory claim
+        //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        vm.stopBroadcast();         
+
+        //As the challenge must start 1 day after its creation, we try to claim 15 hours after the start date
+        // And the victory claim must succeeds !
+        uint256 _1Day15HoursInTheFuture = block.timestamp + 1 days + 15 hours;
+        vm.warp(_1Day15HoursInTheFuture);
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.unclaimVictory(2);
+        vm.stopBroadcast();         
+    }   
+
+    /**
+     * @dev Test that it's impossible to claim victory after the claiming period
+     * It reverts with error "TimeElapsedToClaimVictoryError"
+     */
+    function testUnclaimVictory2() public {
+        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+
+        //The admin of the challenge set delay for victory claim
+        //With that example, the victory unclaim is possible between 10 hours after the start date and 20 hours after the start date 
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        vm.stopBroadcast();         
+
+        //As the challenge must start 1 day after its creation, we try to claim 3 days after the start date
+        uint256 _3DaysInTheFuture = block.timestamp + 3 days;
+        vm.warp(_3DaysInTheFuture);
+        vm.expectRevert(TimeElapsedToUnclaimVictoryError.selector);
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.unclaimVictory(2);
+        vm.stopBroadcast();         
+    }   
+
+    /**
+     * @dev Test that it's impossible to unclaim victory if at least one delay to claim it is not set
+     */
+    function testUnclaimVictory3() public {
+        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+
+        //The admin of the challenge set delay for victory claim
+        //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        vm.stopBroadcast();         
+
+        //As the challenge must start 1 day after its creation, we try to unclaim 3 days after the start date
+        uint256 _3DaysInTheFuture = block.timestamp + 3 days;
+        vm.warp(_3DaysInTheFuture);
+        vm.expectRevert(DelayUnclaimVictoryNotSet.selector);
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.unclaimVictory(2);
+        vm.stopBroadcast();         
+    }   
+
+    /**
+     * @dev Test that it's impossible to unclaim victory after the legal delay
+     */
+    function testUnclaimVictory4() public {
+        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+
+        //The admin of the challenge set delay for victory claim
+        //With that example, the victory unclaim is possible between 10 hours after the start date and 20 hours after the start date 
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayEndForVictoryClaim(10 hours);
+        vm.stopBroadcast();         
+
+        //As the challenge must start 1 day after its creation, we try to claim 15 hours after the start date
+        uint256 _3DaysInTheFuture = block.timestamp + 3 days;
+        vm.warp(_3DaysInTheFuture);
+        vm.expectRevert(DelayUnclaimVictoryNotSet.selector);
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.unclaimVictory(2);
+        vm.stopBroadcast();         
+    }   
+
+    /**
+     * @dev Test that it's impossible to unclaim victory if a player unclaim victory for a team that does not exist
+     */
+    function testUnclaimVictory5() public {
+        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+
+        //The admin of the challenge set delay for victory claim
+        //With that example, the victory unclaim is possible between 10 hours after the start date and 20 hours after the start date 
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        vm.stopBroadcast();         
+
+        //As the challenge must start 1 day after its creation, we try to unclaim 15 hours after the start date
+        uint256 _3DaysInTheFuture = block.timestamp + 3 days;
+        vm.warp(_3DaysInTheFuture);
+        vm.expectRevert(TeamDoesNotExistsError.selector);
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.unclaimVictory(3);
+        vm.stopBroadcast();         
+    }   
+
+    /** @dev Test that it's impossible to unclaim victory if a challenge is canceled
+     * 
+     */
+    function testUnclaimVictory6() public {
+        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+
+        //The admin of the challenge set delay for victory claim
+        //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        vm.stopBroadcast();         
+
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaChallenge.cancelChallenge();
+        vm.stopBroadcast();               
+
+        //As the challenge must start 1 day after its creation, we try to claim 2 days after the start date
+        uint256 _3DaysInTheFuture = block.timestamp + 2 days;
+        vm.warp(_3DaysInTheFuture);
+        vm.expectRevert(ChallengeCanceledError.selector);
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.unclaimVictory(2);
+        vm.stopBroadcast();         
+    }   
+
+    /** 
+     * @dev Test that it's impossible to unclaim victory if a player is not authorized (=bad role)
+     */
+    function testUnclaimVictory7() public {
+        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+
+        //The admin of the challenge set delay for victory claim
+        //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        vm.stopBroadcast();         
+
+        //As the challenge must start 1 day after its creation, 
+        // the PLAYER4 tries to claim the victory but he's not authorized as he has not the GAMER_ROLE
+        uint256 _3DaysInTheFuture = block.timestamp + 2 days;
+        vm.warp(_3DaysInTheFuture);
+        vm.expectRevert(UnclaimVictoryNotAuthorized.selector);
+        vm.startBroadcast(PLAYER4_CHALLENGE1);
+        bitarenaChallenge.unclaimVictory(2);
+        vm.stopBroadcast();         
+    }   
+
+    /** 
+     * @dev Test that it's impossible to unclaim victory for a team that is not yours
+     */
+    function testUclaimVictory8() public {
+        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+
+        //The admin of the challenge set delay for victory claim
+        //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        vm.stopBroadcast();         
+
+        //As the challenge must start 1 day after its creation, 
+        // the PLAYER3 tries to unclaim the victory for the team1 that is not his team (=team2)
+        uint256 _3DaysInTheFuture = block.timestamp + 2 days;
+        vm.warp(_3DaysInTheFuture);
+        vm.expectRevert(NotTeamMemberError.selector);
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.unclaimVictory(1);
+        vm.stopBroadcast();         
+    }   
 
     /********  TESTS ON DISPUTE ***************/
     /** 
@@ -1167,6 +1367,45 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
 
     }   
+
+        /** 
+     * @dev Test that if 2 teams claim their victory and the second finnaly unclaims victory, there is no dispute
+     */
+    function testDispute5() public {
+        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+
+        //The admin of the challenge set delay for victory claim
+        //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        vm.stopBroadcast();         
+
+        //As the challenge must start 1 day after its creation, 
+        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        uint256 _3DaysInTheFuture = block.timestamp + 2 days;
+        vm.warp(_3DaysInTheFuture);
+
+        //PLAYER1 claims victory for his team = team1
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.claimVictory(1);
+        vm.stopBroadcast();         
+
+        //PLAYER3 claims victory for his team = team2
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.claimVictory(2);
+        vm.stopBroadcast();         
+
+        //PLAYER1 finally unclaims victory for his team = team1
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.unclaimVictory(1);
+        vm.stopBroadcast();         
+
+        assertEq(bitarenaChallenge.disputeExists(), false);
+    }   
+
+
 
     /********  TESTS ON CHALLENGE POOL WITHDRAW ***************/
 

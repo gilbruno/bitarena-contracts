@@ -11,4 +11,6 @@ event Debug(address indexed signer);
 
 event VictoryClaimed(uint16 teamNumber, address claimer);
 
+event VictoryUnclaimed(uint16 teamNumber, address claimer);
+
 event DisputeAccepted(address player);

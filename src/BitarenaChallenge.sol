@@ -5,10 +5,11 @@ pragma solidity 0.8.26;
 import {AccessControlDefaultAdminRules} from "openzeppelin-contracts/contracts/access/extensions/AccessControlDefaultAdminRules.sol";
 import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
 import {BalanceChallengePlayerError, ChallengeCanceledError, ChallengeCancelAfterStartDateError, ClaimVictoryNotAuthorized, 
-    DelayClaimVictoryNotSet, DisputeExistsError, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, 
+    DelayClaimVictoryNotSet, DelayUnclaimVictoryNotSet, DisputeExistsError, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, 
     NotTeamMemberError, SendMoneyBackToPlayersError, TeamDoesNotExistsError, 
-    TimeElapsedToClaimVictoryError, TimeElapsedToCreateDisputeError, TimeElapsedToJoinTeamError, WithdrawPoolNotAuthorized} from "./BitarenaChallengeErrors.sol";
-import {PlayerJoinsTeam, TeamCreated, Debug, VictoryClaimed} from "./BitarenaChallengeEvents.sol";
+    TimeElapsedToClaimVictoryError, TimeElapsedToUnclaimVictoryError, TimeElapsedToCreateDisputeError, TimeElapsedToJoinTeamError, WithdrawPoolNotAuthorized, 
+    UnclaimVictoryNotAuthorized} from "./BitarenaChallengeErrors.sol";
+import {PlayerJoinsTeam, TeamCreated, Debug, VictoryClaimed, VictoryUnclaimed} from "./BitarenaChallengeEvents.sol";
 import {ChallengeParams} from "./ChallengeParams.sol";
 import {CHALLENGE_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_CREATOR_ROLE, GAMER_ROLE, FEE_PERCENTAGE_AMOUNT_BY_DEFAULT} from "./BitarenaChallengeConstants.sol";
 
@@ -85,6 +86,16 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
         _;
     }
 
+    modifier checkUnclaimVictory(uint16 _teamIndex) {
+        if (s_delayStartVictoryClaim == 0 || s_delayEndVictoryClaim == 0) revert DelayUnclaimVictoryNotSet();
+        if (!hasRole(CHALLENGE_CREATOR_ROLE, _msgSender()) && !hasRole(GAMER_ROLE, _msgSender())) revert UnclaimVictoryNotAuthorized();
+        if (_teamIndex > s_teamCounter) revert TeamDoesNotExistsError();
+        if (block.timestamp > (s_startAt + s_delayStartVictoryClaim + s_delayEndVictoryClaim)) revert TimeElapsedToUnclaimVictoryError();
+        if (s_players[_msgSender()] != _teamIndex) revert NotTeamMemberError();
+        if (s_isCanceled) revert ChallengeCanceledError();
+        _;
+    }
+
     /**
      * @dev Function that will be callable by front end. 
      * If value of _teamIndex equals 0 then it's a creation team intent
@@ -116,6 +127,9 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
         emit TeamCreated(s_teamCounter);
     }
 
+    /**
+     * @dev 
+     */
     function joinTeamInternal(uint16 _teamIndex, address _player) internal {
         s_teams[_teamIndex].push(_player);
         s_players[_player] = _teamIndex;
@@ -124,11 +138,9 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
     }
 
     
-
     /**
      * @dev It can be done only between (s_startAt + s_delayStartVictoryClaim) and (s_startAt + s_delayStartVictoryClaim + s_delayEndVictoryClaim)
      * @param _teamIndex : index of the team
-     * //TODO : Revert with error if a player claimVictory for a team that is not his team
      */
     function claimVictory(uint16 _teamIndex) public checkClaimVictory(_teamIndex) {
         s_winners[_teamIndex] = true;
@@ -136,6 +148,18 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
         emit VictoryClaimed(_teamIndex, _msgSender());
     }
 
+    /**
+     * @dev If a team decides to unclaimVictory after claiming it, we must provide a fonction for that
+     * @param _teamIndex : index of the team
+     */
+    function unclaimVictory(uint16 _teamIndex) public checkUnclaimVictory(_teamIndex) {
+        s_winners[_teamIndex] = true;
+        //We decrement only if we have at least 1 winner claimed
+        if (s_winnersCount > 0) {
+            s_winnersCount--;
+        } 
+        emit VictoryUnclaimed(_teamIndex, _msgSender());
+    }
 
     /**
      * @dev
@@ -158,7 +182,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
      
      * @dev 
      */
-    function createDispute() public onlyRole(GAMER_ROLE) onlyRole(CHALLENGE_CREATOR_ROLE) {
+    function participateToDispute() public onlyRole(GAMER_ROLE) onlyRole(CHALLENGE_CREATOR_ROLE) {
         if (block.timestamp == s_startAt + s_delayStartVictoryClaim) revert TimeElapsedToCreateDisputeError();
     }
 
@@ -191,9 +215,9 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
     /**
      * @dev 
      */
-    fallback() external payable {
+    // fallback() external payable {
         
-    }
+    // }
     
     /**
      * @dev increment the challenge pool
