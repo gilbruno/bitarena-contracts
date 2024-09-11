@@ -12,8 +12,8 @@ import {BalanceChallengeCreatorError, ChallengeAdminAddressZeroError,
 import {Challenge} from '../src/ChallengeStruct.sol';
 import {BitarenaChallenge} from '../src/BitarenaChallenge.sol';
 import {BalanceChallengePlayerError, ChallengeCancelAfterStartDateError, ChallengeCanceledError, ClaimVictoryNotAuthorized, 
-    DelayClaimVictoryNotSet, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, NotTeamMemberError,
-    TeamDoesNotExistsError, TimeElapsedToJoinTeamError, TimeElapsedToClaimVictoryError} from "../src/BitarenaChallengeErrors.sol";
+    DelayClaimVictoryNotSet, DisputeExistsError, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, NotTeamMemberError,
+    TeamDoesNotExistsError, TimeElapsedToJoinTeamError, TimeElapsedToClaimVictoryError, WithdrawPoolNotAuthorized} from "../src/BitarenaChallengeErrors.sol";
 
 
 contract BitarenaTest is Test {
@@ -1069,6 +1069,77 @@ contract BitarenaTest is Test {
 
         assertEq(bitarenaChallenge.disputeExists(), false);
     }   
+
+    /********  TESTS ON CHALLENGE POOL WITHDRAW ***************/
+
+    /**
+     * @dev Test that it's impossible for a team to withdraw the pool if there is a dispute
+     * so if many teams claim their victory
+     */
+    function testPoolWithdraw1() public {
+        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+
+        //The admin of the challenge set delay for victory claim
+        //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        vm.stopBroadcast();         
+
+        //As the challenge must start 1 day after its creation, 
+        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        uint256 _3DaysInTheFuture = block.timestamp + 2 days;
+        vm.warp(_3DaysInTheFuture);
+
+        //PLAYER1 claims victory for his team = team1
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.claimVictory(1);
+        vm.stopBroadcast();         
+
+        //PLAYER3 claims victory for his team = team2
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.claimVictory(2);
+        vm.stopBroadcast();         
+
+        //PLAYER1 wants to withdraw the pool
+        vm.expectRevert(DisputeExistsError.selector);
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.withdrawChallengePool();
+        vm.stopBroadcast();         
+    }
+
+    /**
+     * @dev Test that it's impossible for a team to withdraw the pool if a player is not authorized 
+     * (i.e. GAMER_ROLE or CHALLENGE_CREATOR_ROLE)
+     */
+    function testPoolWithdraw2() public {
+        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+
+        //The admin of the challenge set delay for victory claim
+        //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        vm.stopBroadcast();         
+
+        //As the challenge must start 1 day after its creation, 
+        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        uint256 _3DaysInTheFuture = block.timestamp + 2 days;
+        vm.warp(_3DaysInTheFuture);
+
+        //PLAYER1 claims victory for his team = team1
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.claimVictory(1);
+        vm.stopBroadcast();         
+
+        //PLAYER4 wants to withdraw the pool as he did not participate to the challenge
+        vm.expectRevert(WithdrawPoolNotAuthorized.selector);
+        vm.startBroadcast(PLAYER4_CHALLENGE1);
+        bitarenaChallenge.withdrawChallengePool();
+        vm.stopBroadcast();         
+    }
 
     //TODO : Tests balance of challenge smart contract after many joining teams
 

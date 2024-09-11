@@ -30,6 +30,10 @@ error DelayClaimVictoryNotSet();
 /**
  * @dev 
  */
+error DisputeExistsError();
+/**
+ * @dev 
+ */
 error NbTeamsLimitReachedError();
 
 /**
@@ -67,3 +71,8 @@ error TimeElapsedToCreateDisputeError();
  * @dev 
  */
 error TimeElapsedToClaimVictoryError();
+
+/**
+ * @dev 
+ */
+error WithdrawPoolNotAuthorized();
