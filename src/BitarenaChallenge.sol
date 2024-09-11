@@ -75,6 +75,17 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
         if (msg.value < s_amountPerPlayer && _msgSender() != s_factory) revert BalanceChallengePlayerError();
         _;
     }
+
+    modifier checkClaimVictory(uint16 _teamIndex) {
+        if (s_delayStartVictoryClaim == 0 || s_delayEndVictoryClaim == 0) revert DelayClaimVictoryNotSet();
+        if (!hasRole(CHALLENGE_CREATOR_ROLE, _msgSender()) && !hasRole(GAMER_ROLE, _msgSender())) revert ClaimVictoryNotAuthorized();
+        if (_teamIndex > s_teamCounter) revert TeamDoesNotExistsError();
+        if (block.timestamp > (s_startAt + s_delayStartVictoryClaim + s_delayEndVictoryClaim)) revert TimeElapsedToClaimVictoryError();
+        if (s_players[_msgSender()] != _teamIndex) revert NotTeamMemberError();
+        if (s_isCanceled) revert ChallengeCanceledError();
+        _;
+    }
+
     /**
      * @dev Function that will be callable by front end. 
      * If value of _teamIndex equals 0 then it's a creation team intent
@@ -86,7 +97,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
      * 
      */
     function joinTeam(uint16 _teamIndex) public payable checkJoinTeam(_teamIndex) {
-       joinTeamInternal(_teamIndex, _msgSender());
+        joinTeamInternal(_teamIndex, _msgSender());
         emit PlayerJoinsTeam(_teamIndex, _msgSender());
     }
 
@@ -120,12 +131,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
      * @param _teamIndex : index of the team
      * //TODO : Revert with error if a player claimVictory for a team that is not his team
      */
-    function claimVictory(uint16 _teamIndex) public {
-        if (s_delayStartVictoryClaim == 0 || s_delayEndVictoryClaim == 0) revert DelayClaimVictoryNotSet();
-        if (!hasRole(CHALLENGE_CREATOR_ROLE, _msgSender()) && !hasRole(GAMER_ROLE, _msgSender())) revert ClaimVictoryNotAuthorized();
-        if (_teamIndex > s_teamCounter) revert TeamDoesNotExistsError();
-        if (block.timestamp > (s_startAt + s_delayStartVictoryClaim + s_delayEndVictoryClaim)) revert TimeElapsedToClaimVictoryError();
-        if (s_players[_msgSender()] != _teamIndex) revert NotTeamMemberError();
+    function claimVictory(uint16 _teamIndex) public checkClaimVictory(_teamIndex) {
         s_winners[_teamIndex] = true;
         emit VictoryClaimed(_teamIndex, _msgSender());
     }

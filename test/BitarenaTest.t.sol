@@ -989,11 +989,57 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
     }   
 
+    /** @dev Test that it's impossible to claim victory if a challenge is canceled
+     * 
+     */
+    function testClaimVictory6() public {
+        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+
+        //send players some native tokens to enable them to jointeams
+        //A second player joins the team 1
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.joinTeam{value: AMOUNT_PER_PLAYER}(1);
+        vm.stopBroadcast();               
+
+
+        //The PLAYER2 creates a new team : team with index 2 is created
+        vm.startBroadcast(PLAYER2_CHALLENGE1);
+        bitarenaChallenge.createTeam{value: AMOUNT_PER_PLAYER}();
+        vm.stopBroadcast();               
+
+        //The PLAYER3 joins the team2 (with index 2) 
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.joinTeam{value: AMOUNT_PER_PLAYER}(2);
+        vm.stopBroadcast();         
+
+        //The admin of the challenge set delay for victory claim
+        //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        vm.stopBroadcast();         
+
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaChallenge.cancelChallenge();
+        vm.stopBroadcast();               
+
+        //As the challenge must start 1 day after its creation, we try to claim 15 hours after the start date
+        uint256 _3DaysInTheFuture = block.timestamp + 2 days;
+        vm.warp(_3DaysInTheFuture);
+        vm.expectRevert(ChallengeCanceledError.selector);
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.claimVictory(2);
+        vm.stopBroadcast();         
+    }   
+
     //TODO : Tests balance of challenge smart contract after many joining teams
 
     
     
     //TODO : Test disputes
+
+
+    //TODO : Test after revert is done, state variables are rolled back well
 
 
 }
