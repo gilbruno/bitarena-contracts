@@ -5,7 +5,7 @@ import {Test, console} from "forge-std/Test.sol";
 import {IAccessControl} from "openzeppelin-contracts/contracts/access/IAccessControl.sol";
 import {BitarenaFactory} from "../src/BitarenaFactory.sol";
 import {BitarenaToken} from "../src/BitarenaToken.sol";
-import {CHALLENGE_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_CREATOR_ROLE, GAMER_ROLE} from "../src/BitarenaChallengeConstants.sol";
+import {CHALLENGE_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_CREATOR_ROLE, GAMER_ROLE, FEE_PERCENTAGE_AMOUNT_BY_DEFAULT} from "../src/BitarenaChallengeConstants.sol";
 import {BalanceChallengeCreatorError, ChallengeAdminAddressZeroError, 
     ChallengeCounterError, ChallengeCreatorAddressZeroError, ChallengeDisputeAdminAddressZeroError, ChallengeGameError, 
     ChallengeNameError, ChallengePlatformError, 
@@ -394,6 +394,39 @@ contract BitarenaTest is Test {
 
         assertEq(bitarenaChallenge.getChallengeAdmin(), ADMIN_CHALLENGE1);
     }
+
+    /**
+     * @dev Test value of state var "s_feePercentage" after challenge creation/deployment 
+     */
+    function testStateVariableAfterChallengeDeployment7() public {
+        intentChallengeCreationWith2TeamsAnd1Player();
+        vm.startBroadcast(ADMIN_FACTORY);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, 1);
+        vm.stopBroadcast();       
+
+        assertEq(bitarenaChallenge.getFeePercentage(), FEE_PERCENTAGE_AMOUNT_BY_DEFAULT);
+    }
+
+        /**
+     * @dev Test value of state var "s_feePercentage" after challenge creation/deployment and set a new fee
+     */
+    function testStateVariableAfterChallengeDeployment8() public {
+        uint16 newFee = 12;
+        intentChallengeCreationWith2TeamsAnd1Player();
+        vm.startBroadcast(ADMIN_FACTORY);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, 1);
+        vm.stopBroadcast();       
+
+        assertEq(bitarenaChallenge.getFeePercentage(), FEE_PERCENTAGE_AMOUNT_BY_DEFAULT);
+
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setFeePercentage(newFee);
+        vm.stopBroadcast();       
+
+        assertEq(bitarenaChallenge.getFeePercentage(), newFee);
+    }
+
+
 
     /**
      * @dev Test roles after challenge creation/deployment 

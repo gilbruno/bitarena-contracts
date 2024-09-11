@@ -10,7 +10,7 @@ import {BalanceChallengePlayerError, ChallengeCanceledError, ChallengeCancelAfte
     TimeElapsedToClaimVictoryError, TimeElapsedToCreateDisputeError, TimeElapsedToJoinTeamError, WithdrawPoolNotAuthorized} from "./BitarenaChallengeErrors.sol";
 import {PlayerJoinsTeam, TeamCreated, Debug, VictoryClaimed} from "./BitarenaChallengeEvents.sol";
 import {ChallengeParams} from "./ChallengeParams.sol";
-import {CHALLENGE_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_CREATOR_ROLE, GAMER_ROLE} from "./BitarenaChallengeConstants.sol";
+import {CHALLENGE_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_CREATOR_ROLE, GAMER_ROLE, FEE_PERCENTAGE_AMOUNT_BY_DEFAULT} from "./BitarenaChallengeConstants.sol";
 
 contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
 
@@ -41,10 +41,6 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
     mapping(address player => uint16 teamNumber) private s_players;
     mapping(uint16 teamIndex => bool winner) s_winners;
 
-    /** CONSTANTS */
-    uint8 private constant DECIMALS_PERCENTAGE_AMOUNT_DISPUTE = 2;
-    uint8 private constant DECIMALS_FEE_PERCENTAGE_AMOUNT = 2;
-
     constructor(ChallengeParams memory params) AccessControlDefaultAdminRules(1 days, params.challengeAdmin) {
         s_factory = params.factory;
         s_admin = params.challengeAdmin;
@@ -62,7 +58,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
         s_teamCounter = 0;
         s_winnersCount = 0;
         s_challengePool = 0;
-        s_feePercentage = 10;
+        s_feePercentage = FEE_PERCENTAGE_AMOUNT_BY_DEFAULT;
         s_delayStartVictoryClaim = 0;
         s_delayEndVictoryClaim = 0;
         _grantRole(CHALLENGE_ADMIN_ROLE, params.challengeAdmin);
