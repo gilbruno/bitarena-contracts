@@ -2,6 +2,7 @@
 pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
+import {IAccessControl} from "openzeppelin-contracts/contracts/access/IAccessControl.sol";
 import {BitarenaFactory} from "../src/BitarenaFactory.sol";
 import {BitarenaToken} from "../src/BitarenaToken.sol";
 import {CHALLENGE_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_CREATOR_ROLE, GAMER_ROLE} from "../src/BitarenaChallengeConstants.sol";
@@ -1068,6 +1069,70 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
 
         assertEq(bitarenaChallenge.disputeExists(), false);
+    }   
+
+     /** 
+     * @dev Test that state var s_feeDispute is OK after the admin sets it 
+     */
+    function testDispute3() public {
+        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+
+        //The admin of the challenge set delay for victory claim
+        //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        vm.stopBroadcast();         
+
+        //As the challenge must start 1 day after its creation, 
+        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        uint256 _3DaysInTheFuture = block.timestamp + 2 days;
+        vm.warp(_3DaysInTheFuture);
+
+        //PLAYER1 claims victory for his team = team1
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.claimVictory(1);
+        vm.stopBroadcast();         
+
+        //ADMIN_CHALLENGE1 sets fee dispute after that
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setFeePercentageDispute(10);
+        vm.stopBroadcast();         
+
+        assertEq(bitarenaChallenge.getFeePercentageDispute(), 10);
+    }   
+
+     /** 
+     * @dev Test that state only ADMIN_CHALLENGE can set the fee for dispute
+     */
+    function testDispute4() public {
+        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+
+        //The admin of the challenge set delay for victory claim
+        //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        vm.stopBroadcast();         
+
+        //As the challenge must start 1 day after its creation, 
+        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        uint256 _3DaysInTheFuture = block.timestamp + 2 days;
+        vm.warp(_3DaysInTheFuture);
+
+        //PLAYER1 claims victory for his team = team1
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.claimVictory(1);
+        vm.stopBroadcast();         
+
+        //PLAYER1_CHALLENGE1 sets fee dispute but it reverts with AccessControl error
+        vm.expectRevert(abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, PLAYER1_CHALLENGE1, CHALLENGE_ADMIN_ROLE));
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.setFeePercentageDispute(10);
+        vm.stopBroadcast();         
+
     }   
 
     /********  TESTS ON CHALLENGE POOL WITHDRAW ***************/
