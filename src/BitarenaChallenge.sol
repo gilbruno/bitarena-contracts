@@ -28,6 +28,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
     uint256 private s_disputePool;
 
     uint16 private s_teamCounter;
+    uint16 private s_winnersCount;
     bool private s_isPrivate;
     bool private s_isCanceled;
     address private s_admin;
@@ -58,6 +59,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
         s_isPrivate = params.isPrivate;
         s_isCanceled = false;
         s_teamCounter = 0;
+        s_winnersCount = 0;
         s_challengePool = 0;
         s_feePercentage = 10;
         s_delayStartVictoryClaim = 0;
@@ -133,6 +135,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
      */
     function claimVictory(uint16 _teamIndex) public checkClaimVictory(_teamIndex) {
         s_winners[_teamIndex] = true;
+        s_winnersCount++;
         emit VictoryClaimed(_teamIndex, _msgSender());
     }
 
@@ -229,20 +232,21 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
     }
 
     /**
-     * @dev By calling this function after the victory claim perido, it calculatesif thers is a dispute
+     * @dev By calling this function after the victory claim period, it calculates if there's a dispute
      * meaning if at least 2 teams claim the victory among all the teams
      * 
      */
-    function disputeExists() public {
-
+    function disputeExists() public view returns (bool) {
+        return (s_winnersCount > 1);
     }
+
 
     /**
      * @dev 
      * Rules : Only the winner can withdraw the pool
      */
     function withdrawChallengePool() public {
-
+        if (!hasRole(CHALLENGE_CREATOR_ROLE, _msgSender()) && !hasRole(GAMER_ROLE, _msgSender())) revert ClaimVictoryNotAuthorized();
     }
 
     /**

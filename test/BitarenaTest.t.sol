@@ -11,7 +11,8 @@ import {BalanceChallengeCreatorError, ChallengeAdminAddressZeroError,
     ChallengeStartDateError, NbTeamsError, NbPlayersPerTeamsError, SendMoneyToChallengeError} from '../src/BitarenaFactoryErrors.sol';
 import {Challenge} from '../src/ChallengeStruct.sol';
 import {BitarenaChallenge} from '../src/BitarenaChallenge.sol';
-import {BalanceChallengePlayerError, ChallengeCancelAfterStartDateError, ChallengeCanceledError, DelayClaimVictoryNotSet, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, 
+import {BalanceChallengePlayerError, ChallengeCancelAfterStartDateError, ChallengeCanceledError, ClaimVictoryNotAuthorized, 
+    DelayClaimVictoryNotSet, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, NotTeamMemberError,
     TeamDoesNotExistsError, TimeElapsedToJoinTeamError, TimeElapsedToClaimVictoryError} from "../src/BitarenaChallengeErrors.sol";
 
 
@@ -27,6 +28,7 @@ contract BitarenaTest is Test {
     address PLAYER1_CHALLENGE1 = makeAddr("player1Challenge1");
     address PLAYER2_CHALLENGE1 = makeAddr("player2Challenge1");
     address PLAYER3_CHALLENGE1 = makeAddr("player3Challenge1");
+    address PLAYER4_CHALLENGE1 = makeAddr("player4Challenge1");
     address PLAYER_WITH_NOT_SUFFICIENT_BALANCE = makeAddr("playerWithBalanceZero");
 
     bytes32 CHALLENGE1 = "Challenge 1";
@@ -109,6 +111,29 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();       
 
         return bitarenaChallenge;
+    }
+
+    /**
+     * @dev
+     */
+    function joinTeamWith2PlayersPerTeam(BitarenaChallenge bitarenaChallenge) private {
+        //send players some native tokens to enable them to jointeams
+        //A second player joins the team 1
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.joinTeam{value: AMOUNT_PER_PLAYER}(1);
+        vm.stopBroadcast();               
+
+
+        //The PLAYER2 creates a new team : team with index 2 is created
+        vm.startBroadcast(PLAYER2_CHALLENGE1);
+        bitarenaChallenge.createTeam{value: AMOUNT_PER_PLAYER}();
+        vm.stopBroadcast();               
+
+        //The PLAYER3 joins the team2 (with index 2) 
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.joinTeam{value: AMOUNT_PER_PLAYER}(2);
+        vm.stopBroadcast();         
+
     }
     
 
@@ -798,23 +823,7 @@ contract BitarenaTest is Test {
      */
     function testClaimVictory1() public {
         BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-
-        //send players some native tokens to enable them to jointeams
-        //A second player joins the team 1
-        vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.joinTeam{value: AMOUNT_PER_PLAYER}(1);
-        vm.stopBroadcast();               
-
-
-        //The PLAYER2 creates a new team : team with index 2 is created
-        vm.startBroadcast(PLAYER2_CHALLENGE1);
-        bitarenaChallenge.createTeam{value: AMOUNT_PER_PLAYER}();
-        vm.stopBroadcast();               
-
-        //The PLAYER3 joins the team2 (with index 2) 
-        vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.joinTeam{value: AMOUNT_PER_PLAYER}(2);
-        vm.stopBroadcast();         
+        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
 
         console.log('TEAM NUMBER OF PLAYER 2 : ', bitarenaChallenge.getTeamOfPlayer(PLAYER2_CHALLENGE1));
         console.log('TEAM NUMBER OF PLAYER 3 : ', bitarenaChallenge.getTeamOfPlayer(PLAYER3_CHALLENGE1));
@@ -840,23 +849,7 @@ contract BitarenaTest is Test {
      */
     function testClaimVictory2() public {
         BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-
-        //send players some native tokens to enable them to jointeams
-        //A second player joins the team 1
-        vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.joinTeam{value: AMOUNT_PER_PLAYER}(1);
-        vm.stopBroadcast();               
-
-
-        //The PLAYER2 creates a new team : team with index 2 is created
-        vm.startBroadcast(PLAYER2_CHALLENGE1);
-        bitarenaChallenge.createTeam{value: AMOUNT_PER_PLAYER}();
-        vm.stopBroadcast();               
-
-        //The PLAYER3 joins the team2 (with index 2) 
-        vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.joinTeam{value: AMOUNT_PER_PLAYER}(2);
-        vm.stopBroadcast();         
+        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -879,23 +872,7 @@ contract BitarenaTest is Test {
      */
     function testClaimVictory3() public {
         BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-
-        //send players some native tokens to enable them to jointeams
-        //A second player joins the team 1
-        vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.joinTeam{value: AMOUNT_PER_PLAYER}(1);
-        vm.stopBroadcast();               
-
-
-        //The PLAYER2 creates a new team : team with index 2 is created
-        vm.startBroadcast(PLAYER2_CHALLENGE1);
-        bitarenaChallenge.createTeam{value: AMOUNT_PER_PLAYER}();
-        vm.stopBroadcast();               
-
-        //The PLAYER3 joins the team2 (with index 2) 
-        vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.joinTeam{value: AMOUNT_PER_PLAYER}(2);
-        vm.stopBroadcast();         
+        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -913,27 +890,11 @@ contract BitarenaTest is Test {
     }   
 
     /**
-     * @dev Test that it's impossible to claim victory if at least one delay to claim it is not set
+     * @dev Test that it's impossible to claim victory after the legal delay
      */
     function testClaimVictory4() public {
         BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-
-        //send players some native tokens to enable them to jointeams
-        //A second player joins the team 1
-        vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.joinTeam{value: AMOUNT_PER_PLAYER}(1);
-        vm.stopBroadcast();               
-
-
-        //The PLAYER2 creates a new team : team with index 2 is created
-        vm.startBroadcast(PLAYER2_CHALLENGE1);
-        bitarenaChallenge.createTeam{value: AMOUNT_PER_PLAYER}();
-        vm.stopBroadcast();               
-
-        //The PLAYER3 joins the team2 (with index 2) 
-        vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.joinTeam{value: AMOUNT_PER_PLAYER}(2);
-        vm.stopBroadcast();         
+        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -955,23 +916,7 @@ contract BitarenaTest is Test {
      */
     function testClaimVictory5() public {
         BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-
-        //send players some native tokens to enable them to jointeams
-        //A second player joins the team 1
-        vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.joinTeam{value: AMOUNT_PER_PLAYER}(1);
-        vm.stopBroadcast();               
-
-
-        //The PLAYER2 creates a new team : team with index 2 is created
-        vm.startBroadcast(PLAYER2_CHALLENGE1);
-        bitarenaChallenge.createTeam{value: AMOUNT_PER_PLAYER}();
-        vm.stopBroadcast();               
-
-        //The PLAYER3 joins the team2 (with index 2) 
-        vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.joinTeam{value: AMOUNT_PER_PLAYER}(2);
-        vm.stopBroadcast();         
+        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -994,23 +939,7 @@ contract BitarenaTest is Test {
      */
     function testClaimVictory6() public {
         BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-
-        //send players some native tokens to enable them to jointeams
-        //A second player joins the team 1
-        vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.joinTeam{value: AMOUNT_PER_PLAYER}(1);
-        vm.stopBroadcast();               
-
-
-        //The PLAYER2 creates a new team : team with index 2 is created
-        vm.startBroadcast(PLAYER2_CHALLENGE1);
-        bitarenaChallenge.createTeam{value: AMOUNT_PER_PLAYER}();
-        vm.stopBroadcast();               
-
-        //The PLAYER3 joins the team2 (with index 2) 
-        vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.joinTeam{value: AMOUNT_PER_PLAYER}(2);
-        vm.stopBroadcast();         
+        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -1023,7 +952,7 @@ contract BitarenaTest is Test {
         bitarenaChallenge.cancelChallenge();
         vm.stopBroadcast();               
 
-        //As the challenge must start 1 day after its creation, we try to claim 15 hours after the start date
+        //As the challenge must start 1 day after its creation, we try to claim 2 days after the start date
         uint256 _3DaysInTheFuture = block.timestamp + 2 days;
         vm.warp(_3DaysInTheFuture);
         vm.expectRevert(ChallengeCanceledError.selector);
@@ -1032,12 +961,119 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
     }   
 
+    /** 
+     * @dev Test that it's impossible to claim victory if a player is not authorized (=bad role)
+     */
+    function testClaimVictory7() public {
+        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+
+        //The admin of the challenge set delay for victory claim
+        //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        vm.stopBroadcast();         
+
+        //As the challenge must start 1 day after its creation, 
+        // the PLAYER4 tries to claim the victory but he's not authorized as he has not the GAMER_ROLE
+        uint256 _3DaysInTheFuture = block.timestamp + 2 days;
+        vm.warp(_3DaysInTheFuture);
+        vm.expectRevert(ClaimVictoryNotAuthorized.selector);
+        vm.startBroadcast(PLAYER4_CHALLENGE1);
+        bitarenaChallenge.claimVictory(2);
+        vm.stopBroadcast();         
+    }   
+
+    /** 
+     * @dev Test that it's impossible to claim victory for a team that is not yours
+     */
+    function testClaimVictory10() public {
+        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+
+        //The admin of the challenge set delay for victory claim
+        //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        vm.stopBroadcast();         
+
+        //As the challenge must start 1 day after its creation, 
+        // the PLAYER3 tries to claim the victory for the team1 that is not his team (=team2)
+        uint256 _3DaysInTheFuture = block.timestamp + 2 days;
+        vm.warp(_3DaysInTheFuture);
+        vm.expectRevert(NotTeamMemberError.selector);
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.claimVictory(1);
+        vm.stopBroadcast();         
+    }   
+
+
+    /********  TESTS ON DISPUTE ***************/
+    /** 
+     * @dev Test that if two teams claim their victory, there is a dispute
+     */
+    function testDispute1() public {
+        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+
+        //The admin of the challenge set delay for victory claim
+        //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        vm.stopBroadcast();         
+
+        //As the challenge must start 1 day after its creation, 
+        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        uint256 _3DaysInTheFuture = block.timestamp + 2 days;
+        vm.warp(_3DaysInTheFuture);
+
+        //PLAYER1 claims victory for his team = team1
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.claimVictory(1);
+        vm.stopBroadcast();         
+
+        //PLAYER3 claims victory for his team = team2
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.claimVictory(2);
+        vm.stopBroadcast();         
+
+        assertEq(bitarenaChallenge.disputeExists(), true);
+    }   
+
+    /** 
+     * @dev Test that with 2 teams if one team claim its victory and the second do not, there is no dispute
+     */
+    function testDispute2() public {
+        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+
+        //The admin of the challenge set delay for victory claim
+        //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        vm.stopBroadcast();         
+
+        //As the challenge must start 1 day after its creation, 
+        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        uint256 _3DaysInTheFuture = block.timestamp + 2 days;
+        vm.warp(_3DaysInTheFuture);
+
+        //PLAYER1 claims victory for his team = team1
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.claimVictory(1);
+        vm.stopBroadcast();         
+
+        assertEq(bitarenaChallenge.disputeExists(), false);
+    }   
+
     //TODO : Tests balance of challenge smart contract after many joining teams
 
     
     
-    //TODO : Test disputes
-
 
     //TODO : Test after revert is done, state variables are rolled back well
 
