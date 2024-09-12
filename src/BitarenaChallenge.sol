@@ -229,13 +229,11 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
 
     /** 
      *  @dev : Only one player create a dispute for his team.
-     * So before the delay set by the admin, it's possible to create a dispute. 
-     * After the delay, it's not possible to create a dispute
-     * @dev 
      */
     function participateToDispute() public payable checkDisputeParticipation()  {
         uint16 teamSigner = getTeamOfPlayer(_msgSender());
         s_disputeParticipants[teamSigner] = _msgSender(); 
+        s_disputeTeams.push(teamSigner);
         incrementDisputePool(getDisputeAmountParticipation());
     }
 
