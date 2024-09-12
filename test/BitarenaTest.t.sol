@@ -407,7 +407,7 @@ contract BitarenaTest is Test {
         assertEq(bitarenaChallenge.getFeePercentage(), FEE_PERCENTAGE_AMOUNT_BY_DEFAULT);
     }
 
-        /**
+    /**
      * @dev Test value of state var "s_feePercentage" after challenge creation/deployment and set a new fee
      */
     function testStateVariableAfterChallengeDeployment8() public {
@@ -426,7 +426,153 @@ contract BitarenaTest is Test {
         assertEq(bitarenaChallenge.getFeePercentage(), newFee);
     }
 
+    /**
+     * @dev Test getter "getNbTeamPlayers"
+     * We create a challenge with 1 player per team so we expect that the getter returns 1
+     */
+    function testGetterAfterChallengeDeployment1() public {
+        intentChallengeCreationWith2TeamsAnd1Player();
+        vm.startBroadcast(ADMIN_FACTORY);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, 1);
+        vm.stopBroadcast();       
 
+        //We create a challenge with 1 player per team so we expect that the getter returns 1
+        assertEq(bitarenaChallenge.getNbTeamPlayers(), 1);
+
+    }
+
+    /**
+     * @dev Test getter "getNbTeamPlayers"
+     * We create a challenge with 2 players per team so we expect that the getter returns 2
+     */
+    function testGetterAfterChallengeDeployment2() public {
+        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        assertEq(bitarenaChallenge.getNbTeamPlayers(), 2);
+    }
+
+    /**
+     * @dev Test getter "getChallengeStartDate"
+     */
+    function testGetterAfterChallengeDeployment3() public {
+        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        assertEq(bitarenaChallenge.getChallengeStartDate(), block.timestamp + 1 days);
+    }
+
+    /**
+     * @dev Test getter "getChallengeVisibility"
+     * We expect value "false" as the function "createChallengeWith2TeamsAnd2Players" is built 
+     * with is_private =false 
+     */
+    function testGetterAfterChallengeDeployment4() public {
+        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        assertEq(bitarenaChallenge.getChallengeVisibility(), false);
+    }
+
+    /**
+     * @dev Test getter "getIsCanceled"
+     * We expect value "false" just after challenge deployment
+     * 
+     */
+    function testGetterAfterChallengeDeployment5() public {
+        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        assertEq(bitarenaChallenge.getIsCanceled(), false);
+    }
+    /**
+     * @dev Test getter "getIsCanceled"
+     * We expect value "false" after canceling the challenge by the creator
+     * 
+     */
+    function testGetterAfterChallengeDeployment6() public {
+        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaChallenge.cancelChallenge();
+        vm.stopBroadcast();
+        assertEq(bitarenaChallenge.getIsCanceled(), true);
+    }
+
+    /**
+     * @dev Test getter "getTeamOfPlayer"
+     * 
+     */
+    function testGetterAfterChallengeDeployment7() public {
+        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        assertEq(bitarenaChallenge.getTeamOfPlayer(CREATOR_CHALLENGE1), 1);
+        assertEq(bitarenaChallenge.getTeamOfPlayer(PLAYER2_CHALLENGE1), 2);
+    }
+    
+    /**
+     * @dev Test getter "getDelayStartVictoryClaim"
+     * 
+     */
+    function testGetterAfterChallengeDeployment8() public {
+        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        assertEq(bitarenaChallenge.getDelayStartVictoryClaim(), 0);
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        vm.stopBroadcast();
+        assertEq(bitarenaChallenge.getDelayStartVictoryClaim(), 10 hours);
+
+    }
+    /**
+     * @dev Test getter "getDelayEndVictoryClaim"
+     * 
+     */
+    function testGetterAfterChallengeDeployment9() public {
+        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        assertEq(bitarenaChallenge.getDelayEndVictoryClaim(), 0);
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        vm.stopBroadcast();
+        assertEq(bitarenaChallenge.getDelayEndVictoryClaim(), 20 hours);
+
+    }
+
+    /**
+     * @dev Test getter "getDisputePool"
+     * 
+     */
+    function testGetterAfterChallengeDeployment10() public {
+        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        
+        //The admin of the challenge set delay for victory claim
+        //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        vm.stopBroadcast();         
+
+        //As the challenge must start 1 day after its creation, 
+        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        uint256 _3DaysInTheFuture = block.timestamp + 2 days;
+        vm.warp(_3DaysInTheFuture);
+
+        //PLAYER1 claims victory for his team = team1
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.claimVictory(1);
+        vm.stopBroadcast();         
+
+        //PLAYER3 claims victory for his team = team2
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.claimVictory(2);
+        vm.stopBroadcast();         
+
+        //There is a dispute so 1 member of a team participate in a dispute
+        uint256 amountDisputePerPlayer = bitarenaChallenge.getDisputeAmountParticipation();
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.participateToDispute{value : amountDisputePerPlayer}();
+        vm.stopBroadcast();         
+
+        vm.startBroadcast(PLAYER2_CHALLENGE1);
+        bitarenaChallenge.participateToDispute{value : amountDisputePerPlayer}();
+        vm.stopBroadcast();         
+
+        assertEq(bitarenaChallenge.getDisputePool(), 2 * amountDisputePerPlayer);
+
+    }
 
     /**
      * @dev Test roles after challenge creation/deployment 

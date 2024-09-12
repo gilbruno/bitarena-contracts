@@ -67,10 +67,21 @@ error NoDisputeError();
  * @dev 
  */
 error NotSufficientAmountForDisputeError();
+
 /**
  * @dev 
  */
 error NotTeamMemberError();
+
+/**
+ * @dev 
+ */
+error NoDisputeParticipantsError();
+
+/**
+ * @dev 
+ */
+error RefundImpossibleDueToTooManyDisputeParticipantsError();
 
 /**
  * @dev 
@@ -82,6 +93,12 @@ error SendMoneyBackToPlayersError();
  * @dev 
  */
 error TeamDoesNotExistsError();
+
+
+/**
+ * @dev 
+ */
+error TeamOfSignerAlreadyParticipatesInDisputeError();
 
 /**
  * @dev 

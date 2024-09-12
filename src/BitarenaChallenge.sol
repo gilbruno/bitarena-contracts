@@ -6,8 +6,8 @@ import {AccessControlDefaultAdminRules} from "openzeppelin-contracts/contracts/a
 import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
 import {BalanceChallengePlayerError, ChallengeCanceledError, ChallengeCancelAfterStartDateError, ClaimVictoryNotAuthorized, 
     DelayClaimVictoryNotSet, DelayUnclaimVictoryNotSet, DisputeExistsError, DisputeParticipationNotAuthorizedError, FeeDisputeNotSetError, NbTeamsLimitReachedError, 
-    NbPlayersPerTeamsLimitReachedError, NoDisputeError, NotSufficientAmountForDisputeError, NotTeamMemberError, SendMoneyBackToPlayersError, 
-    TeamDoesNotExistsError, TimeElapsedToClaimVictoryError, TimeElapsedToUnclaimVictoryError, TimeElapsedToCreateDisputeError, 
+    NbPlayersPerTeamsLimitReachedError, NoDisputeError, NotSufficientAmountForDisputeError, NotTeamMemberError, NoDisputeParticipantsError, RefundImpossibleDueToTooManyDisputeParticipantsError, 
+    SendMoneyBackToPlayersError, TeamDoesNotExistsError, TeamOfSignerAlreadyParticipatesInDisputeError, TimeElapsedToClaimVictoryError, TimeElapsedToUnclaimVictoryError, TimeElapsedToCreateDisputeError, 
     TimeElapsedToJoinTeamError, WithdrawPoolNotAuthorized, UnclaimVictoryNotAuthorized} from "./BitarenaChallengeErrors.sol";
 import {PlayerJoinsTeam, TeamCreated, Debug, VictoryClaimed, VictoryUnclaimed} from "./BitarenaChallengeEvents.sol";
 import {ChallengeParams} from "./ChallengeParams.sol";
@@ -18,10 +18,14 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
     bytes32 private s_name;
     bytes32 private s_game;
     bytes32 private s_platform;
+
     uint16 private immutable s_nbTeams;
     uint16 private immutable s_nbTeamPlayers;
     uint16 private s_feePercentage;
     uint16 private s_feePercentageDispute;
+    uint16 private s_teamCounter;
+    uint16 private s_winnersCount;
+    
     uint256 private immutable s_startAt;
     uint256 private immutable s_amountPerPlayer;
     uint256 private s_delayStartVictoryClaim;
@@ -29,10 +33,9 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
     uint256 private s_challengePool;
     uint256 private s_disputePool;
 
-    uint16 private s_teamCounter;
-    uint16 private s_winnersCount;
     bool private s_isPrivate;
     bool private s_isCanceled;
+
     address private s_admin;
     address private s_disputeAdmin;
     address private immutable s_creator;
@@ -40,7 +43,10 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
 
     mapping(uint16 teamIndex => address[] players) private s_teams;
     mapping(address player => uint16 teamNumber) private s_players;
-    mapping(uint16 teamIndex => bool winner) s_winners;
+    mapping(uint16 teamIndex => bool winner) private s_winners;
+    mapping(uint16 teamIndex => address disputeParticipant) private s_disputeParticipants;
+
+    uint16[] private s_disputeTeams;
 
     constructor(ChallengeParams memory params) AccessControlDefaultAdminRules(1 days, params.challengeAdmin) {
         s_factory = params.factory;
@@ -97,14 +103,21 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
      * @dev Modifier for the "participateToDispute" function
      */
     modifier checkDisputeParticipation() {
+        if (s_delayStartVictoryClaim == 0 || s_delayEndVictoryClaim == 0) revert DelayClaimVictoryNotSet();
         if (s_feePercentageDispute == 0) revert FeeDisputeNotSetError();
         uint256 disputeParticipationAmount = getDisputeAmountParticipation();
         if (msg.value < disputeParticipationAmount) revert NotSufficientAmountForDisputeError();
         if (!disputeExists()) revert NoDisputeError();
         if (!hasRole(CHALLENGE_CREATOR_ROLE, _msgSender()) && !hasRole(GAMER_ROLE, _msgSender())) revert DisputeParticipationNotAuthorizedError();
+        uint16 teamOfSigner = getTeamOfPlayer(_msgSender());
+        address participant = s_disputeParticipants[teamOfSigner];
+        if (participant != address(0)) revert TeamOfSignerAlreadyParticipatesInDisputeError();
         _;
     }
 
+    /**
+     * Modifier for 'unclaimVictory' fonction
+     */
     modifier checkUnclaimVictory(uint16 _teamIndex) {
         if (s_delayStartVictoryClaim == 0 || s_delayEndVictoryClaim == 0) revert DelayUnclaimVictoryNotSet();
         if (!hasRole(CHALLENGE_CREATOR_ROLE, _msgSender()) && !hasRole(GAMER_ROLE, _msgSender())) revert UnclaimVictoryNotAuthorized();
@@ -112,6 +125,15 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
         if (block.timestamp > (s_startAt + s_delayStartVictoryClaim + s_delayEndVictoryClaim)) revert TimeElapsedToUnclaimVictoryError();
         if (s_players[_msgSender()] != _teamIndex) revert NotTeamMemberError();
         if (s_isCanceled) revert ChallengeCanceledError();
+        _;
+    }
+
+    /**
+     * Modifier for 'refundDisputeAmount' fonction
+     */
+    modifier checkRefundDisputeAmount() {
+        if (getDisputeParticipantsCount() > 1) revert RefundImpossibleDueToTooManyDisputeParticipantsError();
+        if (getDisputeParticipantsCount() == 0) revert NoDisputeParticipantsError();
         _;
     }
 
@@ -181,6 +203,17 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
     }
 
     /**
+     * This function only callable by Admin of the challenge mus be call in case a disputer finally 
+     * does not want to participate to the dispute, so we must refund the only participant to the dispute
+     */
+    function refundDisputeAmount() public onlyRole(CHALLENGE_ADMIN_ROLE) checkRefundDisputeAmount() {
+        uint16 teamInDispute = s_disputeTeams[0];
+        address disputeParticipant = s_disputeParticipants[teamInDispute];
+        (bool success, ) = disputeParticipant.call{value: getDisputeAmountParticipation()}("");
+        if (!success) revert SendMoneyBackToPlayersError();
+    }
+
+    /**
      * @dev
      */
     function setFeePercentageDispute(uint16 _percentage) public onlyRole(CHALLENGE_ADMIN_ROLE) {
@@ -201,6 +234,8 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
      * @dev 
      */
     function participateToDispute() public payable checkDisputeParticipation()  {
+        uint16 teamSigner = getTeamOfPlayer(_msgSender());
+        s_disputeParticipants[teamSigner] = _msgSender(); 
         incrementDisputePool(getDisputeAmountParticipation());
     }
 
@@ -224,19 +259,11 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
         s_delayEndVictoryClaim = _delayEndVictoryClaim;
     }
     /**
-     * @dev 
+     * @dev Nothing special to implemnt on 'receive'
      */
     receive() external payable {
         
     }
-
-    /**
-     * @dev 
-     */
-    // fallback() external payable {
-        
-    // }
-    
     /**
      * @dev increment the challenge pool
      */
@@ -391,7 +418,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
      * @dev getter for mapping state variable s_teams
      * @return the team number of the player
      */
-    function getTeamOfPlayer(address _player) external view returns (uint16) {
+    function getTeamOfPlayer(address _player) public view returns (uint16) {
         return s_players[_player];
     }
 
@@ -432,8 +459,6 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
         return disputeParticipationAmount;
     }
 
-    
-
     /**
      * @dev getter for state variable s_disputePool
      */
@@ -460,6 +485,20 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
      */
     function getDisputeAdmin() external view returns (address) {
         return s_disputeAdmin;
+    }
+
+    /**
+     * @dev get the count of dispute participants 
+     */
+    function getDisputeParticipantsCount() public view returns (uint256) {
+        return s_disputeTeams.length;
+    }
+
+    /**
+     * @dev getter for state variable s_disputeParticipants
+     */
+    function getDisputeParticipants(uint16 _teamIndex) public view returns (address) {
+        return s_disputeParticipants[_teamIndex];
     }
 
 }
