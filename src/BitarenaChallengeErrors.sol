@@ -37,6 +37,17 @@ error DelayUnclaimVictoryNotSet();
  * @dev 
  */
 error DisputeExistsError();
+
+/**
+ * @dev 
+ */
+error DisputeParticipationNotAuthorizedError();
+
+/**
+ * @dev 
+ */
+error FeeDisputeNotSetError();
+
 /**
  * @dev 
  */
@@ -47,6 +58,15 @@ error NbTeamsLimitReachedError();
  */
 error NbPlayersPerTeamsLimitReachedError();
 
+/**
+ * @dev 
+ */
+error NoDisputeError();
+
+/**
+ * @dev 
+ */
+error NotSufficientAmountForDisputeError();
 /**
  * @dev 
  */

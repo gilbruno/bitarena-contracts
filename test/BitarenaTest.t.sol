@@ -7,13 +7,13 @@ import {BitarenaFactory} from "../src/BitarenaFactory.sol";
 import {CHALLENGE_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_CREATOR_ROLE, GAMER_ROLE, FEE_PERCENTAGE_AMOUNT_BY_DEFAULT} from "../src/BitarenaChallengeConstants.sol";
 import {BalanceChallengeCreatorError, ChallengeAdminAddressZeroError, 
     ChallengeCounterError, ChallengeCreatorAddressZeroError, ChallengeDisputeAdminAddressZeroError, ChallengeGameError, 
-    ChallengeNameError, ChallengePlatformError, 
-    ChallengeStartDateError, NbTeamsError, NbPlayersPerTeamsError, SendMoneyToChallengeError} from '../src/BitarenaFactoryErrors.sol';
+    ChallengeNameError, ChallengePlatformError, ChallengeStartDateError, NbTeamsError, NbPlayersPerTeamsError, 
+    SendMoneyToChallengeError} from '../src/BitarenaFactoryErrors.sol';
 import {Challenge} from '../src/ChallengeStruct.sol';
 import {BitarenaChallenge} from '../src/BitarenaChallenge.sol';
 import {BalanceChallengePlayerError, ChallengeCancelAfterStartDateError, ChallengeCanceledError, ClaimVictoryNotAuthorized, 
-    DelayClaimVictoryNotSet, DelayUnclaimVictoryNotSet, DisputeExistsError, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, NotTeamMemberError,
-    TeamDoesNotExistsError, TimeElapsedToJoinTeamError, TimeElapsedToClaimVictoryError, TimeElapsedToUnclaimVictoryError, 
+    DelayClaimVictoryNotSet, DelayUnclaimVictoryNotSet, DisputeExistsError, DisputeParticipationNotAuthorizedError, FeeDisputeNotSetError, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, 
+    NotSufficientAmountForDisputeError, NoDisputeError, NotTeamMemberError, TeamDoesNotExistsError, TimeElapsedToJoinTeamError, TimeElapsedToClaimVictoryError, TimeElapsedToUnclaimVictoryError, 
     UnclaimVictoryNotAuthorized, WithdrawPoolNotAuthorized} from "../src/BitarenaChallengeErrors.sol";
 
 
@@ -1368,7 +1368,7 @@ contract BitarenaTest is Test {
 
     }   
 
-        /** 
+    /** 
      * @dev Test that if 2 teams claim their victory and the second finnaly unclaims victory, there is no dispute
      */
     function testDispute5() public {
@@ -1405,7 +1405,257 @@ contract BitarenaTest is Test {
         assertEq(bitarenaChallenge.disputeExists(), false);
     }   
 
+    /** 
+     * @dev Test that if there is no dispute anyone can particpate to a dispute
+     */
+    function testDispute6() public {
+        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
 
+        //The admin of the challenge set delay for victory claim
+        //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        vm.stopBroadcast();         
+
+        //As the challenge must start 1 day after its creation, 
+        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        uint256 _3DaysInTheFuture = block.timestamp + 2 days;
+        vm.warp(_3DaysInTheFuture);
+
+        //PLAYER1 claims victory for his team = team1
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.claimVictory(1);
+        vm.stopBroadcast();         
+
+        //PLAYER3 claims victory for his team = team2
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.claimVictory(2);
+        vm.stopBroadcast();         
+
+        //PLAYER1 finally unclaims victory for his team = team1
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.unclaimVictory(1);
+        vm.stopBroadcast();         
+
+        //The ADMIN set the fee for the dispute
+
+        //There is no dispute so anyone can participate to a dispute
+        //PLAYER1 wants to participete to a dispute 
+        vm.expectRevert(NoDisputeError.selector);
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.participateToDispute{value: 1 ether}();
+        vm.stopBroadcast();         
+    }   
+
+    /** 
+     * @dev Test that if there a dispute, a dispute participation is possible
+     */
+    function testDispute7() public {
+        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+
+        //The admin of the challenge set delay for victory claim
+        //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        vm.stopBroadcast();         
+
+        //As the challenge must start 1 day after its creation, 
+        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        uint256 _3DaysInTheFuture = block.timestamp + 2 days;
+        vm.warp(_3DaysInTheFuture);
+
+        //PLAYER1 claims victory for his team = team1
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.claimVictory(1);
+        vm.stopBroadcast();         
+
+        //PLAYER3 claims victory for his team = team2
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.claimVictory(2);
+        vm.stopBroadcast();         
+
+        //There is a dispute so anyone can participate to a dispute
+        //PLAYER1 wants to participate to a dispute         
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.participateToDispute{value: bitarenaChallenge.getDisputeAmountParticipation()}();
+        vm.stopBroadcast();         
+
+        assertEq(true, true);
+    }   
+
+    /** 
+     * @dev Test that if there a dispute, the tx revertsif the fee result set by the admin equals 0
+     */
+    function testDispute8() public {
+        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+
+        //The admin of the challenge set delay for victory claim
+        //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        vm.stopBroadcast();         
+
+        //As the challenge must start 1 day after its creation, 
+        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        uint256 _3DaysInTheFuture = block.timestamp + 2 days;
+        vm.warp(_3DaysInTheFuture);
+
+        //PLAYER1 claims victory for his team = team1
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.claimVictory(1);
+        vm.stopBroadcast();         
+
+        //PLAYER3 claims victory for his team = team2
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.claimVictory(2);
+        vm.stopBroadcast();         
+
+        //ADMIN_CHALLENGE set fee dispute to 0
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setFeePercentageDispute(0);
+        vm.stopBroadcast();         
+
+        //There is a dispute so anyone can participate to a dispute
+        //PLAYER1 wants to participate to a dispute         
+        vm.expectRevert(FeeDisputeNotSetError.selector);
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.participateToDispute{value: 1 ether}();
+        vm.stopBroadcast();         
+
+        assertEq(true, true);
+    }   
+
+    /** 
+     * @dev Test that if there a dispute, the tx revertsif the fee result set by the admin equals 0
+     */
+    function testDispute9() public {
+        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+
+        //The admin of the challenge set delay for victory claim
+        //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        vm.stopBroadcast();         
+
+        //As the challenge must start 1 day after its creation, 
+        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        uint256 _3DaysInTheFuture = block.timestamp + 2 days;
+        vm.warp(_3DaysInTheFuture);
+
+        //PLAYER1 claims victory for his team = team1
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.claimVictory(1);
+        vm.stopBroadcast();         
+
+        //PLAYER3 claims victory for his team = team2
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.claimVictory(2);
+        vm.stopBroadcast();         
+
+        //ADMIN_CHALLENGE set fee dispute to 0
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setFeePercentageDispute(0);
+        vm.stopBroadcast();         
+
+        //There is a dispute so anyone can participate to a dispute
+        //PLAYER1 wants to participate to a dispute         
+        vm.expectRevert(FeeDisputeNotSetError.selector);
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.participateToDispute{value: 1 ether}();
+        vm.stopBroadcast();         
+
+        assertEq(true, true);
+    }   
+
+    /** 
+     * @dev Test that if there a dispute, you must be authorized to participâte to a dispute
+     * if the amount is not sufficient
+     */
+    function testDispute10() public {
+        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+
+        //The admin of the challenge set delay for victory claim
+        //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        vm.stopBroadcast();         
+
+        //As the challenge must start 1 day after its creation, 
+        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        uint256 _3DaysInTheFuture = block.timestamp + 2 days;
+        vm.warp(_3DaysInTheFuture);
+
+        //PLAYER1 claims victory for his team = team1
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.claimVictory(1);
+        vm.stopBroadcast();         
+
+        //PLAYER3 claims victory for his team = team2
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.claimVictory(2);
+        vm.stopBroadcast();         
+
+        //There is a dispute so anyone who is granted can participate to a dispute
+        //PLAYER4 wants to participate to a dispute but he did not participate to the challenge
+        vm.deal(PLAYER4_CHALLENGE1, 1 ether);
+        vm.expectRevert(DisputeParticipationNotAuthorizedError.selector);
+        vm.startBroadcast(PLAYER4_CHALLENGE1);
+        bitarenaChallenge.participateToDispute{value: 1 ether}();
+        vm.stopBroadcast();         
+
+        assertEq(true, true);
+    }   
+
+    /** 
+     * @dev Test that if there a dispute, you must pay at least the amount for particpation otherwise the tx fails
+     * if the amount is not sufficient
+     */
+    function testDispute11() public {
+        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+
+        //The admin of the challenge set delay for victory claim
+        //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        vm.stopBroadcast();         
+
+        //As the challenge must start 1 day after its creation, 
+        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        uint256 _3DaysInTheFuture = block.timestamp + 2 days;
+        vm.warp(_3DaysInTheFuture);
+
+        //PLAYER1 claims victory for his team = team1
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.claimVictory(1);
+        vm.stopBroadcast();         
+
+        //PLAYER3 claims victory for his team = team2
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.claimVictory(2);
+        vm.stopBroadcast();         
+
+        //There is a dispute so anyone who is granted can participate to a dispute
+        //PLAYER3 wants to participate to a dispute but he provides a not sufficient amount 
+        vm.expectRevert(NotSufficientAmountForDisputeError.selector);
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        //uint256 amountDispute = bitarenaChallenge.getDisputeAmountParticipation() - 1000;
+        bitarenaChallenge.participateToDispute{value: 1000}();
+        vm.stopBroadcast();         
+
+        assertEq(true, true);
+    }   
 
     /********  TESTS ON CHALLENGE POOL WITHDRAW ***************/
 

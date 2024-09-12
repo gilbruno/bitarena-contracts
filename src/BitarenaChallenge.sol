@@ -5,13 +5,13 @@ pragma solidity 0.8.26;
 import {AccessControlDefaultAdminRules} from "openzeppelin-contracts/contracts/access/extensions/AccessControlDefaultAdminRules.sol";
 import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
 import {BalanceChallengePlayerError, ChallengeCanceledError, ChallengeCancelAfterStartDateError, ClaimVictoryNotAuthorized, 
-    DelayClaimVictoryNotSet, DelayUnclaimVictoryNotSet, DisputeExistsError, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, 
-    NotTeamMemberError, SendMoneyBackToPlayersError, TeamDoesNotExistsError, 
-    TimeElapsedToClaimVictoryError, TimeElapsedToUnclaimVictoryError, TimeElapsedToCreateDisputeError, TimeElapsedToJoinTeamError, WithdrawPoolNotAuthorized, 
-    UnclaimVictoryNotAuthorized} from "./BitarenaChallengeErrors.sol";
+    DelayClaimVictoryNotSet, DelayUnclaimVictoryNotSet, DisputeExistsError, DisputeParticipationNotAuthorizedError, FeeDisputeNotSetError, NbTeamsLimitReachedError, 
+    NbPlayersPerTeamsLimitReachedError, NoDisputeError, NotSufficientAmountForDisputeError, NotTeamMemberError, SendMoneyBackToPlayersError, 
+    TeamDoesNotExistsError, TimeElapsedToClaimVictoryError, TimeElapsedToUnclaimVictoryError, TimeElapsedToCreateDisputeError, 
+    TimeElapsedToJoinTeamError, WithdrawPoolNotAuthorized, UnclaimVictoryNotAuthorized} from "./BitarenaChallengeErrors.sol";
 import {PlayerJoinsTeam, TeamCreated, Debug, VictoryClaimed, VictoryUnclaimed} from "./BitarenaChallengeEvents.sol";
 import {ChallengeParams} from "./ChallengeParams.sol";
-import {CHALLENGE_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_CREATOR_ROLE, GAMER_ROLE, FEE_PERCENTAGE_AMOUNT_BY_DEFAULT} from "./BitarenaChallengeConstants.sol";
+import {CHALLENGE_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_CREATOR_ROLE, GAMER_ROLE, FEE_PERCENTAGE_AMOUNT_BY_DEFAULT, FEE_PERCENTAGE_DISPUTE_AMOUNT_BY_DEFAULT} from "./BitarenaChallengeConstants.sol";
 
 contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
 
@@ -60,6 +60,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
         s_winnersCount = 0;
         s_challengePool = 0;
         s_feePercentage = FEE_PERCENTAGE_AMOUNT_BY_DEFAULT;
+        s_feePercentageDispute = FEE_PERCENTAGE_DISPUTE_AMOUNT_BY_DEFAULT;
         s_delayStartVictoryClaim = 0;
         s_delayEndVictoryClaim = 0;
         _grantRole(CHALLENGE_ADMIN_ROLE, params.challengeAdmin);
@@ -67,6 +68,9 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
         _grantRole(CHALLENGE_DISPUTE_ADMIN_ROLE, params.challengeDisputeAdmin);
     }
 
+    /**
+     * @dev Modifier for the "joinTem" function
+     */
     modifier checkJoinTeam(uint16 _teamIndex) {
         if (s_teams[_teamIndex].length == s_nbTeamPlayers) revert NbPlayersPerTeamsLimitReachedError();
         if (_teamIndex > s_teamCounter) revert TeamDoesNotExistsError();        
@@ -76,6 +80,9 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
         _;
     }
 
+    /**
+     * @dev Modifier for the "claimVictory" function
+     */
     modifier checkClaimVictory(uint16 _teamIndex) {
         if (s_delayStartVictoryClaim == 0 || s_delayEndVictoryClaim == 0) revert DelayClaimVictoryNotSet();
         if (!hasRole(CHALLENGE_CREATOR_ROLE, _msgSender()) && !hasRole(GAMER_ROLE, _msgSender())) revert ClaimVictoryNotAuthorized();
@@ -83,6 +90,18 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
         if (block.timestamp > (s_startAt + s_delayStartVictoryClaim + s_delayEndVictoryClaim)) revert TimeElapsedToClaimVictoryError();
         if (s_players[_msgSender()] != _teamIndex) revert NotTeamMemberError();
         if (s_isCanceled) revert ChallengeCanceledError();
+        _;
+    }
+
+    /**
+     * @dev Modifier for the "participateToDispute" function
+     */
+    modifier checkDisputeParticipation() {
+        if (s_feePercentageDispute == 0) revert FeeDisputeNotSetError();
+        uint256 disputeParticipationAmount = getDisputeAmountParticipation();
+        if (msg.value < disputeParticipationAmount) revert NotSufficientAmountForDisputeError();
+        if (!disputeExists()) revert NoDisputeError();
+        if (!hasRole(CHALLENGE_CREATOR_ROLE, _msgSender()) && !hasRole(GAMER_ROLE, _msgSender())) revert DisputeParticipationNotAuthorizedError();
         _;
     }
 
@@ -175,15 +194,14 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
         s_feePercentage = _percentage;
     }
 
-    /** All players can create a dispute.
-     * Only one player create a dispute for his team.
+    /** 
+     *  @dev : Only one player create a dispute for his team.
      * So before the delay set by the admin, it's possible to create a dispute. 
      * After the delay, it's not possible to create a dispute
-     
      * @dev 
      */
-    function participateToDispute() public onlyRole(GAMER_ROLE) onlyRole(CHALLENGE_CREATOR_ROLE) {
-        if (block.timestamp == s_startAt + s_delayStartVictoryClaim) revert TimeElapsedToCreateDisputeError();
+    function participateToDispute() public payable checkDisputeParticipation()  {
+        incrementDisputePool(getDisputeAmountParticipation());
     }
 
     /**
@@ -224,6 +242,13 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
      */
     function incrementChallengePool(uint256 _amount) internal {
         s_challengePool += _amount;
+    }
+
+    /**
+     * @dev increment the challenge pool
+     */
+    function incrementDisputePool(uint256 _amount) internal {
+        s_disputePool += _amount;
     }
 
     /**
@@ -397,6 +422,17 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
     function getChallengePool() external view returns (uint256) {
         return s_challengePool;
     }
+
+    /**
+     * @dev get the value of the amount of the dispute participation
+     */
+    function getDisputeAmountParticipation() public view returns (uint256) {
+        uint256 disputeParticipationAmount = s_challengePool * s_feePercentageDispute;
+        disputeParticipationAmount = disputeParticipationAmount / 100;
+        return disputeParticipationAmount;
+    }
+
+    
 
     /**
      * @dev getter for state variable s_disputePool
