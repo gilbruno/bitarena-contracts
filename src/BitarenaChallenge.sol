@@ -136,6 +136,18 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
     }
 
     /**
+     * @dev Entry point for front application to create or join a team 
+     */
+    function createOrJoinTeam(uint16 _teamIndex) public payable {
+        if (_teamIndex == 0) {
+            createTeam();
+        }
+        else {
+            joinTeam(_teamIndex);
+        }
+    }
+
+    /**
      * @dev Function that will be callable by front end. 
      * If value of _teamIndex equals 0 then it's a creation team intent
      * Oherwise the player wants to join the team with specified index
@@ -145,7 +157,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
      * We reject the Tx if a player wants to join a team afetr the challenge start date
      * 
      */
-    function joinTeam(uint16 _teamIndex) public payable checkJoinTeam(_teamIndex) {
+    function joinTeam(uint16 _teamIndex) internal checkJoinTeam(_teamIndex) {
         joinTeamInternal(_teamIndex, _msgSender());
         emit PlayerJoinsTeam(_teamIndex, _msgSender());
     }
@@ -153,7 +165,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
     /**
      * @dev Create a team
      */    
-    function createTeam() public payable {
+    function createTeam() internal {
         unchecked {
             ++s_teamCounter;
         }
