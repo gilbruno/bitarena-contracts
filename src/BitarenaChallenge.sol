@@ -15,7 +15,6 @@ import {CHALLENGE_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_CREATOR_RO
 
 contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
 
-    bytes32 private s_name;
     bytes32 private s_game;
     bytes32 private s_platform;
 
@@ -53,7 +52,6 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
         s_admin = params.challengeAdmin;
         s_disputeAdmin = params.challengeDisputeAdmin;
         s_creator = params.challengeCreator;
-        s_name = params.name;
         s_game = params.game;
         s_platform = params.platform;
         s_nbTeams = params.nbTeams;
@@ -319,13 +317,6 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
     function withdrawChallengePool() public {
         if (!hasRole(CHALLENGE_CREATOR_ROLE, _msgSender()) && !hasRole(GAMER_ROLE, _msgSender())) revert WithdrawPoolNotAuthorized();
         if (disputeExists()) revert DisputeExistsError();
-    }
-
-    /**
-     * @dev getter for state variable s_name
-     */
-    function getName() external view returns (bytes32) {
-        return s_name;
     }
 
     /**

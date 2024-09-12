@@ -296,19 +296,6 @@ contract BitarenaTest is Test {
         assertEq(challengeStructCreated.challengeName, CHALLENGE1);
     }
     /**
-     * @dev Test value of state var "s_challengesName" after intent challenge creation 
-     */
-    function testStateVariableAfterChallengeDeployment1() public {
-        intentChallengeCreationWith2TeamsAnd1Player();
-
-        vm.startBroadcast(ADMIN_FACTORY);
-        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, 1);
-        vm.stopBroadcast();       
-
-        assertEq(bitarenaChallenge.getName(), CHALLENGE1);
-    }
-
-    /**
      * @dev Test value of mapping "s_challengesMap" after intent challenge creation 
      */
     function testStateVariableAfterIntentChallengeCreation2() public {
@@ -929,7 +916,7 @@ contract BitarenaTest is Test {
     }
 
     /**
-     * @dev Test that native tokens are sent back to players that jointeam after the creator cancel the challenge
+     * @dev Test that native tokens are sent back to players that join team after the creator cancel the challenge
      */
     function testCancelChallenge1() public {
         BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();

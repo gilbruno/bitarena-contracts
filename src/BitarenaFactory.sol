@@ -88,7 +88,6 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
             challengeAdmin: _challengeAdmin,
             challengeDisputeAdmin: _challengeDisputeAdmin,
             challengeCreator: challenge.challengeCreator,
-            name: challenge.challengeName,
             game: challenge.game,
             platform: challenge.platform,
             nbTeams: challenge.nbTeams,
