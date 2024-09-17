@@ -255,7 +255,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
      * @dev
      */
     function setDelayStartForVictoryClaim(uint256 _delayStartVictoryClaim) public onlyRole(CHALLENGE_ADMIN_ROLE) {
-        if (s_delayEndVictoryClaim > 0 && s_delayStartVictoryClaim > s_delayEndVictoryClaim) revert DelayStartClaimVictoryGreaterThanDelayEndClaimVictoryError();
+        if (s_delayEndVictoryClaim > 0 && _delayStartVictoryClaim > s_delayEndVictoryClaim) revert DelayStartClaimVictoryGreaterThanDelayEndClaimVictoryError();
         s_delayStartVictoryClaim = _delayStartVictoryClaim;
     }
 
@@ -266,7 +266,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
      * @dev
      */
     function setDelayEndForVictoryClaim(uint256 _delayEndVictoryClaim) public onlyRole(CHALLENGE_ADMIN_ROLE) {
-        if (s_delayStartVictoryClaim > 0 && s_delayStartVictoryClaim > s_delayEndVictoryClaim) revert DelayStartClaimVictoryGreaterThanDelayEndClaimVictoryError();
+        if (s_delayStartVictoryClaim > 0 && s_delayStartVictoryClaim > _delayEndVictoryClaim) revert DelayStartClaimVictoryGreaterThanDelayEndClaimVictoryError();
         s_delayEndVictoryClaim = _delayEndVictoryClaim;
     }
     /**

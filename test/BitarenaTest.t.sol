@@ -12,7 +12,8 @@ import {BalanceChallengeCreatorError, ChallengeAdminAddressZeroError,
 import {Challenge} from '../src/ChallengeStruct.sol';
 import {BitarenaChallenge} from '../src/BitarenaChallenge.sol';
 import {BalanceChallengePlayerError, ChallengeCancelAfterStartDateError, ChallengeCanceledError, ClaimVictoryNotAuthorized, 
-    DelayClaimVictoryNotSet, DelayUnclaimVictoryNotSet, DisputeExistsError, DisputeParticipationNotAuthorizedError, FeeDisputeNotSetError, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, 
+    DelayClaimVictoryNotSet, DelayUnclaimVictoryNotSet, DelayStartClaimVictoryGreaterThanDelayEndClaimVictoryError, 
+    DisputeExistsError, DisputeParticipationNotAuthorizedError, FeeDisputeNotSetError, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, 
     NotSufficientAmountForDisputeError, NoDisputeError, NoDisputeParticipantsError, NotTeamMemberError, RefundImpossibleDueToTooManyDisputeParticipantsError, 
     TeamDoesNotExistsError, TeamOfSignerAlreadyParticipatesInDisputeError, TimeElapsedToJoinTeamError, TimeElapsedToClaimVictoryError, TimeElapsedToUnclaimVictoryError, 
     UnclaimVictoryNotAuthorized, WithdrawPoolNotAuthorized} from "../src/BitarenaChallengeErrors.sol";
@@ -518,7 +519,23 @@ contract BitarenaTest is Test {
         console.log('DELAY 2', bitarenaChallenge.getDelayEndVictoryClaim());
         assertEq(bitarenaChallenge.getDelayStartVictoryClaim(), 5 hours);
         assertEq(bitarenaChallenge.getDelayEndVictoryClaim(), 20 hours);
+    }
 
+    /**
+     * @dev Test setter "setDelayStartVictoryClaim"
+     * 
+     */
+    function testSetterAfterChallengeDeployment1() public {
+        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        vm.stopBroadcast();
+
+        vm.expectRevert(DelayStartClaimVictoryGreaterThanDelayEndClaimVictoryError.selector);
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayEndForVictoryClaim(5 hours);
+        vm.stopBroadcast();
     }
 
     /**
@@ -1251,8 +1268,11 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
-        bitarenaChallenge.setDelayEndForVictoryClaim(0);
+        bitarenaChallenge.setDelayStartForVictoryClaim(0);
+        vm.stopBroadcast();         
+
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayEndForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, we try to unclaim 3 days after the start date
