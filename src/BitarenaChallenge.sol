@@ -11,7 +11,8 @@ import {BalanceChallengePlayerError, ChallengeCanceledError, ChallengeCancelAfte
     TimeElapsedToJoinTeamError, WithdrawPoolNotAuthorized, UnclaimVictoryNotAuthorized} from "./BitarenaChallengeErrors.sol";
 import {PlayerJoinsTeam, TeamCreated, Debug, VictoryClaimed, VictoryUnclaimed} from "./BitarenaChallengeEvents.sol";
 import {ChallengeParams} from "./ChallengeParams.sol";
-import {CHALLENGE_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_CREATOR_ROLE, GAMER_ROLE, FEE_PERCENTAGE_AMOUNT_BY_DEFAULT, FEE_PERCENTAGE_DISPUTE_AMOUNT_BY_DEFAULT} from "./BitarenaChallengeConstants.sol";
+import {CHALLENGE_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_CREATOR_ROLE, DELAY_START_VICTORY_CLAIM__BY_DEFAULT, DELAY_END_VICTORY_CLAIM__BY_DEFAULT, 
+    GAMER_ROLE, FEE_PERCENTAGE_AMOUNT_BY_DEFAULT, FEE_PERCENTAGE_DISPUTE_AMOUNT_BY_DEFAULT} from "./BitarenaChallengeConstants.sol";
 
 contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
 
@@ -65,8 +66,8 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
         s_challengePool = 0;
         s_feePercentage = FEE_PERCENTAGE_AMOUNT_BY_DEFAULT;
         s_feePercentageDispute = FEE_PERCENTAGE_DISPUTE_AMOUNT_BY_DEFAULT;
-        s_delayStartVictoryClaim = 0;
-        s_delayEndVictoryClaim = 0;
+        s_delayStartVictoryClaim = DELAY_START_VICTORY_CLAIM__BY_DEFAULT;
+        s_delayEndVictoryClaim = DELAY_END_VICTORY_CLAIM__BY_DEFAULT;
         _grantRole(CHALLENGE_ADMIN_ROLE, params.challengeAdmin);
         _grantRole(CHALLENGE_CREATOR_ROLE, params.challengeCreator);
         _grantRole(CHALLENGE_DISPUTE_ADMIN_ROLE, params.challengeDisputeAdmin);
