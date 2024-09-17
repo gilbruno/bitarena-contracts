@@ -496,11 +496,12 @@ contract BitarenaTest is Test {
     function testGetterAfterChallengeDeployment8() public {
         BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
         joinTeamWith2PlayersPerTeam(bitarenaChallenge);
-        assertEq(bitarenaChallenge.getDelayStartVictoryClaim(), 0);
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(1 hours);
+        bitarenaChallenge.setDelayEndForVictoryClaim(10 hours);
         vm.stopBroadcast();
-        assertEq(bitarenaChallenge.getDelayStartVictoryClaim(), 10 hours);
+        assertEq(bitarenaChallenge.getDelayStartVictoryClaim(), 1 hours);
+        assertEq(bitarenaChallenge.getDelayEndVictoryClaim(), 10 hours);
 
     }
     /**
@@ -510,10 +511,12 @@ contract BitarenaTest is Test {
     function testGetterAfterChallengeDeployment9() public {
         BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
         joinTeamWith2PlayersPerTeam(bitarenaChallenge);
-        assertEq(bitarenaChallenge.getDelayEndVictoryClaim(), 0);
         vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayStartForVictoryClaim(5 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
         vm.stopBroadcast();
+        console.log('DELAY 2', bitarenaChallenge.getDelayEndVictoryClaim());
+        assertEq(bitarenaChallenge.getDelayStartVictoryClaim(), 5 hours);
         assertEq(bitarenaChallenge.getDelayEndVictoryClaim(), 20 hours);
 
     }
@@ -1057,6 +1060,7 @@ contract BitarenaTest is Test {
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
         bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(0);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, we try to claim 3 days after the start date
@@ -1078,6 +1082,7 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayStartForVictoryClaim(0);
         bitarenaChallenge.setDelayEndForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
@@ -1247,6 +1252,7 @@ contract BitarenaTest is Test {
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
         bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayEndForVictoryClaim(0);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, we try to unclaim 3 days after the start date
@@ -1268,13 +1274,14 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory unclaim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayEndForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(1 hours);
+        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
         vm.stopBroadcast();         
 
-        //As the challenge must start 1 day after its creation, we try to claim 15 hours after the start date
+        //As the challenge must start 1 day after its creation, we try to claim 3 days after the start date
         uint256 _3DaysInTheFuture = block.timestamp + 3 days;
         vm.warp(_3DaysInTheFuture);
-        vm.expectRevert(DelayUnclaimVictoryNotSet.selector);
+        vm.expectRevert(TimeElapsedToUnclaimVictoryError.selector);
         vm.startBroadcast(PLAYER3_CHALLENGE1);
         bitarenaChallenge.unclaimVictory(2);
         vm.stopBroadcast();         
