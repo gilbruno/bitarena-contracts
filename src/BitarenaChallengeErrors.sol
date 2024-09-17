@@ -32,6 +32,11 @@ error DelayClaimVictoryNotSet();
  */
 error DelayUnclaimVictoryNotSet();
 
+/**
+ * @dev 
+ */
+error DelayStartClaimVictoryGreaterThanDelayEndClaimVictoryError();
+
 
 /**
  * @dev 

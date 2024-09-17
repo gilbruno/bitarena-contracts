@@ -5,7 +5,7 @@ pragma solidity 0.8.26;
 import {AccessControlDefaultAdminRules} from "openzeppelin-contracts/contracts/access/extensions/AccessControlDefaultAdminRules.sol";
 import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
 import {BalanceChallengePlayerError, ChallengeCanceledError, ChallengeCancelAfterStartDateError, ClaimVictoryNotAuthorized, 
-    DelayClaimVictoryNotSet, DelayUnclaimVictoryNotSet, DisputeExistsError, DisputeParticipationNotAuthorizedError, FeeDisputeNotSetError, NbTeamsLimitReachedError, 
+    DelayClaimVictoryNotSet, DelayUnclaimVictoryNotSet, DelayStartClaimVictoryGreaterThanDelayEndClaimVictoryError, DisputeExistsError, DisputeParticipationNotAuthorizedError, FeeDisputeNotSetError, NbTeamsLimitReachedError, 
     NbPlayersPerTeamsLimitReachedError, NoDisputeError, NotSufficientAmountForDisputeError, NotTeamMemberError, NoDisputeParticipantsError, RefundImpossibleDueToTooManyDisputeParticipantsError, 
     SendMoneyBackToPlayersError, TeamDoesNotExistsError, TeamOfSignerAlreadyParticipatesInDisputeError, TimeElapsedToClaimVictoryError, TimeElapsedToUnclaimVictoryError, TimeElapsedToCreateDisputeError, 
     TimeElapsedToJoinTeamError, WithdrawPoolNotAuthorized, UnclaimVictoryNotAuthorized} from "./BitarenaChallengeErrors.sol";
@@ -254,6 +254,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
      * @dev
      */
     function setDelayStartForVictoryClaim(uint256 _delayStartVictoryClaim) public onlyRole(CHALLENGE_ADMIN_ROLE) {
+        if (s_delayEndVictoryClaim > 0 && s_delayStartVictoryClaim > s_delayEndVictoryClaim) revert DelayStartClaimVictoryGreaterThanDelayEndClaimVictoryError();
         s_delayStartVictoryClaim = _delayStartVictoryClaim;
     }
 
@@ -264,6 +265,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
      * @dev
      */
     function setDelayEndForVictoryClaim(uint256 _delayEndVictoryClaim) public onlyRole(CHALLENGE_ADMIN_ROLE) {
+        if (s_delayStartVictoryClaim > 0 && s_delayStartVictoryClaim > s_delayEndVictoryClaim) revert DelayStartClaimVictoryGreaterThanDelayEndClaimVictoryError();
         s_delayEndVictoryClaim = _delayEndVictoryClaim;
     }
     /**
