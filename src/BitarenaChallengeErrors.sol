@@ -81,6 +81,11 @@ error NotTeamMemberError();
 /**
  * @dev 
  */
+error NotTimeYetToParticipateToDisputeError();
+
+/**
+ * @dev 
+ */
 error NoDisputeParticipantsError();
 
 /**
@@ -88,6 +93,11 @@ error NoDisputeParticipantsError();
  */
 error RefundImpossibleDueToTooManyDisputeParticipantsError();
 
+/**
+ * @dev
+ */
+error 
+RevealWinnerImpossibleDueToTooFewDisputersError();
 /**
  * @dev 
  */
@@ -104,6 +114,11 @@ error TeamDoesNotExistsError();
  * @dev 
  */
 error TeamOfSignerAlreadyParticipatesInDisputeError();
+
+/**
+ * @dev 
+ */
+error TeamIsNotDisputerError();
 
 /**
  * @dev 
@@ -135,3 +150,8 @@ error UnclaimVictoryNotAuthorized();
  * @dev 
  */
 error WithdrawPoolNotAuthorized();
+
+/**
+ * @dev 
+ */
+error WithdrawPoolByLooserTeamImpossibleError();
