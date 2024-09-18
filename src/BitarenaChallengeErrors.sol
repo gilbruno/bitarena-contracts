@@ -133,7 +133,7 @@ error TimeElapsedToJoinTeamError();
 /**
  * @dev 
  */
-error TimeElapsedToCreateDisputeError();
+error TimeElapsedForDisputeParticipationError();
 
 /**
  * @dev 

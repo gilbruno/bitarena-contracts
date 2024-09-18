@@ -15,7 +15,7 @@ import {BalanceChallengePlayerError, ChallengeCancelAfterStartDateError, Challen
     DelayClaimVictoryNotSet, DelayUnclaimVictoryNotSet, DelayStartClaimVictoryGreaterThanDelayEndClaimVictoryError, 
     DisputeExistsError, DisputeParticipationNotAuthorizedError, FeeDisputeNotSetError, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, 
     NotSufficientAmountForDisputeError, NoDisputeError, NoDisputeParticipantsError, NotTeamMemberError, RefundImpossibleDueToTooManyDisputeParticipantsError, 
-    RevealWinnerImpossibleDueToTooFewDisputersError, TeamDoesNotExistsError, TeamOfSignerAlreadyParticipatesInDisputeError, TimeElapsedToJoinTeamError, 
+    RevealWinnerImpossibleDueToTooFewDisputersError, TeamDoesNotExistsError, TeamOfSignerAlreadyParticipatesInDisputeError, TimeElapsedToJoinTeamError, TimeElapsedForDisputeParticipationError,
     TimeElapsedToClaimVictoryError, TimeElapsedToUnclaimVictoryError, UnclaimVictoryNotAuthorized, WinnerNotRevealedYetError, WithdrawPoolByLooserTeamImpossibleError, WithdrawPoolNotAuthorized} from "../src/BitarenaChallengeErrors.sol";
 
 
@@ -1643,7 +1643,7 @@ contract BitarenaTest is Test {
 
         //There is a dispute so anyone can participate to a dispute
         //PLAYER1 wants to participate to a dispute after a correct delay        
-        vm.warp(bitarenaChallenge.getChallengeStartDate() + bitarenaChallenge.getDelayStartVictoryClaim() + bitarenaChallenge.getDelayEndVictoryClaim());
+        vm.warp(bitarenaChallenge.getChallengeStartDate() + bitarenaChallenge.getDelayStartVictoryClaim() + bitarenaChallenge.getDelayEndVictoryClaim() + 1 hours);
         vm.startBroadcast(PLAYER1_CHALLENGE1);
         bitarenaChallenge.participateToDispute{value: bitarenaChallenge.getDisputeAmountParticipation()}();
         vm.stopBroadcast();         
@@ -1696,7 +1696,7 @@ contract BitarenaTest is Test {
     }   
 
     /** 
-     * @dev Test that if there a dispute, the tx revertsif the fee result set by the admin equals 0
+     * @dev Test that if there a dispute, the tx reverts if the fee result set by the admin equals 0
      */
     function testDispute9() public {
         BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
@@ -1960,8 +1960,51 @@ contract BitarenaTest is Test {
         vm.startBroadcast(ADMIN_CHALLENGE1);
         bitarenaChallenge.refundDisputeAmount();
         vm.stopBroadcast();         
-
     }   
+
+        /** 
+     * @dev Test that if there a dispute, a dispute participation is impossible after the delay set by the admin
+     */
+    function testDispute14() public {
+        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+
+        //The admin of the challenge set delay for victory claim
+        //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        vm.stopBroadcast();         
+
+        //As the challenge must start 1 day after its creation, 
+        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        uint256 _3DaysInTheFuture = block.timestamp + 2 days;
+        vm.warp(_3DaysInTheFuture);
+
+        //PLAYER1 claims victory for his team = team1
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.claimVictory(1);
+        vm.stopBroadcast();         
+
+        //PLAYER3 claims victory for his team = team2
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.claimVictory(2);
+        vm.stopBroadcast();         
+
+        //There is a dispute so anyone can participate to a dispute
+        //PLAYER1 wants to participate to a dispute after a wrong delay : it reverts with TimeElapsedForDisputeParticipationError
+        uint256 amountDispute = bitarenaChallenge.getDisputeAmountParticipation();
+
+        vm.warp(block.timestamp + 5 days);
+        vm.expectRevert(TimeElapsedForDisputeParticipationError.selector);
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.participateToDispute{value: amountDispute}();
+        vm.stopBroadcast();         
+
+        assertEq(true, true);
+    }   
+
+
 
     /********  TESTS ON CHALLENGE POOL WITHDRAW ***************/
     /**
@@ -2141,7 +2184,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
-        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        // the PLAYER3 tries to claim the victory for the team1 that is not his team (=team2)
         uint256 _3DaysInTheFuture = block.timestamp + 2 days;
         vm.warp(_3DaysInTheFuture);
 
@@ -2196,11 +2239,19 @@ contract BitarenaTest is Test {
         bitarenaChallenge.claimVictory(2);
         vm.stopBroadcast();         
 
-        //The challenge DISPUTE ADMIN revealed team 1 as the winner
+        //The challenge DISPUTE ADMIN revealed team 1 as the winner : it reverts because to reveal the winner, the dispute mustcontain at least 2 participants
+        // At this stage, we have any dispute participants 
         vm.expectRevert(RevealWinnerImpossibleDueToTooFewDisputersError.selector);
         vm.startBroadcast(ADMIN_DISPUTE_CHALLENGE1);
         bitarenaChallenge.revealWinnerAfterDispute(1);
         vm.stopBroadcast();         
+
+        //PLAYER1 (team1) participates to a dispute
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.claimVictory(1);
+        vm.stopBroadcast();         
+
+
 
     }
 

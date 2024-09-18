@@ -11,7 +11,8 @@ bytes32 constant GAMER_ROLE = keccak256("GAMER_ROLE");
 uint8 constant FEE_PERCENTAGE_AMOUNT_BY_DEFAULT = 15;
 uint8 constant FEE_PERCENTAGE_DISPUTE_AMOUNT_BY_DEFAULT = 15;
 
-uint256 constant DELAY_START_VICTORY_CLAIM__BY_DEFAULT = 1 hours;
-uint256 constant DELAY_END_VICTORY_CLAIM__BY_DEFAULT = 24 hours;
+uint256 constant DELAY_START_VICTORY_CLAIM_BY_DEFAULT = 1 hours; //After startAt
+uint256 constant DELAY_END_VICTORY_CLAIM_BY_DEFAULT = 24 hours; //After startVictoryclaim
 
-
+uint256 constant DELAY_START_DISPUTE_PARTICIPATION_BY_DEFAULT = 1 hours; //After endVictoryclaim
+uint256 constant DELAY_END_DISPUTE_PARTICIPATION_BY_DEFAULT = 24 hours; //After startdisputeParticipation

@@ -7,11 +7,12 @@ import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
 import {BalanceChallengePlayerError, ChallengeCanceledError, ChallengeCancelAfterStartDateError, ChallengePoolAlreadyWithdrawed, ClaimVictoryNotAuthorized, 
     DelayClaimVictoryNotSet, DelayUnclaimVictoryNotSet, DelayStartClaimVictoryGreaterThanDelayEndClaimVictoryError, DisputeExistsError, DisputeParticipationNotAuthorizedError, FeeDisputeNotSetError, NbTeamsLimitReachedError, 
     NbPlayersPerTeamsLimitReachedError, NoDisputeError, NotSufficientAmountForDisputeError, NotTeamMemberError, NotTimeYetToParticipateToDisputeError, NoDisputeParticipantsError, RefundImpossibleDueToTooManyDisputeParticipantsError, RevealWinnerImpossibleDueToTooFewDisputersError,
-    SendMoneyBackToPlayersError, TeamDoesNotExistsError, TeamIsNotDisputerError, TeamOfSignerAlreadyParticipatesInDisputeError, TimeElapsedToClaimVictoryError, TimeElapsedToUnclaimVictoryError, TimeElapsedToCreateDisputeError, 
+    SendMoneyBackToPlayersError, TeamDoesNotExistsError, TeamIsNotDisputerError, TeamOfSignerAlreadyParticipatesInDisputeError, TimeElapsedToClaimVictoryError, TimeElapsedToUnclaimVictoryError, TimeElapsedForDisputeParticipationError, 
     TimeElapsedToJoinTeamError, UnclaimVictoryNotAuthorized, WinnerNotRevealedYetError, WithdrawPoolNotAuthorized, WithdrawPoolByLooserTeamImpossibleError} from "./BitarenaChallengeErrors.sol";
 import {PlayerJoinsTeam, TeamCreated, Debug, VictoryClaimed, VictoryUnclaimed} from "./BitarenaChallengeEvents.sol";
 import {ChallengeParams} from "./ChallengeParams.sol";
-import {CHALLENGE_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_CREATOR_ROLE, DELAY_START_VICTORY_CLAIM__BY_DEFAULT, DELAY_END_VICTORY_CLAIM__BY_DEFAULT, 
+import {CHALLENGE_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_CREATOR_ROLE, DELAY_START_VICTORY_CLAIM_BY_DEFAULT, DELAY_END_VICTORY_CLAIM_BY_DEFAULT, 
+    DELAY_START_DISPUTE_PARTICIPATION_BY_DEFAULT, DELAY_END_DISPUTE_PARTICIPATION_BY_DEFAULT,
     GAMER_ROLE, FEE_PERCENTAGE_AMOUNT_BY_DEFAULT, FEE_PERCENTAGE_DISPUTE_AMOUNT_BY_DEFAULT} from "./BitarenaChallengeConstants.sol";
 
 contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
@@ -32,6 +33,8 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
     uint256 private immutable s_amountPerPlayer;
     uint256 private s_delayStartVictoryClaim;
     uint256 private s_delayEndVictoryClaim;
+    uint256 private s_delayStartDisputeParticipation;
+    uint256 private s_delayEndDisputeParticipation;
     uint256 private s_challengePool;
     uint256 private s_disputePool;
 
@@ -71,8 +74,10 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
         s_challengePool = 0;
         s_feePercentage = FEE_PERCENTAGE_AMOUNT_BY_DEFAULT;
         s_feePercentageDispute = FEE_PERCENTAGE_DISPUTE_AMOUNT_BY_DEFAULT;
-        s_delayStartVictoryClaim = DELAY_START_VICTORY_CLAIM__BY_DEFAULT;
-        s_delayEndVictoryClaim = DELAY_END_VICTORY_CLAIM__BY_DEFAULT;
+        s_delayStartVictoryClaim = DELAY_START_VICTORY_CLAIM_BY_DEFAULT;
+        s_delayEndVictoryClaim = DELAY_END_VICTORY_CLAIM_BY_DEFAULT;
+        s_delayStartDisputeParticipation = DELAY_START_DISPUTE_PARTICIPATION_BY_DEFAULT;
+        s_delayEndDisputeParticipation = DELAY_END_DISPUTE_PARTICIPATION_BY_DEFAULT;
         _grantRole(CHALLENGE_ADMIN_ROLE, params.challengeAdmin);
         _grantRole(CHALLENGE_CREATOR_ROLE, params.challengeCreator);
         _grantRole(CHALLENGE_DISPUTE_ADMIN_ROLE, params.challengeDisputeAdmin);
@@ -122,7 +127,8 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
         if (!hasRole(CHALLENGE_CREATOR_ROLE, _msgSender()) && !hasRole(GAMER_ROLE, _msgSender())) revert DisputeParticipationNotAuthorizedError();
         uint16 teamIndex = getTeamOfPlayer(_msgSender());
         if (teamIsDisputer(teamIndex)) revert TeamOfSignerAlreadyParticipatesInDisputeError();
-        if (block.timestamp < (s_startAt + s_delayStartVictoryClaim + s_delayEndVictoryClaim)) revert NotTimeYetToParticipateToDisputeError();
+        if (block.timestamp < (s_startAt + s_delayStartVictoryClaim + s_delayEndVictoryClaim + s_delayStartDisputeParticipation)) revert NotTimeYetToParticipateToDisputeError();
+        if (block.timestamp > (s_startAt + s_delayStartVictoryClaim + s_delayEndVictoryClaim + s_delayStartDisputeParticipation + s_delayEndDisputeParticipation)) revert TimeElapsedForDisputeParticipationError();
         _;
     }
 
@@ -528,6 +534,19 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
         return s_delayEndVictoryClaim;
     }
 
+    /**
+     * @dev getter for state variable s_delayStartDisputeParticipation
+     */
+    function getDelayStartDisputeParticipation() external view returns (uint256) {
+        return s_delayStartDisputeParticipation;
+    }
+
+    /**
+     * @dev getter for state variable s_delayEndDisputeParticipation
+     */
+    function getDelayEndDisputeParticipation() external view returns (uint256) {
+        return s_delayEndDisputeParticipation;
+    }
     /**
      * @dev getter for state variable s_feePercentageDispute
      */
