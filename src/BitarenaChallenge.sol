@@ -4,11 +4,11 @@ pragma solidity 0.8.26;
 
 import {AccessControlDefaultAdminRules} from "openzeppelin-contracts/contracts/access/extensions/AccessControlDefaultAdminRules.sol";
 import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
-import {BalanceChallengePlayerError, ChallengeCanceledError, ChallengeCancelAfterStartDateError, ClaimVictoryNotAuthorized, 
+import {BalanceChallengePlayerError, ChallengeCanceledError, ChallengeCancelAfterStartDateError, ChallengePoolAlreadyWithdrawed, ClaimVictoryNotAuthorized, 
     DelayClaimVictoryNotSet, DelayUnclaimVictoryNotSet, DelayStartClaimVictoryGreaterThanDelayEndClaimVictoryError, DisputeExistsError, DisputeParticipationNotAuthorizedError, FeeDisputeNotSetError, NbTeamsLimitReachedError, 
     NbPlayersPerTeamsLimitReachedError, NoDisputeError, NotSufficientAmountForDisputeError, NotTeamMemberError, NotTimeYetToParticipateToDisputeError, NoDisputeParticipantsError, RefundImpossibleDueToTooManyDisputeParticipantsError, RevealWinnerImpossibleDueToTooFewDisputersError,
     SendMoneyBackToPlayersError, TeamDoesNotExistsError, TeamIsNotDisputerError, TeamOfSignerAlreadyParticipatesInDisputeError, TimeElapsedToClaimVictoryError, TimeElapsedToUnclaimVictoryError, TimeElapsedToCreateDisputeError, 
-    TimeElapsedToJoinTeamError, UnclaimVictoryNotAuthorized, WithdrawPoolNotAuthorized, WithdrawPoolByLooserTeamImpossibleError} from "./BitarenaChallengeErrors.sol";
+    TimeElapsedToJoinTeamError, UnclaimVictoryNotAuthorized, WinnerNotRevealedYetError, WithdrawPoolNotAuthorized, WithdrawPoolByLooserTeamImpossibleError} from "./BitarenaChallengeErrors.sol";
 import {PlayerJoinsTeam, TeamCreated, Debug, VictoryClaimed, VictoryUnclaimed} from "./BitarenaChallengeEvents.sol";
 import {ChallengeParams} from "./ChallengeParams.sol";
 import {CHALLENGE_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_CREATOR_ROLE, DELAY_START_VICTORY_CLAIM__BY_DEFAULT, DELAY_END_VICTORY_CLAIM__BY_DEFAULT, 
@@ -37,6 +37,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
 
     bool private s_isPrivate;
     bool private s_isCanceled;
+    bool private s_isPoolWithdrawed;
 
     address private s_admin;
     address private s_disputeAdmin;
@@ -63,6 +64,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
         s_startAt = params.startAt;
         s_isPrivate = params.isPrivate;
         s_isCanceled = false;
+        s_isPoolWithdrawed = false;
         s_teamCounter = 0;
         s_winnersCount = 0;
         s_winnerTeam= 0;
@@ -116,7 +118,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
         if (s_feePercentageDispute == 0) revert FeeDisputeNotSetError();
         uint256 disputeParticipationAmount = getDisputeAmountParticipation();
         if (msg.value < disputeParticipationAmount) revert NotSufficientAmountForDisputeError();
-        if (!disputeExists()) revert NoDisputeError();
+        if (!atLeast2TeamsClaimVictory()) revert NoDisputeError();
         if (!hasRole(CHALLENGE_CREATOR_ROLE, _msgSender()) && !hasRole(GAMER_ROLE, _msgSender())) revert DisputeParticipationNotAuthorizedError();
         uint16 teamIndex = getTeamOfPlayer(_msgSender());
         if (teamIsDisputer(teamIndex)) revert TeamOfSignerAlreadyParticipatesInDisputeError();
@@ -163,12 +165,17 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
      * After a dispute occurs and the ADMIN revealed which team is the winner, the team member can withdraw the pool
      * Controls for that action must be : 
      *   - only a GAMER or challenge CREATOR can withdraw the challenge pool
+     *   - a dispute must exist (so with 2 participants at least)
+     *   - impossible to withdraw the pool if the winner has not been revealed yet with at least 2 disputers
      *   - only the member of the team who won can withdraw the challenge pool
      */
     modifier checkWithdrawPool() {
         if (!hasRole(CHALLENGE_CREATOR_ROLE, _msgSender()) && !hasRole(GAMER_ROLE, _msgSender())) revert WithdrawPoolNotAuthorized();
+        if (!atLeast1TeamParticipateToDispute()) revert NoDisputeParticipantsError();
+        if (s_winnerTeam == 0 && atLeast2TeamsParticipateToDispute()) revert WinnerNotRevealedYetError();
         uint16 teamIndex = getTeamOfPlayer(_msgSender());
         if (teamIndex != s_winnerTeam) revert WithdrawPoolByLooserTeamImpossibleError();
+        if (getIsPoolWithdrawed() == true) revert ChallengePoolAlreadyWithdrawed();
         _;
     }
 
@@ -263,7 +270,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
     /**
      * @dev After many teams participate to a dispute, the challenge ADMIN reveal which team is the winner by indicating which team is the winner
      */
-    function revealWinnerAfterDispute(uint16 _teamIndex) public onlyRole(CHALLENGE_ADMIN_ROLE) checkRevealWinnerAfterDispute(_teamIndex) {
+    function revealWinnerAfterDispute(uint16 _teamIndex) public onlyRole(CHALLENGE_DISPUTE_ADMIN_ROLE) checkRevealWinnerAfterDispute(_teamIndex) {
         s_winnerTeam = _teamIndex;
     }    
 
@@ -297,6 +304,16 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
         uint16 teamSigner = getTeamOfPlayer(_msgSender());
         s_disputeParticipants[teamSigner] = _msgSender(); 
         s_disputeTeams.push(teamSigner);
+        // The first team to participate to the dispute is revealed as winner
+        // Then, if no other teams participate to the dispute, the winer is the first team to participate
+        if (s_disputeTeams.length == 1) {
+            s_winnerTeam = teamSigner;
+        }
+        else {
+            // If a second team participates to the dispute we reset the wionner to 0 = no winner
+            s_winnerTeam = 0;
+        }
+        
         incrementDisputePool(getDisputeAmountParticipation());
     }
 
@@ -372,18 +389,30 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
      * meaning if at least 2 teams claim the victory among all the teams
      * 
      */
-    function disputeExists() public view returns (bool) {
+    function atLeast2TeamsClaimVictory() public view returns (bool) {
         return (s_winnersCount > 1);
     }
 
+    /**
+     * @dev Returns true if at least 2 teams participate to a dispute
+     */
+    function atLeast2TeamsParticipateToDispute() public view returns (bool) {
+        return (getDisputeParticipantsCount() > 1);
+    }
+
+    /**
+     * @dev Returns true if at least 1 team participate to a dispute
+     */
+    function atLeast1TeamParticipateToDispute() public view returns (bool) {
+        return (getDisputeParticipantsCount() == 1);
+    }
 
     /**
      * @dev 
      * Rules : Only the winner can withdraw the pool
      */
-    function withdrawChallengePool() public {
-        if (!hasRole(CHALLENGE_CREATOR_ROLE, _msgSender()) && !hasRole(GAMER_ROLE, _msgSender())) revert WithdrawPoolNotAuthorized();
-        if (disputeExists()) revert DisputeExistsError();
+    function withdrawChallengePool() public checkWithdrawPool() {
+        s_isPoolWithdrawed = true;
     }
 
     /**
@@ -437,8 +466,15 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
     /**
      * @dev getter for state variable s_isCanceled
      */
-    function getIsCanceled() external view returns (bool) {
+    function getIsCanceled() public view returns (bool) {
         return s_isCanceled;
+    }
+
+    /**
+     * @dev getter for state variable s_isPoolWithdrawed
+     */
+    function getIsPoolWithdrawed() public view returns (bool) {
+        return s_isPoolWithdrawed;
     }
 
     /**

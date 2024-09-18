@@ -20,6 +20,11 @@ error ChallengeCancelAfterStartDateError();
 /**
  * @dev 
  */
+error ChallengePoolAlreadyWithdrawed();
+
+/**
+ * @dev 
+ */
 error ClaimVictoryNotAuthorized();
 
 /**
@@ -71,6 +76,11 @@ error NoDisputeError();
 /**
  * @dev 
  */
+error NoDisputeParticipantsError();
+
+/**
+ * @dev 
+ */
 error NotSufficientAmountForDisputeError();
 
 /**
@@ -82,11 +92,6 @@ error NotTeamMemberError();
  * @dev 
  */
 error NotTimeYetToParticipateToDisputeError();
-
-/**
- * @dev 
- */
-error NoDisputeParticipantsError();
 
 /**
  * @dev 
@@ -145,7 +150,10 @@ error TimeElapsedToUnclaimVictoryError();
  */
 error UnclaimVictoryNotAuthorized();
 
-
+/**
+ * @dev 
+ */
+error WinnerNotRevealedYetError();
 /**
  * @dev 
  */
