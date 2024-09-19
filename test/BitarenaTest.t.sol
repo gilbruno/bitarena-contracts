@@ -1922,13 +1922,6 @@ contract BitarenaTest is Test {
         bitarenaChallenge.participateToDispute{value: amountDispute}();
         vm.stopBroadcast();         
 
-        //ADMIN of the CHALLENGE wants to refund dispute amount but it fails because there 2 disputers and 
-        // the refund is possible if there is only 1 disputer
-        // vm.expectRevert(RefundImpossibleDueToTooManyDisputeParticipantsError.selector);
-        // vm.startBroadcast(ADMIN_CHALLENGE1);
-        // bitarenaChallenge.refundDisputeAmount();
-        // vm.stopBroadcast();         
-
     }   
 
     /** 
@@ -1961,12 +1954,6 @@ contract BitarenaTest is Test {
         bitarenaChallenge.claimVictory(2);
         vm.stopBroadcast();         
 
-        //ADMIN of the CHALLENGE wants to refund Dispute amount but it fails because there is no dispute participants
-        // vm.expectRevert(NoDisputeParticipantsError.selector);
-        // vm.startBroadcast(ADMIN_CHALLENGE1);
-        // bitarenaChallenge.refundDisputeAmount();
-        // vm.stopBroadcast();         
-
         //There is a dispute so PLAYER3 wants to participate to a dispute 
         vm.warp(bitarenaChallenge.getChallengeStartDate() + bitarenaChallenge.getDelayStartVictoryClaim() + bitarenaChallenge.getDelayEndVictoryClaim() + 1 hours);
         vm.startBroadcast(PLAYER3_CHALLENGE1);
@@ -1992,13 +1979,6 @@ contract BitarenaTest is Test {
         vm.startBroadcast(PLAYER2_CHALLENGE1);
         bitarenaChallenge.participateToDispute{value: amountDispute}();
         vm.stopBroadcast();         
-
-        //ADMIN of the CHALLENGE wants to refund dispute amount but it fails because there 2 disputers and 
-        // the refund is possible if there is only 1 disputer
-        // vm.expectRevert(RefundImpossibleDueToTooManyDisputeParticipantsError.selector);
-        // vm.startBroadcast(ADMIN_CHALLENGE1);
-        // bitarenaChallenge.refundDisputeAmount();
-        // vm.stopBroadcast();         
     }   
 
     /** 
@@ -2083,6 +2063,52 @@ contract BitarenaTest is Test {
 
         assertEq(true, true);
     }   
+
+    /** 
+     * @dev Test that if there a dispute, a dispute participation is impossible after the delay set by the admin
+     */
+    function testDispute16() public {
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
+
+        //The admin of the challenge set delay for victory claim
+        //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        vm.stopBroadcast();         
+
+        //As the challenge must start 1 day after its creation, 
+        // the PLAYER3 tries to claim the victory for the team1 that is not his team (=team2)
+        uint256 _3DaysInTheFuture = block.timestamp + 2 days;
+        vm.warp(_3DaysInTheFuture);
+
+        //PLAYER1 claims victory for his team = team1
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.claimVictory(1);
+        vm.stopBroadcast();         
+
+        //PLAYER3 claims victory for his team = team2
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.claimVictory(2);
+        vm.stopBroadcast();         
+
+        //There is a dispute so anyone can participate to a dispute
+        //PLAYER1 wants to participate to a dispute 
+        uint256 amountDispute = bitarenaChallenge.getDisputeAmountParticipation();
+        vm.warp(bitarenaChallenge.getChallengeStartDate() + bitarenaChallenge.getDelayStartVictoryClaim() + bitarenaChallenge.getDelayEndVictoryClaim() + 1 hours);
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.participateToDispute{value: amountDispute}();
+        vm.stopBroadcast();         
+        assertEq(bitarenaChallenge.atLeast1TeamParticipateToDispute(), true);
+        //PLAYER3 wants to participate to a dispute 
+        vm.warp(bitarenaChallenge.getChallengeStartDate() + bitarenaChallenge.getDelayStartVictoryClaim() + bitarenaChallenge.getDelayEndVictoryClaim() + 2 hours);
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.participateToDispute{value: amountDispute}();
+        vm.stopBroadcast();         
+        assertEq(bitarenaChallenge.atLeast2TeamsParticipateToDispute(), true);
+    }   
+
 
 
     /********  TESTS ON CHALLENGE POOL WITHDRAW ***************/
