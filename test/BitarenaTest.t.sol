@@ -12,7 +12,7 @@ import {BalanceChallengeCreatorError, ChallengeAdminAddressZeroError,
 import {Challenge} from '../src/ChallengeStruct.sol';
 import {BitarenaChallenge} from '../src/BitarenaChallenge.sol';
 import {BalanceChallengePlayerError, ChallengeCancelAfterStartDateError, ChallengeCanceledError, ChallengePoolAlreadyWithdrawed, ClaimVictoryNotAuthorized, 
-    DelayClaimVictoryNotSet, DelayUnclaimVictoryNotSet, DelayStartClaimVictoryGreaterThanDelayEndClaimVictoryError, 
+    DelayClaimVictoryNotSet, DelayUnclaimVictoryNotSet, DelayStartGreaterThanDelayEnd, 
     DisputeExistsError, DisputeParticipationNotAuthorizedError, FeeDisputeNotSetError, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, 
     NotSufficientAmountForDisputeError, NotTimeYetToParticipateToDisputeError, NoDisputeError, NoDisputeParticipantsError, NotTeamMemberError, RefundImpossibleDueToTooManyDisputeParticipantsError, 
     RevealWinnerImpossibleDueToTooFewDisputersError, TeamDoesNotExistsError, TeamIsNotDisputerError, TeamOfSignerAlreadyParticipatesInDisputeError, TimeElapsedToJoinTeamError, 
@@ -540,7 +540,7 @@ contract BitarenaTest is Test {
     }
 
     /**
-     * @dev Test setter "setDelayStartVictoryClaim"
+     * @dev Test setter "setDelayStartVictoryClaim" and "setDelayEndVictoryClaim"
      * 
      */
     function testSetterAfterChallengeDeployment1() public {
@@ -550,10 +550,41 @@ contract BitarenaTest is Test {
         bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();
 
-        vm.expectRevert(DelayStartClaimVictoryGreaterThanDelayEndClaimVictoryError.selector);
+        vm.expectRevert(DelayStartGreaterThanDelayEnd.selector);
         vm.startBroadcast(ADMIN_CHALLENGE1);
         bitarenaChallenge.setDelayEndForVictoryClaim(5 hours);
         vm.stopBroadcast();
+
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        vm.stopBroadcast();
+
+        assertEq(bitarenaChallenge.getDelayStartVictoryClaim(), 10 hours);
+        assertEq(bitarenaChallenge.getDelayEndVictoryClaim(), 20 hours);
+    }
+
+    /**
+     * @dev Test setter "setDelayStartDisputeParticipation" and "setDelayEndDisputeParticipation"
+     * 
+     */
+    function testSetterAfterChallengeDeployment2() public {
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
+        vm.startBroadcast(ADMIN_DISPUTE_CHALLENGE1);
+        bitarenaChallenge.setDelayStartDisputeParticipation(10 hours);
+        vm.stopBroadcast();
+
+        vm.expectRevert(DelayStartGreaterThanDelayEnd.selector);
+        vm.startBroadcast(ADMIN_DISPUTE_CHALLENGE1);
+        bitarenaChallenge.setDelayEndDisputeParticipation(5 hours);
+        vm.stopBroadcast();
+
+        vm.startBroadcast(ADMIN_DISPUTE_CHALLENGE1);
+        bitarenaChallenge.setDelayEndDisputeParticipation(20 hours);
+        vm.stopBroadcast();
+
+        assertEq(bitarenaChallenge.getDelayStartDisputeParticipation(), 10 hours);
+        assertEq(bitarenaChallenge.getDelayEndDisputeParticipation(), 20 hours);
     }
 
     /**
@@ -2221,6 +2252,9 @@ contract BitarenaTest is Test {
         vm.startBroadcast(PLAYER3_CHALLENGE1);
         bitarenaChallenge.withdrawChallengePool();
         vm.stopBroadcast();         
+
+        assertEq(bitarenaChallenge.getIsPoolWithdrawed(), true);
+        
 
     }
 

@@ -6,7 +6,7 @@ import {AccessControlDefaultAdminRules} from "openzeppelin-contracts/contracts/a
 import {ReentrancyGuard} from "openzeppelin-contracts/contracts/utils/ReentrancyGuard.sol";
 import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
 import {BalanceChallengePlayerError, ChallengeCanceledError, ChallengeCancelAfterStartDateError, ChallengePoolAlreadyWithdrawed, ClaimVictoryNotAuthorized, 
-    DelayClaimVictoryNotSet, DelayUnclaimVictoryNotSet, DelayStartClaimVictoryGreaterThanDelayEndClaimVictoryError, DisputeExistsError, DisputeParticipationNotAuthorizedError, FeeDisputeNotSetError, NbTeamsLimitReachedError, 
+    DelayClaimVictoryNotSet, DelayUnclaimVictoryNotSet, DelayStartGreaterThanDelayEnd, DelayStartClaimVictoryGreaterThanDelayEndClaimVictoryError, DisputeExistsError, DisputeParticipationNotAuthorizedError, FeeDisputeNotSetError, NbTeamsLimitReachedError, 
     NbPlayersPerTeamsLimitReachedError, NoDisputeError, NotSufficientAmountForDisputeError, NotTeamMemberError, NotTimeYetToParticipateToDisputeError, NoDisputeParticipantsError, RefundImpossibleDueToTooManyDisputeParticipantsError, RevealWinnerImpossibleDueToTooFewDisputersError,
     SendMoneyBackToPlayersError, TeamDoesNotExistsError, TeamIsNotDisputerError, TeamOfSignerAlreadyParticipatesInDisputeError, TimeElapsedToClaimVictoryError, TimeElapsedToUnclaimVictoryError, TimeElapsedForDisputeParticipationError, 
     TimeElapsedToJoinTeamError, UnclaimVictoryNotAuthorized, WinnerNotRevealedYetError, WithdrawPoolNotAuthorized, WithdrawPoolByLooserTeamImpossibleError} from "./BitarenaChallengeErrors.sol";
@@ -331,7 +331,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
      * @dev
      */
     function setDelayStartForVictoryClaim(uint256 _delayStartVictoryClaim) public onlyRole(CHALLENGE_ADMIN_ROLE) {
-        if (s_delayEndVictoryClaim > 0 && _delayStartVictoryClaim > s_delayEndVictoryClaim) revert DelayStartClaimVictoryGreaterThanDelayEndClaimVictoryError();
+        if (s_delayEndVictoryClaim > 0 && _delayStartVictoryClaim > s_delayEndVictoryClaim) revert DelayStartGreaterThanDelayEnd();
         s_delayStartVictoryClaim = _delayStartVictoryClaim;
     }
 
@@ -342,9 +342,32 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
      * @dev
      */
     function setDelayEndForVictoryClaim(uint256 _delayEndVictoryClaim) public onlyRole(CHALLENGE_ADMIN_ROLE) {
-        if (s_delayStartVictoryClaim > 0 && s_delayStartVictoryClaim > _delayEndVictoryClaim) revert DelayStartClaimVictoryGreaterThanDelayEndClaimVictoryError();
+        if (s_delayStartVictoryClaim > 0 && s_delayStartVictoryClaim > _delayEndVictoryClaim) revert DelayStartGreaterThanDelayEnd();
         s_delayEndVictoryClaim = _delayEndVictoryClaim;
     }
+
+    /**
+     * Delay to start the dispute participation (after the end victory claim).
+     * Ex : 1 hours
+     * 
+     * @dev
+     */
+    function setDelayStartDisputeParticipation(uint256 _delayStartDisputeParticipation) public onlyRole(CHALLENGE_DISPUTE_ADMIN_ROLE) {
+        if (s_delayEndDisputeParticipation > 0 && _delayStartDisputeParticipation > s_delayEndDisputeParticipation) revert DelayStartGreaterThanDelayEnd();
+        s_delayStartDisputeParticipation = _delayStartDisputeParticipation;
+    }
+
+    /**
+     * Delay to end the dispute participation (after the start date of dispute participation).
+     * Ex : 5 hours
+     * 
+     * @dev
+     */
+    function setDelayEndDisputeParticipation(uint256 _delayEndDisputeParticipation) public onlyRole(CHALLENGE_DISPUTE_ADMIN_ROLE) {
+        if (s_delayStartDisputeParticipation > 0 && s_delayStartDisputeParticipation > _delayEndDisputeParticipation) revert DelayStartGreaterThanDelayEnd();
+        s_delayEndDisputeParticipation = _delayEndDisputeParticipation;
+    }
+
     /**
      * @dev Nothing special to implemnt on 'receive'
      */
