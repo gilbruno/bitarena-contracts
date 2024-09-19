@@ -3,6 +3,7 @@
 pragma solidity 0.8.26;
 
 import {AccessControlDefaultAdminRules} from "openzeppelin-contracts/contracts/access/extensions/AccessControlDefaultAdminRules.sol";
+import {ReentrancyGuard} from "openzeppelin-contracts/contracts/utils/ReentrancyGuard.sol";
 import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
 import {BalanceChallengePlayerError, ChallengeCanceledError, ChallengeCancelAfterStartDateError, ChallengePoolAlreadyWithdrawed, ClaimVictoryNotAuthorized, 
     DelayClaimVictoryNotSet, DelayUnclaimVictoryNotSet, DelayStartClaimVictoryGreaterThanDelayEndClaimVictoryError, DisputeExistsError, DisputeParticipationNotAuthorizedError, FeeDisputeNotSetError, NbTeamsLimitReachedError, 
@@ -15,7 +16,7 @@ import {CHALLENGE_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_CREATOR_RO
     DELAY_START_DISPUTE_PARTICIPATION_BY_DEFAULT, DELAY_END_DISPUTE_PARTICIPATION_BY_DEFAULT,
     GAMER_ROLE, FEE_PERCENTAGE_AMOUNT_BY_DEFAULT, FEE_PERCENTAGE_DISPUTE_AMOUNT_BY_DEFAULT} from "./BitarenaChallengeConstants.sol";
 
-contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
+contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, ReentrancyGuard{
 
     bytes32 private s_game;
     bytes32 private s_platform;
@@ -266,7 +267,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
      * This function only callable by Admin of the challenge mus be call in case a disputer finally 
      * does not want to participate to the dispute, so we must refund the only participant to the dispute
      */
-    function refundDisputeAmount() public onlyRole(CHALLENGE_ADMIN_ROLE) checkRefundDisputeAmount() {
+    function refundDisputeAmount() public onlyRole(CHALLENGE_ADMIN_ROLE) checkRefundDisputeAmount() nonReentrant {
         uint16 teamInDispute = s_disputeTeams[0];
         address disputeParticipant = s_disputeParticipants[teamInDispute];
         (bool success, ) = disputeParticipant.call{value: getDisputeAmountParticipation()}("");
@@ -376,7 +377,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
     /**
      * After the challenge creator cancel the challenge, the money must be sent back to players
      */
-    function returnMoneyBackDueToChallengeCancel() internal {
+    function returnMoneyBackDueToChallengeCancel() internal nonReentrant {
         uint16 teamCount = s_teamCounter;
         for (uint16 i = 1; i <= teamCount; i++) {
             address[] memory teamPlayers = s_teams[i];
@@ -417,7 +418,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules{
      * @dev 
      * Rules : Only the winner can withdraw the pool
      */
-    function withdrawChallengePool() public checkWithdrawPool() {
+    function withdrawChallengePool() public checkWithdrawPool() nonReentrant {
         s_isPoolWithdrawed = true;
     }
 
