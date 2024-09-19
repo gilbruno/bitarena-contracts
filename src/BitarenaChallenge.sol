@@ -120,7 +120,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
      *  - a dispute participation is only allowed after the delay of claim victory so after startat + delayStartClaimVictory + delayEndClaimVictory
      */
     modifier checkDisputeParticipation() {
-        if (s_delayStartVictoryClaim == 0 || s_delayEndVictoryClaim == 0) revert DelayClaimVictoryNotSet();
+        if (getDelayStartVictoryClaim() == 0 || getDelayEndVictoryClaim() == 0) revert DelayClaimVictoryNotSet();
         if (s_feePercentageDispute == 0) revert FeeDisputeNotSetError();
         uint256 disputeParticipationAmount = getDisputeAmountParticipation();
         if (msg.value < disputeParticipationAmount) revert NotSufficientAmountForDisputeError();
@@ -524,14 +524,14 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
     /**
      * @dev getter for state variable s_delayStartVictoryClaim
      */
-    function getDelayStartVictoryClaim() external view returns (uint256) {
+    function getDelayStartVictoryClaim() public view returns (uint256) {
         return s_delayStartVictoryClaim;
     }
 
     /**
      * @dev getter for state variable s_delayEndVictoryClaim
      */
-    function getDelayEndVictoryClaim() external view returns (uint256) {
+    function getDelayEndVictoryClaim() public view returns (uint256) {
         return s_delayEndVictoryClaim;
     }
 
