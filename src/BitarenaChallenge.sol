@@ -149,11 +149,11 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
     /**
      * Modifier for 'refundDisputeAmount' fonction
      */
-    modifier checkRefundDisputeAmount() {
-        if (getDisputeParticipantsCount() > 1) revert RefundImpossibleDueToTooManyDisputeParticipantsError();
-        if (getDisputeParticipantsCount() == 0) revert NoDisputeParticipantsError();
-        _;
-    }
+    // modifier checkRefundDisputeAmount() {
+    //     if (getDisputeParticipantsCount() > 1) revert RefundImpossibleDueToTooManyDisputeParticipantsError();
+    //     if (getDisputeParticipantsCount() == 0) revert NoDisputeParticipantsError();
+    //     _;
+    // }
 
     /**
      * After a dispute occurs the ADMIN of the challenge must decide and reveal which team is the winner.
@@ -220,7 +220,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
         unchecked {
             ++s_teamCounter;
         }
-        
+        if (s_teamCounter > s_nbTeams) revert NbTeamsLimitReachedError();
         //If a team is created for the first time, we add the creator of the challenge in this team.
         // Otherwise we add the creator of the team in the created team
         address player = s_teamCounter == 1 ? s_creator : _msgSender();
@@ -267,12 +267,12 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
      * This function only callable by Admin of the challenge mus be call in case a disputer finally 
      * does not want to participate to the dispute, so we must refund the only participant to the dispute
      */
-    function refundDisputeAmount() public onlyRole(CHALLENGE_ADMIN_ROLE) checkRefundDisputeAmount() nonReentrant {
+    /*function refundDisputeAmount() public onlyRole(CHALLENGE_ADMIN_ROLE) checkRefundDisputeAmount() nonReentrant {
         uint16 teamInDispute = s_disputeTeams[0];
         address disputeParticipant = s_disputeParticipants[teamInDispute];
         (bool success, ) = disputeParticipant.call{value: getDisputeAmountParticipation()}("");
         if (!success) revert SendMoneyBackToPlayersError();
-    }
+    }*/
 
     /**
      * @dev After many teams participate to a dispute, the challenge ADMIN reveal which team is the winner by indicating which team is the winner

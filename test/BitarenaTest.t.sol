@@ -18,6 +18,7 @@ import {BalanceChallengePlayerError, ChallengeCancelAfterStartDateError, Challen
     RevealWinnerImpossibleDueToTooFewDisputersError, TeamDoesNotExistsError, TeamIsNotDisputerError, TeamOfSignerAlreadyParticipatesInDisputeError, TimeElapsedToJoinTeamError, 
     TimeElapsedForDisputeParticipationError, TimeElapsedToClaimVictoryError, TimeElapsedToUnclaimVictoryError, UnclaimVictoryNotAuthorized, WinnerNotRevealedYetError, 
     WithdrawPoolByLooserTeamImpossibleError, WithdrawPoolNotAuthorized} from "../src/BitarenaChallengeErrors.sol";
+import {MockFailingReceiver} from "./MockContracts.sol";
 
 
 contract BitarenaTest is Test {
@@ -1037,6 +1038,28 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();
     }   
 
+    /**
+     * 
+     */
+    function testCancelChallenge4() public {
+        BitarenaChallenge bitarenaChallenge = createChallenge(THREE_TEAMS,TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
+
+        // Create a player that can not receive eth
+        MockFailingReceiver failingPlayer = new MockFailingReceiver();
+        
+        // This player create a team
+        vm.startPrank(address(failingPlayer));
+        bitarenaChallenge.createOrJoinTeam(0);
+        vm.stopPrank();
+
+        // The creator cancel the challenge and the tx fails with "SendMoneyBackToPlayersError" error
+        vm.startPrank(CREATOR_CHALLENGE1);
+        vm.expectRevert(abi.encodeWithSignature("SendMoneyBackToPlayersError()"));
+        bitarenaChallenge.cancelChallenge();
+        vm.stopPrank();
+    }
+
     /********  TESTS ON CLAIM VICTORY ***************/
     /**
      * @dev Test that it's possible to claim victory if the claiming period is ok
@@ -1867,11 +1890,11 @@ contract BitarenaTest is Test {
         bitarenaChallenge.claimVictory(2);
         vm.stopBroadcast();         
 
-        //ADMIN of the CHALLENGE wants to refund Dispute amount but it fails because there is no dispute participants
-        vm.expectRevert(NoDisputeParticipantsError.selector);
-        vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.refundDisputeAmount();
-        vm.stopBroadcast();         
+        // //ADMIN of the CHALLENGE wants to refund Dispute amount but it fails because there is no dispute participants
+        // vm.expectRevert(NoDisputeParticipantsError.selector);
+        // vm.startBroadcast(ADMIN_CHALLENGE1);
+        // bitarenaChallenge.refundDisputeAmount();
+        // vm.stopBroadcast();         
 
         //There is a dispute so PLAYER3 wants to participate to a dispute after the claim victory 
         vm.warp(bitarenaChallenge.getChallengeStartDate() + bitarenaChallenge.getDelayStartVictoryClaim() + bitarenaChallenge.getDelayEndVictoryClaim() + 1 hours);
@@ -1901,10 +1924,10 @@ contract BitarenaTest is Test {
 
         //ADMIN of the CHALLENGE wants to refund dispute amount but it fails because there 2 disputers and 
         // the refund is possible if there is only 1 disputer
-        vm.expectRevert(RefundImpossibleDueToTooManyDisputeParticipantsError.selector);
-        vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.refundDisputeAmount();
-        vm.stopBroadcast();         
+        // vm.expectRevert(RefundImpossibleDueToTooManyDisputeParticipantsError.selector);
+        // vm.startBroadcast(ADMIN_CHALLENGE1);
+        // bitarenaChallenge.refundDisputeAmount();
+        // vm.stopBroadcast();         
 
     }   
 
@@ -1939,10 +1962,10 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
 
         //ADMIN of the CHALLENGE wants to refund Dispute amount but it fails because there is no dispute participants
-        vm.expectRevert(NoDisputeParticipantsError.selector);
-        vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.refundDisputeAmount();
-        vm.stopBroadcast();         
+        // vm.expectRevert(NoDisputeParticipantsError.selector);
+        // vm.startBroadcast(ADMIN_CHALLENGE1);
+        // bitarenaChallenge.refundDisputeAmount();
+        // vm.stopBroadcast();         
 
         //There is a dispute so PLAYER3 wants to participate to a dispute 
         vm.warp(bitarenaChallenge.getChallengeStartDate() + bitarenaChallenge.getDelayStartVictoryClaim() + bitarenaChallenge.getDelayEndVictoryClaim() + 1 hours);
@@ -1972,10 +1995,10 @@ contract BitarenaTest is Test {
 
         //ADMIN of the CHALLENGE wants to refund dispute amount but it fails because there 2 disputers and 
         // the refund is possible if there is only 1 disputer
-        vm.expectRevert(RefundImpossibleDueToTooManyDisputeParticipantsError.selector);
-        vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.refundDisputeAmount();
-        vm.stopBroadcast();         
+        // vm.expectRevert(RefundImpossibleDueToTooManyDisputeParticipantsError.selector);
+        // vm.startBroadcast(ADMIN_CHALLENGE1);
+        // bitarenaChallenge.refundDisputeAmount();
+        // vm.stopBroadcast();         
     }   
 
     /** 
@@ -2365,12 +2388,29 @@ contract BitarenaTest is Test {
 
     }
 
+    /**
+     * Test that if a challenge is created with 2 teams only, that's impossible to create a third team
+     */
+    function testJoinTeamMaxLimitTeamReached() public {
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
+
+        //The PLAYER4 wants to creates a new team : it reverts due to max nb team limit reached
+        vm.expectRevert(NbTeamsLimitReachedError.selector);
+        vm.startBroadcast(PLAYER4_CHALLENGE1);
+        bitarenaChallenge.createOrJoinTeam{value: AMOUNT_PER_PLAYER}(0);
+        vm.stopBroadcast();               
+        
+        assertEq(bitarenaChallenge.getTeamCounter(), 2);
+    }
+
+
     /********  TESTS ON CHALLENGE WINNER REVEALING ***************/
     /**
      * Test that the dispute pool is correct after 2 team participate to a dispute
      */
     function testRevealWinner1() public {
-        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        BitarenaChallenge bitarenaChallenge = createChallenge(THREE_TEAMS, TWO_PLAYERS);
         joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
         add2PlayersInTheTeam3(bitarenaChallenge);
         //The admin of the challenge set delay for victory claim

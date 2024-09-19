@@ -58,6 +58,7 @@ error DisputeParticipationNotAuthorizedError();
  */
 error FeeDisputeNotSetError();
 
+
 /**
  * @dev 
  */
