@@ -411,7 +411,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
      * @dev Returns true if at least 1 team participate to a dispute
      */
     function atLeast1TeamParticipateToDispute() public view returns (bool) {
-        return (getDisputeParticipantsCount() == 1);
+        return (getDisputeParticipantsCount() >= 1);
     }
 
     /**

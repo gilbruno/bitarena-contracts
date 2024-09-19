@@ -15,8 +15,9 @@ import {BalanceChallengePlayerError, ChallengeCancelAfterStartDateError, Challen
     DelayClaimVictoryNotSet, DelayUnclaimVictoryNotSet, DelayStartClaimVictoryGreaterThanDelayEndClaimVictoryError, 
     DisputeExistsError, DisputeParticipationNotAuthorizedError, FeeDisputeNotSetError, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, 
     NotSufficientAmountForDisputeError, NoDisputeError, NoDisputeParticipantsError, NotTeamMemberError, RefundImpossibleDueToTooManyDisputeParticipantsError, 
-    RevealWinnerImpossibleDueToTooFewDisputersError, TeamDoesNotExistsError, TeamOfSignerAlreadyParticipatesInDisputeError, TimeElapsedToJoinTeamError, TimeElapsedForDisputeParticipationError,
-    TimeElapsedToClaimVictoryError, TimeElapsedToUnclaimVictoryError, UnclaimVictoryNotAuthorized, WinnerNotRevealedYetError, WithdrawPoolByLooserTeamImpossibleError, WithdrawPoolNotAuthorized} from "../src/BitarenaChallengeErrors.sol";
+    RevealWinnerImpossibleDueToTooFewDisputersError, TeamDoesNotExistsError, TeamIsNotDisputerError, TeamOfSignerAlreadyParticipatesInDisputeError, TimeElapsedToJoinTeamError, 
+    TimeElapsedForDisputeParticipationError, TimeElapsedToClaimVictoryError, TimeElapsedToUnclaimVictoryError, UnclaimVictoryNotAuthorized, WinnerNotRevealedYetError, 
+    WithdrawPoolByLooserTeamImpossibleError, WithdrawPoolNotAuthorized} from "../src/BitarenaChallengeErrors.sol";
 
 
 contract BitarenaTest is Test {
@@ -32,6 +33,7 @@ contract BitarenaTest is Test {
     address PLAYER2_CHALLENGE1 = makeAddr("player2Challenge1");
     address PLAYER3_CHALLENGE1 = makeAddr("player3Challenge1");
     address PLAYER4_CHALLENGE1 = makeAddr("player4Challenge1");
+    address PLAYER5_CHALLENGE1 = makeAddr("player5Challenge1");
     address PLAYER_WITH_NOT_SUFFICIENT_BALANCE = makeAddr("playerWithBalanceZero");
 
     bytes32 CHALLENGE1 = "Challenge 1";
@@ -42,6 +44,7 @@ contract BitarenaTest is Test {
     bytes32 PLATFORM2 = "Steam";
     uint16 ONE_TEAM = 1;
     uint16 TWO_TEAMS = 2;
+    uint16 THREE_TEAMS = 3;
     uint16 ONE_PLAYER = 1;
     uint16 TWO_PLAYERS = 2;
     uint16 THREE_PLAYERS = 3;
@@ -60,6 +63,8 @@ contract BitarenaTest is Test {
         vm.deal(PLAYER1_CHALLENGE1, STARTING_BALANCE_ETH);
         vm.deal(PLAYER2_CHALLENGE1, STARTING_BALANCE_ETH);
         vm.deal(PLAYER3_CHALLENGE1, STARTING_BALANCE_ETH);
+        vm.deal(PLAYER4_CHALLENGE1, STARTING_BALANCE_ETH);
+        vm.deal(PLAYER5_CHALLENGE1, STARTING_BALANCE_ETH);
         vm.deal(PLAYER_WITH_NOT_SUFFICIENT_BALANCE, STARTING_BALANCE_NOT_SUFFICIENT_ETH);
 
     }
@@ -91,9 +96,9 @@ contract BitarenaTest is Test {
     }
 
     /**
-     * Create a challenge with 2 teams & 2 players. The challenge is set to begin 1 day later
+     * Create a challenge by indicating nbTeams and nbPlayersPerTeam. The challenge is set to begin 1 day later
      */
-    function createChallengeWith2TeamsAnd2Players() public returns(BitarenaChallenge) {
+    function createChallenge(uint16 nbTeams, uint16 nbPlayersPerTeam) public returns(BitarenaChallenge) {
         deployFactory();
         
         vm.startBroadcast(CREATOR_CHALLENGE1);
@@ -101,8 +106,8 @@ contract BitarenaTest is Test {
             CHALLENGE1,
             GAME1,
             PLATFORM1,
-            TWO_TEAMS,
-            TWO_PLAYERS,
+            nbTeams,
+            nbPlayersPerTeam,
             AMOUNT_PER_PLAYER,
             block.timestamp + 1 days,
             false
@@ -119,7 +124,7 @@ contract BitarenaTest is Test {
     /**
      * @dev
      */
-    function joinTeamWith2PlayersPerTeam(BitarenaChallenge bitarenaChallenge) private {
+    function joinTeamWith2PlayersPerTeam_challengeWith2Teams(BitarenaChallenge bitarenaChallenge) private {
         //send players some native tokens to enable them to jointeams
         //A second player joins the team 1
         vm.startBroadcast(PLAYER1_CHALLENGE1);
@@ -135,6 +140,18 @@ contract BitarenaTest is Test {
         //The PLAYER3 joins the team2 (with index 2) 
         vm.startBroadcast(PLAYER3_CHALLENGE1);
         bitarenaChallenge.createOrJoinTeam{value: AMOUNT_PER_PLAYER}(2);
+        vm.stopBroadcast();         
+    }
+
+    function add2PlayersInTheTeam3(BitarenaChallenge bitarenaChallenge) private {
+        //The PLAYER4 creates a new team : team with index 3 is created
+        vm.startBroadcast(PLAYER4_CHALLENGE1);
+        bitarenaChallenge.createOrJoinTeam{value: AMOUNT_PER_PLAYER}(0);
+        vm.stopBroadcast();               
+
+        //The PLAYER5 joins the team3 (with index 3) 
+        vm.startBroadcast(PLAYER5_CHALLENGE1);
+        bitarenaChallenge.createOrJoinTeam{value: AMOUNT_PER_PLAYER}(3);
         vm.stopBroadcast();         
 
     }
@@ -435,7 +452,7 @@ contract BitarenaTest is Test {
      * We create a challenge with 2 players per team so we expect that the getter returns 2
      */
     function testGetterAfterChallengeDeployment2() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
         assertEq(bitarenaChallenge.getNbTeamPlayers(), 2);
     }
 
@@ -443,17 +460,17 @@ contract BitarenaTest is Test {
      * @dev Test getter "getChallengeStartDate"
      */
     function testGetterAfterChallengeDeployment3() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
         assertEq(bitarenaChallenge.getChallengeStartDate(), block.timestamp + 1 days);
     }
 
     /**
      * @dev Test getter "getChallengeVisibility"
-     * We expect value "false" as the function "createChallengeWith2TeamsAnd2Players" is built 
+     * We expect value "false" as the function "createChallenge" is built 
      * with is_private =false 
      */
     function testGetterAfterChallengeDeployment4() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
         assertEq(bitarenaChallenge.getChallengeVisibility(), false);
     }
 
@@ -463,7 +480,7 @@ contract BitarenaTest is Test {
      * 
      */
     function testGetterAfterChallengeDeployment5() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
         assertEq(bitarenaChallenge.getIsCanceled(), false);
     }
     /**
@@ -472,7 +489,7 @@ contract BitarenaTest is Test {
      * 
      */
     function testGetterAfterChallengeDeployment6() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
         vm.startBroadcast(CREATOR_CHALLENGE1);
         bitarenaChallenge.cancelChallenge();
         vm.stopBroadcast();
@@ -484,8 +501,8 @@ contract BitarenaTest is Test {
      * 
      */
     function testGetterAfterChallengeDeployment7() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
         assertEq(bitarenaChallenge.getTeamOfPlayer(CREATOR_CHALLENGE1), 1);
         assertEq(bitarenaChallenge.getTeamOfPlayer(PLAYER2_CHALLENGE1), 2);
     }
@@ -495,8 +512,8 @@ contract BitarenaTest is Test {
      * 
      */
     function testGetterAfterChallengeDeployment8() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
         vm.startBroadcast(ADMIN_CHALLENGE1);
         bitarenaChallenge.setDelayStartForVictoryClaim(1 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(10 hours);
@@ -510,8 +527,8 @@ contract BitarenaTest is Test {
      * 
      */
     function testGetterAfterChallengeDeployment9() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
         vm.startBroadcast(ADMIN_CHALLENGE1);
         bitarenaChallenge.setDelayStartForVictoryClaim(5 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
@@ -526,8 +543,8 @@ contract BitarenaTest is Test {
      * 
      */
     function testSetterAfterChallengeDeployment1() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
         vm.startBroadcast(ADMIN_CHALLENGE1);
         bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();
@@ -543,8 +560,8 @@ contract BitarenaTest is Test {
      * 
      */
     function testGetterAfterChallengeDeployment10() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
         
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -800,7 +817,7 @@ contract BitarenaTest is Test {
      * Case of challenge that is set with 2 teams and 2 players per team
      */
     function testPlayersCanJoinExistingTeamsIfLimitIsOk() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
         
         //send players some native tokens to enable them to jointeams
         //A second player joins the team 1
@@ -835,7 +852,7 @@ contract BitarenaTest is Test {
      */
     function testPlayersWithNullBalanceCanNotJoinExistingTeam() public {
 
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
         //send players some native tokens to enable them to jointeams
         //A second player joins the team 1
         vm.startBroadcast(PLAYER1_CHALLENGE1);
@@ -862,7 +879,7 @@ contract BitarenaTest is Test {
      * So the challenge pool must be equal to 4 x s_amountPerPlayer
      */
     function testChallengePoolAfterPlayersJoinTeams() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
 
         //send players some native tokens to enable them to jointeams
         //A second player joins the team 1
@@ -889,7 +906,7 @@ contract BitarenaTest is Test {
      * @dev Test that some players can not join team after challenge start date
      */
     function testPlayersCanNotJoinExistingTeamsAfterChallengeStartDate() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
 
         //send players some native tokens to enable them to jointeams
         //A second player joins the team 1
@@ -916,7 +933,7 @@ contract BitarenaTest is Test {
      * @dev Test that some players can not join team that does not exist 
      */
     function testPlayersCanNotJoinNotExistingTeam() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
 
         //send players some native tokens to enable them to jointeams
         //A second player joins the team 1
@@ -941,7 +958,7 @@ contract BitarenaTest is Test {
      * @dev Test that native tokens are sent back to players that join team after the creator cancel the challenge
      */
     function testCancelChallenge1() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
 
         uint256 balanceCreatorAfterJoiningTeam = CREATOR_CHALLENGE1.balance;
 
@@ -992,7 +1009,7 @@ contract BitarenaTest is Test {
      * @dev Test that it's impossible to join a team after a challenge was cancelled by the creator
      */
     function testCancelChallenge2() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
 
         //The creator cancels the challenge
         vm.startBroadcast(CREATOR_CHALLENGE1);
@@ -1010,7 +1027,7 @@ contract BitarenaTest is Test {
      * @dev Test that it's impossible to cancel the challenge after start date of the challenge
      */
     function testCancelChallenge3() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
 
         //The creator cancels the challenge in 2 days so after the start date of the challenge
         vm.warp(block.timestamp + 2 days);
@@ -1025,8 +1042,8 @@ contract BitarenaTest is Test {
      * @dev Test that it's possible to claim victory if the claiming period is ok
      */
     function testClaimVictory1() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -1049,8 +1066,8 @@ contract BitarenaTest is Test {
      * It reverts with error "TimeElapsedToClaimVictoryError"
      */
     function testClaimVictory2() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -1072,8 +1089,8 @@ contract BitarenaTest is Test {
      * @dev Test that it's impossible to claim victory if at least one delay to claim it is not set
      */
     function testClaimVictory3() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -1095,8 +1112,8 @@ contract BitarenaTest is Test {
      * @dev Test that it's impossible to claim victory after the legal delay
      */
     function testClaimVictory4() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -1118,8 +1135,8 @@ contract BitarenaTest is Test {
      * @dev Test that it's impossible to claim victory if a player claim victory for a team that does not exist
      */
     function testClaimVictory5() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -1141,8 +1158,8 @@ contract BitarenaTest is Test {
      * 
      */
     function testClaimVictory6() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -1168,8 +1185,8 @@ contract BitarenaTest is Test {
      * @dev Test that it's impossible to claim victory if a player is not authorized (=bad role)
      */
     function testClaimVictory7() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -1192,8 +1209,8 @@ contract BitarenaTest is Test {
      * @dev Test that it's impossible to claim victory for a team that is not yours
      */
     function testClaimVictory8() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -1217,8 +1234,8 @@ contract BitarenaTest is Test {
      * @dev Test that it's possible to unclaim victory if the claiming period is ok
      */
     function testUnclaimVictory1() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -1241,8 +1258,8 @@ contract BitarenaTest is Test {
      * It reverts with error "TimeElapsedToClaimVictoryError"
      */
     function testUnclaimVictory2() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory unclaim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -1264,8 +1281,8 @@ contract BitarenaTest is Test {
      * @dev Test that it's impossible to unclaim victory if at least one delay to claim it is not set
      */
     function testUnclaimVictory3() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -1290,8 +1307,8 @@ contract BitarenaTest is Test {
      * @dev Test that it's impossible to unclaim victory after the legal delay
      */
     function testUnclaimVictory4() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory unclaim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -1313,8 +1330,8 @@ contract BitarenaTest is Test {
      * @dev Test that it's impossible to unclaim victory if a player unclaim victory for a team that does not exist
      */
     function testUnclaimVictory5() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory unclaim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -1336,8 +1353,8 @@ contract BitarenaTest is Test {
      * 
      */
     function testUnclaimVictory6() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -1363,8 +1380,8 @@ contract BitarenaTest is Test {
      * @dev Test that it's impossible to unclaim victory if a player is not authorized (=bad role)
      */
     function testUnclaimVictory7() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -1387,8 +1404,8 @@ contract BitarenaTest is Test {
      * @dev Test that it's impossible to unclaim victory for a team that is not yours
      */
     function testUclaimVictory8() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -1412,8 +1429,8 @@ contract BitarenaTest is Test {
      * @dev Test that if two teams claim their victory, there is a dispute
      */
     function testDispute1() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -1444,8 +1461,8 @@ contract BitarenaTest is Test {
      * @dev Test that with 2 teams if one team claim its victory and the second do not, there is no dispute
      */
     function testDispute2() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -1471,8 +1488,8 @@ contract BitarenaTest is Test {
      * @dev Test that state var s_feeDispute is OK after the admin sets it 
      */
     function testDispute3() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -1503,8 +1520,8 @@ contract BitarenaTest is Test {
      * @dev Test that state only ADMIN_CHALLENGE can set the fee for dispute
      */
     function testDispute4() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -1535,8 +1552,8 @@ contract BitarenaTest is Test {
      * @dev Test that if 2 teams claim their victory and the second finnaly unclaims victory, there is no dispute
      */
     function testDispute5() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -1572,8 +1589,8 @@ contract BitarenaTest is Test {
      * @dev Test that if there is no dispute anyone can particpate to a dispute
      */
     function testDispute6() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -1616,8 +1633,8 @@ contract BitarenaTest is Test {
      * @dev Test that if there a dispute, a dispute participation is possible
      */
     function testDispute7() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -1655,8 +1672,8 @@ contract BitarenaTest is Test {
      * @dev Test that if there a dispute, the tx revertsif the fee result set by the admin equals 0
      */
     function testDispute8() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -1699,8 +1716,8 @@ contract BitarenaTest is Test {
      * @dev Test that if there a dispute, the tx reverts if the fee result set by the admin equals 0
      */
     function testDispute9() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -1744,8 +1761,8 @@ contract BitarenaTest is Test {
      * if the amount is not sufficient
      */
     function testDispute10() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -1785,8 +1802,8 @@ contract BitarenaTest is Test {
      * if the amount is not sufficient
      */
     function testDispute11() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -1826,8 +1843,8 @@ contract BitarenaTest is Test {
     * 
     */
     function testDispute12() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -1897,8 +1914,8 @@ contract BitarenaTest is Test {
     * 
     */
     function testDispute13() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -1966,8 +1983,8 @@ contract BitarenaTest is Test {
      * @dev Test that if there a dispute, a dispute participation is impossible after the delay set by the admin
      */
     function testDispute14() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -2012,8 +2029,8 @@ contract BitarenaTest is Test {
      * 
      */
     function testPoolWithdraw1() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -2049,8 +2066,8 @@ contract BitarenaTest is Test {
      * (i.e. GAMER_ROLE or CHALLENGE_CREATOR_ROLE)
      */
     function testPoolWithdraw2() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -2080,8 +2097,8 @@ contract BitarenaTest is Test {
      * @dev Test that it's possible for a signer to withdraw the pool if he's a member of the only one dispute team
      */
     function testPoolWithdraw3() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -2123,8 +2140,8 @@ contract BitarenaTest is Test {
      * @dev Test that it's possible for a signer to withdraw the pool if he's a member of the only one dispute team
      */
     function testPoolWithdraw4() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -2173,8 +2190,8 @@ contract BitarenaTest is Test {
      * @dev Test that it's impossible for a signer to withdraw the pool with only 1 disputer if he's a member of a looser team
      */
     function testPoolWithdraw5() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -2211,11 +2228,13 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
 
     }
-
-    //TODO : TEST reveal winner by admin challenge
-    function testRevealWinner1() public {
-        BitarenaChallenge bitarenaChallenge = createChallengeWith2TeamsAnd2Players();
-        joinTeamWith2PlayersPerTeam(bitarenaChallenge);
+    /********  TESTS ON CHALLENGE DISPUTE POOL ***************/
+    /**
+     * Test that the dispute pool is correct after 2 team participate to a dispute
+     */
+    function testDisputePool1() public {
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -2239,23 +2258,105 @@ contract BitarenaTest is Test {
         bitarenaChallenge.claimVictory(2);
         vm.stopBroadcast();         
 
-        //The challenge DISPUTE ADMIN revealed team 1 as the winner : it reverts because to reveal the winner, the dispute mustcontain at least 2 participants
-        // At this stage, we have any dispute participants 
+        uint256 amountDispute = bitarenaChallenge.getDisputeAmountParticipation();
+
+        //PLAYER1 & PLAYER3 participate to a dispute 1 hour after the "claim victory period" 
+        vm.warp(bitarenaChallenge.getChallengeStartDate() + bitarenaChallenge.getDelayStartVictoryClaim() + bitarenaChallenge.getDelayEndVictoryClaim() + 1 hours);
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.participateToDispute{value: amountDispute}();
+        vm.stopBroadcast();         
+
+        vm.warp(bitarenaChallenge.getChallengeStartDate() + bitarenaChallenge.getDelayStartVictoryClaim() + bitarenaChallenge.getDelayEndVictoryClaim() + 1 hours);
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.participateToDispute{value: amountDispute}();
+        vm.stopBroadcast();         
+
+        //As there are 2 disputers; the dispute pool must be equal to 2 times the "amountDispute"
+        assertEq(bitarenaChallenge.getDisputePool(), 2 * amountDispute);
+
+    }
+
+    /********  TESTS ON CHALLENGE WINNER REVEALING ***************/
+    /**
+     * Test that the dispute pool is correct after 2 team participate to a dispute
+     */
+    function testRevealWinner1() public {
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
+        add2PlayersInTheTeam3(bitarenaChallenge);
+        //The admin of the challenge set delay for victory claim
+        //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        vm.stopBroadcast();         
+
+        //As the challenge must start 1 day after its creation, 
+        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        uint256 _3DaysInTheFuture = block.timestamp + 2 days;
+        vm.warp(_3DaysInTheFuture);
+
+        //PLAYER1 claims victory for his team = team1
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.claimVictory(1);
+        vm.stopBroadcast();         
+
+        //PLAYER3 claims victory for his team = team2
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.claimVictory(2);
+        vm.stopBroadcast();         
+
+        uint256 amountDispute = bitarenaChallenge.getDisputeAmountParticipation();
+
+        //PLAYER1 only participates to a dispute 1 hour after the "claim victory period". So there is only 1 disputer 
+        vm.warp(bitarenaChallenge.getChallengeStartDate() + bitarenaChallenge.getDelayStartVictoryClaim() + bitarenaChallenge.getDelayEndVictoryClaim() + 1 hours);
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.participateToDispute{value: amountDispute}();
+        vm.stopBroadcast();         
+
+        //The tx fails as it's useless to reveal the winner because ther is only 1 disputer
         vm.expectRevert(RevealWinnerImpossibleDueToTooFewDisputersError.selector);
         vm.startBroadcast(ADMIN_DISPUTE_CHALLENGE1);
         bitarenaChallenge.revealWinnerAfterDispute(1);
         vm.stopBroadcast();         
 
-        //PLAYER1 (team1) participates to a dispute
+        //PLAYER3 participates to the dispute 2 hours after the "claim victory period". So there is now 2 disputerss
+        vm.warp(bitarenaChallenge.getChallengeStartDate() + bitarenaChallenge.getDelayStartVictoryClaim() + bitarenaChallenge.getDelayEndVictoryClaim() + 2 hours);
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.participateToDispute{value: amountDispute}();
+        vm.stopBroadcast();         
+
+        //The tx fails because the dispute admin tries to reveal a winner team that does not exists
+        vm.expectRevert(TeamDoesNotExistsError.selector);
+        vm.startBroadcast(ADMIN_DISPUTE_CHALLENGE1);
+        bitarenaChallenge.revealWinnerAfterDispute(4);
+        vm.stopBroadcast();         
+
+        //The Dispute Admin wants to reveal a winner team that does not participate to a dispute.
+        // So The tx fails with error 'TeamIsNotDisputerError'
+        vm.startBroadcast(ADMIN_DISPUTE_CHALLENGE1);
+        vm.expectRevert(TeamIsNotDisputerError.selector);
+        bitarenaChallenge.revealWinnerAfterDispute(3);
+        vm.stopBroadcast();         
+
+        uint16 TEAM_WINNER = 2;
+        //Finally the Dispute Admin reveals the team2 as winner
+        vm.startBroadcast(ADMIN_DISPUTE_CHALLENGE1);
+        bitarenaChallenge.revealWinnerAfterDispute(TEAM_WINNER);
+        vm.stopBroadcast();         
+
+        assertEq(bitarenaChallenge.getWinnerTeam(), TEAM_WINNER);
+
+        //After revealing the winner = team2
+        // A player of team1 wants to withdraw the challenge pool but the winner is team2, so the tx fails 
+        //with error "WithdrawPoolByLooserTeamImpossibleError"
+        vm.expectRevert(WithdrawPoolByLooserTeamImpossibleError.selector);
         vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.claimVictory(1);
+        bitarenaChallenge.withdrawChallengePool();
         vm.stopBroadcast();         
 
 
-
     }
-
-
 
 
     //TODO : TEST withdraw pool
