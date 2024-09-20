@@ -26,7 +26,6 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
     uint16 private s_feePercentage;
     uint16 private s_feePercentageDispute;
     uint16 private s_teamCounter;
-    uint16 private s_winnersCount;
     uint16 private s_winnerTeam;
 
     
@@ -54,6 +53,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
     mapping(uint16 teamIndex => address disputeParticipant) private s_disputeParticipants;
 
     uint16[] private s_disputeTeams;
+    uint16[] private s_claimVictoryTeams;
 
     constructor(ChallengeParams memory params) AccessControlDefaultAdminRules(1 days, params.challengeAdmin) {
         s_factory = params.factory;
@@ -70,7 +70,6 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
         s_isCanceled = false;
         s_isPoolWithdrawed = false;
         s_teamCounter = 0;
-        s_winnersCount = 0;
         s_winnerTeam= 0;
         s_challengePool = 0;
         s_feePercentage = FEE_PERCENTAGE_AMOUNT_BY_DEFAULT;
@@ -137,6 +136,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
     /**
      * Modifier for 'unclaimVictory' fonction
      */
+    /*
     modifier checkUnclaimVictory() {
         if (s_delayStartVictoryClaim == 0 || s_delayEndVictoryClaim == 0) revert DelayUnclaimVictoryNotSet();
         if (!hasRole(CHALLENGE_CREATOR_ROLE, _msgSender()) && !hasRole(GAMER_ROLE, _msgSender())) revert UnclaimVictoryNotAuthorized();
@@ -144,16 +144,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
         if (block.timestamp > (s_startAt + s_delayStartVictoryClaim + s_delayEndVictoryClaim)) revert TimeElapsedToUnclaimVictoryError();
         if (s_isCanceled) revert ChallengeCanceledError();
         _;
-    }
-
-    /**
-     * Modifier for 'refundDisputeAmount' fonction
-     */
-    // modifier checkRefundDisputeAmount() {
-    //     if (getDisputeParticipantsCount() > 1) revert RefundImpossibleDueToTooManyDisputeParticipantsError();
-    //     if (getDisputeParticipantsCount() == 0) revert NoDisputeParticipantsError();
-    //     _;
-    // }
+    }*/
 
     /**
      * After a dispute occurs the ADMIN of the challenge must decide and reveal which team is the winner.
@@ -247,22 +238,42 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
     function claimVictory() public checkClaimVictory() {
         uint16 teamIndex = getTeamOfPlayer(_msgSender()); 
         s_winners[teamIndex] = true;
-        s_winnersCount++;
+        s_claimVictoryTeams.push(teamIndex);
+        if (s_claimVictoryTeams.length == 1) {
+            s_winnerTeam = teamIndex;
+        }
+        else {
+            s_winnerTeam = 0;
+        }
         emit VictoryClaimed(teamIndex, _msgSender());
     }
 
     /**
      * @dev If a team decides to unclaimVictory after claiming it, we must provide a fonction for that
      */
+    /*
     function unclaimVictory() public checkUnclaimVictory() {
         uint16 _teamIndex = getTeamOfPlayer(_msgSender());
         s_winners[_teamIndex] = false;
-        //We decrement only if we have at least 1 winner claimed
-        if (s_winnersCount > 0) {
-            s_winnersCount--;
-        } 
+        
+        for (uint256 i = 0; i < s_claimVictoryTeams.length; i++) {
+            if (s_claimVictoryTeams[i] == _teamIndex) {
+                // Déplacer le dernier élément à la place de celui à supprimer
+                s_claimVictoryTeams[i] = s_claimVictoryTeams[s_claimVictoryTeams.length - 1];
+                // Supprimer le dernier élément
+                s_claimVictoryTeams.pop();
+                break;
+            }
+        }
+
+        //If there is no more element in the array of teams that claimed victory we must reset team index of winner to value 0
+        if (s_claimVictoryTeams.length == 0) {
+            s_winnerTeam = 0;
+        }
+
         emit VictoryUnclaimed(_teamIndex, _msgSender());
     }
+    */
 
     /**
      * This function only callable by Admin of the challenge mus be call in case a disputer finally 
@@ -318,7 +329,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
             s_winnerTeam = teamSigner;
         }
         else {
-            // If a second team participates to the dispute we reset the wionner to 0 = no winner
+            // If a second team participates to the dispute we reset the winner to 0 = no winner
             s_winnerTeam = 0;
         }
         
@@ -421,7 +432,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
      * 
      */
     function atLeast2TeamsClaimVictory() public view returns (bool) {
-        return (s_winnersCount > 1);
+        return (s_claimVictoryTeams.length > 1);
     }
 
     /**
@@ -445,6 +456,8 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
     function withdrawChallengePool() public checkWithdrawPool() nonReentrant {
         s_isPoolWithdrawed = true;
         //CASE 1 : Only 1 participant to a dispute, so the team is automatically the winner
+
+        //CASE2
          
     }
 
@@ -647,10 +660,10 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
     }
 
     /**
-     * @dev get the state var "s_winnersCount"
+     * @dev get the number of team that claimed victory
      */
-    function getWinnersClaimedCount() public view returns (uint16) {
-        return s_winnersCount;
+    function getWinnersClaimedCount() public view returns (uint256) {
+        return s_claimVictoryTeams.length;
     }
 
     /**

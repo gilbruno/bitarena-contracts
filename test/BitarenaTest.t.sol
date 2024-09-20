@@ -1279,6 +1279,7 @@ contract BitarenaTest is Test {
     /**
      * @dev Test that it's possible to unclaim victory if the claiming period is ok
      */
+    /*
     function testUnclaimVictory1() public {
         BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
         joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
@@ -1298,11 +1299,13 @@ contract BitarenaTest is Test {
         bitarenaChallenge.unclaimVictory();
         vm.stopBroadcast();         
     }   
+    */
 
     /**
      * @dev Test that it's impossible to claim victory after the claiming period
      * It reverts with error "TimeElapsedToClaimVictoryError"
      */
+    /*
     function testUnclaimVictory2() public {
         BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
         joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
@@ -1322,10 +1325,12 @@ contract BitarenaTest is Test {
         bitarenaChallenge.unclaimVictory();
         vm.stopBroadcast();         
     }   
+    */
 
     /**
      * @dev Test that it's impossible to unclaim victory if at least one delay to claim it is not set
      */
+    /*
     function testUnclaimVictory3() public {
         BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
         joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
@@ -1348,10 +1353,12 @@ contract BitarenaTest is Test {
         bitarenaChallenge.unclaimVictory();
         vm.stopBroadcast();         
     }   
+    */
 
     /**
      * @dev Test that it's impossible to unclaim victory after the legal delay
      */
+    /*
     function testUnclaimVictory4() public {
         BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
         joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
@@ -1371,10 +1378,12 @@ contract BitarenaTest is Test {
         bitarenaChallenge.unclaimVictory();
         vm.stopBroadcast();         
     }   
+    */
 
     /** @dev Test that it's impossible to unclaim victory if a challenge is canceled
      * 
      */
+    /*
     function testUnclaimVictory6() public {
         BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
         joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
@@ -1398,10 +1407,12 @@ contract BitarenaTest is Test {
         bitarenaChallenge.unclaimVictory();
         vm.stopBroadcast();         
     }   
+    */
 
     /** 
      * @dev Test that it's impossible to unclaim victory if a player is not authorized (=bad role)
      */
+    /*
     function testUnclaimVictory7() public {
         BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
         joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
@@ -1422,10 +1433,12 @@ contract BitarenaTest is Test {
         bitarenaChallenge.unclaimVictory();
         vm.stopBroadcast();         
     }   
+    */
 
     /** 
      * @dev Test state vars linked to claim victory
      */
+    /*
     function testUnclaimVictory9() public {
         BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
         joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
@@ -1463,8 +1476,8 @@ contract BitarenaTest is Test {
         assertEq(bitarenaChallenge.getWinnerClaimed(team1Index), true);
         assertEq(bitarenaChallenge.getWinnerClaimed(team2Index), false);
         assertEq(bitarenaChallenge.getWinnersClaimedCount(), 1);
-
     }   
+    */
 
     /********  TESTS ON DISPUTE ***************/
     /** 
@@ -1591,7 +1604,7 @@ contract BitarenaTest is Test {
     }   
 
     /** 
-     * @dev Test that if 2 teams claim their victory and the second finnaly unclaims victory, there is no dispute
+     * @dev Test that if 2 teams claim their victory there is a dispute
      */
     function testDispute5() public {
         BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
@@ -1619,12 +1632,7 @@ contract BitarenaTest is Test {
         bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
-        //PLAYER1 finally unclaims victory for his team = team1
-        vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.unclaimVictory();
-        vm.stopBroadcast();         
-
-        assertEq(bitarenaChallenge.atLeast2TeamsClaimVictory(), false);
+        assertEq(bitarenaChallenge.atLeast2TeamsClaimVictory(), true);
     }   
 
     /** 
@@ -1650,18 +1658,6 @@ contract BitarenaTest is Test {
         vm.startBroadcast(PLAYER1_CHALLENGE1);
         bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
-
-        //PLAYER3 claims victory for his team = team2
-        vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.claimVictory();
-        vm.stopBroadcast();         
-
-        //PLAYER1 finally unclaims victory for his team = team1
-        vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.unclaimVictory();
-        vm.stopBroadcast();         
-
-        //The ADMIN set the fee for the dispute
 
         //There is no dispute so anyone can participate to a dispute
         //PLAYER1 wants to participete to a dispute 
