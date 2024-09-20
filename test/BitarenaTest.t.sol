@@ -2438,6 +2438,233 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
 
     }
+
+    /**
+     * @dev Test that amounts withdrawed by the winner are correct.
+     *  Test that balances are correct before and after withdraw
+     *  Case of 2 teams and 2 players per team
+     */
+    function testPoolWithdraw7() public {
+        uint256 balanceStartOfPlayer1 = PLAYER1_CHALLENGE1.balance;
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
+        uint256 balanceAfterJoinTeamOfPlayer1 = PLAYER1_CHALLENGE1.balance;
+
+        console.log('balanceStartOfPlayer1 : ', balanceStartOfPlayer1);
+        console.log('balanceAfterJoinTeamOfPlayer1 : ', balanceAfterJoinTeamOfPlayer1);
+
+        //The admin of the challenge set delay for victory claim
+        //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        vm.stopBroadcast();         
+
+        //As the challenge must start 1 day after its creation, 
+        // the PLAYER3 tries to claim the victory for the team1 that is not his team (=team2)
+        uint256 _3DaysInTheFuture = block.timestamp + 2 days;
+        vm.warp(_3DaysInTheFuture);
+
+        //PLAYER1 claims victory for his team = team1
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.claimVictory();
+        vm.stopBroadcast();         
+
+        //PLAYER3 claims victory for his team = team2
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.claimVictory();
+        vm.stopBroadcast();         
+
+        uint256 amountDispute = bitarenaChallenge.getDisputeAmountParticipation();
+        console.log('challengePool : ', bitarenaChallenge.getChallengePool());
+        console.log('amountDispute : ', amountDispute);
+
+        //PLAYER1 participates to the dispute 1 hour after the "claim victory period" and that's the only disputer of the dispute
+        vm.warp(bitarenaChallenge.getChallengeStartDate() + bitarenaChallenge.getDelayStartVictoryClaim() + bitarenaChallenge.getDelayEndVictoryClaim() + 1 hours);
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.participateToDispute{value: amountDispute}();
+        vm.stopBroadcast();         
+
+        uint256 balanceAfterDisputeParticipationOfPlayer1 = PLAYER1_CHALLENGE1.balance;
+        console.log('balanceAfterDisputeParticipationOfPlayer1 : ', balanceAfterDisputeParticipationOfPlayer1);
+        //Assert that the balance of player 1 is : 
+        // his starting balance - amount of challenge - amount of dispute participation
+        assertEq(balanceAfterDisputeParticipationOfPlayer1, STARTING_BALANCE_ETH - bitarenaChallenge.getAmountPerPlayer() - bitarenaChallenge.getDisputeAmountParticipation());
+
+        //PLAYER3 participates to the dispute 2 hours after the "claim victory period" and that's the only disputer of the dispute
+        vm.warp(bitarenaChallenge.getChallengeStartDate() + bitarenaChallenge.getDelayStartVictoryClaim() + bitarenaChallenge.getDelayEndVictoryClaim() + 2 hours);
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.participateToDispute{value: amountDispute}();
+        vm.stopBroadcast();         
+
+        vm.warp(block.timestamp + 1 weeks);
+        vm.startBroadcast(ADMIN_DISPUTE_CHALLENGE1);
+        bitarenaChallenge.revealWinnerAfterDispute(1);
+        vm.stopBroadcast();         
+
+        // The pool amount to the winner team must be calculated after after the winner has been revealed by the dispute admin 
+        // because it the teamIndex of the winner is not set befaore the revealing and this fn uses this data
+        uint256 poolAmountForWinnerTeam = bitarenaChallenge.calculatePoolAmountToSendBackForWinnerTeam();
+        console.log('poolAmountForWinnerTeam : ', poolAmountForWinnerTeam);
+
+
+        uint256 balanceBeforeWithdrawPlayer1 = PLAYER1_CHALLENGE1.balance;
+
+        console.log('balanceBeforeWithdrawPlayer1 : ', balanceBeforeWithdrawPlayer1);
+        vm.warp(block.timestamp + 1 weeks);
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.withdrawChallengePool();
+        vm.stopBroadcast();         
+        uint256 realBalanceAfterWithdrawPlayer1 = PLAYER1_CHALLENGE1.balance;
+        uint256 realBalanceOfAdminAfterWithdraw = ADMIN_CHALLENGE1.balance;
+        console.log('realBalanceAfterWithdrawPlayer1 : ', realBalanceAfterWithdrawPlayer1);
+
+        //After withdrawing the pool the balance of the player 1 is : 
+        // balanceAfterDisputeParticipationOfPlayer1 + disputeAmount + pool/playerof team
+        console.log('feePercentage : ', bitarenaChallenge.getFeePercentage());
+        console.log('feeAmount : ', bitarenaChallenge.calculateFeeAmount());
+        address[] memory winners =  bitarenaChallenge.getTeamsByTeamIndex(bitarenaChallenge.getWinnerTeam());
+        uint256 winnersCount = winners.length;
+        uint256 amountWonPerWinners = poolAmountForWinnerTeam / winnersCount;
+
+        console.log('balanceBeforeWithdrawPlayer1 : ', balanceBeforeWithdrawPlayer1);
+        console.log('amountDispute : ', amountDispute);
+        console.log('amountWonPerWinners : ', amountWonPerWinners);
+        uint256 theoricalBalanceAfterWithdrawPlayer1 = balanceBeforeWithdrawPlayer1 + amountDispute + amountWonPerWinners;
+        
+        //The amount to send to admin is : balance of challenge smart contract - total poolAmountForWinnerTeam - amountDispute (because the winner got back his dispute amount)
+        uint256 poolAmountRemainingforAdmin = bitarenaChallenge.getChallengePool() - poolAmountForWinnerTeam;
+        uint256 disputePoolAmountRemainingForAdmin = bitarenaChallenge.getDisputePool() - amountDispute;
+
+        // console.log('BALANCE CHALLENGE : ', address(bitarenaChallenge).balance);
+        
+        uint256 theoricalBalanceAfterWithdrawAdmin = poolAmountRemainingforAdmin + disputePoolAmountRemainingForAdmin;
+
+        assertEq(theoricalBalanceAfterWithdrawPlayer1, realBalanceAfterWithdrawPlayer1);
+        assertEq(realBalanceOfAdminAfterWithdraw, theoricalBalanceAfterWithdrawAdmin);
+        // assertEq(address(bitarenaChallenge).balance, 0);
+
+    }
+
+    /**
+     * @dev Test that amounts withdrawed by the winner are correct.
+     *  Test that balances are correct before and after withdraw
+     *  Case of 3 teams and 2 players per team
+     */
+    function testPoolWithdraw8() public {
+        uint256 balanceStartOfPlayer1 = PLAYER1_CHALLENGE1.balance;
+        BitarenaChallenge bitarenaChallenge = createChallenge(THREE_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
+        //PLAYER4 and PLAYER5 join team3
+        add2PlayersInTheTeam3(bitarenaChallenge);
+        uint256 balanceAfterJoinTeamOfPlayer1 = PLAYER1_CHALLENGE1.balance;
+
+        console.log('balanceStartOfPlayer1 : ', balanceStartOfPlayer1);
+        console.log('balanceAfterJoinTeamOfPlayer1 : ', balanceAfterJoinTeamOfPlayer1);
+
+        //The admin of the challenge set delay for victory claim
+        //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        vm.stopBroadcast();         
+
+        //As the challenge must start 1 day after its creation, 
+        // the PLAYER3 tries to claim the victory for the team1 that is not his team (=team2)
+        uint256 _3DaysInTheFuture = block.timestamp + 2 days;
+        vm.warp(_3DaysInTheFuture);
+
+        //PLAYER1 claims victory for his team = team1
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.claimVictory();
+        vm.stopBroadcast();         
+
+        //PLAYER3 claims victory for his team = team2
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.claimVictory();
+        vm.stopBroadcast();         
+
+        //PLAYER5 claims victory for his team = team3
+        vm.startBroadcast(PLAYER5_CHALLENGE1);
+        bitarenaChallenge.claimVictory();
+        vm.stopBroadcast();         
+
+        uint256 amountDispute = bitarenaChallenge.getDisputeAmountParticipation();
+        console.log('challengePool : ', bitarenaChallenge.getChallengePool());
+        console.log('amountDispute : ', amountDispute);
+
+        //PLAYER1 participates to the dispute 1 hour after the "claim victory period" and that's the only disputer of the dispute
+        vm.warp(bitarenaChallenge.getChallengeStartDate() + bitarenaChallenge.getDelayStartVictoryClaim() + bitarenaChallenge.getDelayEndVictoryClaim() + 1 hours);
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.participateToDispute{value: amountDispute}();
+        vm.stopBroadcast();         
+
+        uint256 balanceAfterDisputeParticipationOfPlayer1 = PLAYER1_CHALLENGE1.balance;
+        console.log('balanceAfterDisputeParticipationOfPlayer1 : ', balanceAfterDisputeParticipationOfPlayer1);
+        //Assert that the balance of player 1 is : 
+        // his starting balance - amount of challenge - amount of dispute participation
+        assertEq(balanceAfterDisputeParticipationOfPlayer1, STARTING_BALANCE_ETH - bitarenaChallenge.getAmountPerPlayer() - bitarenaChallenge.getDisputeAmountParticipation());
+
+        //PLAYER3 participates to the dispute 2 hours after the "claim victory period" and that's the only disputer of the dispute
+        vm.warp(bitarenaChallenge.getChallengeStartDate() + bitarenaChallenge.getDelayStartVictoryClaim() + bitarenaChallenge.getDelayEndVictoryClaim() + 2 hours);
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.participateToDispute{value: amountDispute}();
+        vm.stopBroadcast();         
+
+        //PLAYER4 participates to the dispute 2 hours after the "claim victory period" and that's the only disputer of the dispute
+        vm.warp(bitarenaChallenge.getChallengeStartDate() + bitarenaChallenge.getDelayStartVictoryClaim() + bitarenaChallenge.getDelayEndVictoryClaim() + 2 hours);
+        vm.startBroadcast(PLAYER4_CHALLENGE1);
+        bitarenaChallenge.participateToDispute{value: amountDispute}();
+        vm.stopBroadcast();         
+
+        vm.warp(block.timestamp + 1 weeks);
+        vm.startBroadcast(ADMIN_DISPUTE_CHALLENGE1);
+        bitarenaChallenge.revealWinnerAfterDispute(1);
+        vm.stopBroadcast();         
+
+        // The pool amount to the winner team must be calculated after after the winner has been revealed by the dispute admin 
+        // because it the teamIndex of the winner is not set befaore the revealing and this fn uses this data
+        uint256 poolAmountForWinnerTeam = bitarenaChallenge.calculatePoolAmountToSendBackForWinnerTeam();
+        console.log('poolAmountForWinnerTeam : ', poolAmountForWinnerTeam);
+
+
+        uint256 balanceBeforeWithdrawPlayer1 = PLAYER1_CHALLENGE1.balance;
+
+        console.log('balanceBeforeWithdrawPlayer1 : ', balanceBeforeWithdrawPlayer1);
+        vm.warp(block.timestamp + 1 weeks);
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.withdrawChallengePool();
+        vm.stopBroadcast();         
+        uint256 realBalanceAfterWithdrawPlayer1 = PLAYER1_CHALLENGE1.balance;
+        uint256 realBalanceOfAdminAfterWithdraw = ADMIN_CHALLENGE1.balance;
+        console.log('realBalanceAfterWithdrawPlayer1 : ', realBalanceAfterWithdrawPlayer1);
+
+        //After withdrawing the pool the balance of the player 1 is : 
+        // balanceAfterDisputeParticipationOfPlayer1 + disputeAmount + pool/playerof team
+        console.log('feePercentage : ', bitarenaChallenge.getFeePercentage());
+        console.log('feeAmount : ', bitarenaChallenge.calculateFeeAmount());
+        address[] memory winners =  bitarenaChallenge.getTeamsByTeamIndex(bitarenaChallenge.getWinnerTeam());
+        uint256 winnersCount = winners.length;
+        uint256 amountWonPerWinners = poolAmountForWinnerTeam / winnersCount;
+
+        console.log('balanceBeforeWithdrawPlayer1 : ', balanceBeforeWithdrawPlayer1);
+        console.log('amountDispute : ', amountDispute);
+        console.log('amountWonPerWinners : ', amountWonPerWinners);
+        uint256 theoricalBalanceAfterWithdrawPlayer1 = balanceBeforeWithdrawPlayer1 + amountDispute + amountWonPerWinners;
+        
+        //The amount to send to admin is : balance of challenge smart contract - total poolAmountForWinnerTeam - amountDispute (because the winner got back his dispute amount)
+        uint256 poolAmountRemainingforAdmin = bitarenaChallenge.getChallengePool() - poolAmountForWinnerTeam;
+        uint256 disputePoolAmountRemainingForAdmin = bitarenaChallenge.getDisputePool() - amountDispute;
+
+        // console.log('BALANCE CHALLENGE : ', address(bitarenaChallenge).balance);
+        
+        uint256 theoricalBalanceAfterWithdrawAdmin = poolAmountRemainingforAdmin + disputePoolAmountRemainingForAdmin;
+
+        assertEq(theoricalBalanceAfterWithdrawPlayer1, realBalanceAfterWithdrawPlayer1);
+        assertEq(realBalanceOfAdminAfterWithdraw, theoricalBalanceAfterWithdrawAdmin);
+        // assertEq(address(bitarenaChallenge).balance, 0);
+
+    }
     /********  TESTS ON CHALLENGE DISPUTE POOL ***************/
     /**
      * Test that the dispute pool is correct after 2 team participate to a dispute

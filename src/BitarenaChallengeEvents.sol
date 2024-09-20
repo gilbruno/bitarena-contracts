@@ -14,3 +14,9 @@ event VictoryClaimed(uint16 teamNumber, address claimer);
 event VictoryUnclaimed(uint16 teamNumber, address claimer);
 
 event DisputeAccepted(address player);
+
+event ParticipateToDispute(address indexed player);
+
+event PoolChallengeWithdrawed(uint16 indexed teamIndex, address indexed signer);
+
+event RevealWinner(uint16 indexed winnerTeam, address indexed signer);

@@ -11,7 +11,7 @@ import {BalanceChallengePlayerError, ChallengeCanceledError, ChallengeCancelAfte
     SendMoneyBackToPlayersError, SendDisputeAmountBackToWinnerError, SendMoneyBackToAdminError,
     TeamDoesNotExistsError, TeamDidNotClaimVictoryError, TeamIsNotDisputerError, TeamOfSignerAlreadyParticipatesInDisputeError, TimeElapsedToClaimVictoryError, TimeElapsedToUnclaimVictoryError, TimeElapsedForDisputeParticipationError, 
     TimeElapsedToJoinTeamError, UnclaimVictoryNotAuthorized, WinnerNotRevealedYetError, WithdrawPoolNotAuthorized, WithdrawPoolByLooserTeamImpossibleError} from "./BitarenaChallengeErrors.sol";
-import {PlayerJoinsTeam, TeamCreated, Debug, VictoryClaimed, VictoryUnclaimed} from "./BitarenaChallengeEvents.sol";
+import {ParticipateToDispute, PlayerJoinsTeam, PoolChallengeWithdrawed, RevealWinner, TeamCreated, Debug, VictoryClaimed, VictoryUnclaimed} from "./BitarenaChallengeEvents.sol";
 import {ChallengeParams} from "./ChallengeParams.sol";
 import {CHALLENGE_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_CREATOR_ROLE, DELAY_START_VICTORY_CLAIM_BY_DEFAULT, DELAY_END_VICTORY_CLAIM_BY_DEFAULT, 
     DELAY_START_DISPUTE_PARTICIPATION_BY_DEFAULT, DELAY_END_DISPUTE_PARTICIPATION_BY_DEFAULT,
@@ -294,6 +294,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
      */
     function revealWinnerAfterDispute(uint16 _teamIndex) public onlyRole(CHALLENGE_DISPUTE_ADMIN_ROLE) checkRevealWinnerAfterDispute(_teamIndex) {
         s_winnerTeam = _teamIndex;
+        emit RevealWinner(_teamIndex, _msgSender());
     }    
 
     /**
@@ -337,6 +338,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
         }
         
         incrementDisputePool(getDisputeAmountParticipation());
+        emit ParticipateToDispute(_msgSender());
     }
 
     /**
@@ -453,6 +455,30 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
     }
 
     /**
+     * @dev Fee amount for Bitarena protocol
+     */
+    function calculateFeeAmount() public view returns (uint256) {
+        uint256 feeAmount = getFeePercentage() * getChallengePool();
+        feeAmount = feeAmount / 100;
+        return feeAmount;
+    }
+
+    /**
+     * @dev 
+     */
+    function calculatePoolAmountToSendBackForWinnerTeam() public view returns (uint256) {
+        address[] memory winningTeam = s_teams[s_winnerTeam];
+        uint256 playerWinnersCount = winningTeam.length;
+
+        
+        uint256 poolAmount = getChallengePool() - calculateFeeAmount();
+        uint256 remainder = poolAmount % playerWinnersCount;
+        //We substract the remainder of the euclidian divide in order to make the amount to send back dividable 
+        poolAmount = poolAmount - remainder;
+        return poolAmount;
+    }
+
+    /**
      * @dev 
      * Rules : Only the winner can withdraw the pool
      */
@@ -462,36 +488,34 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
         address[] memory winningTeam = s_teams[s_winnerTeam];
         uint256 playerWinnersCount = winningTeam.length;
 
+        uint256 totalPoolAmountForWinner = calculatePoolAmountToSendBackForWinnerTeam();        
+        
         //STEP 1: Send dispute amount back to the winner
         address disputeParticipant = s_disputeParticipants[s_winnerTeam];
         uint256 amountDispute = getDisputeAmountParticipation();
         (bool success, ) = disputeParticipant.call{value: amountDispute}("");
         if (!success) revert SendDisputeAmountBackToWinnerError();
-        s_disputePool = s_disputePool - amountDispute;
+        
+
 
         //STEP 2 : Send challenge pool to players of winner team
-        //First we must substract the fee of the challenge pool
-        uint256 feeAmount = getFeePercentage() * getChallengePool();
-        feeAmount = feeAmount / 100;
-        uint256 poolAmount = getChallengePool() - feeAmount;
-        uint256 remainder = poolAmount % playerWinnersCount;
-        //We substract the remainder of the euclidian divide in order to make the amount to send back dividable 
-        poolAmount = poolAmount - remainder;
-        uint256 amountPerPlayer = poolAmount / playerWinnersCount;
+        uint256 amountPerPlayer = totalPoolAmountForWinner / playerWinnersCount;
 
-
-        s_challengePool = s_challengePool - poolAmount;
         for (uint256 i = 0; i < playerWinnersCount; i++) {
             (success, ) = winningTeam[i].call{value: amountPerPlayer}("");
             if (!success) revert SendMoneyBackToPlayersError();
         }     
 
-        //STEP 3 : Send back dispute fee and pool fee to the admin challenge
-        uint256 amountToSendToAdmin = getChallengePool() + s_disputePool;
-        (success, ) = s_admin.call{value: amountToSendToAdmin}("");
-        if (!success) revert SendMoneyBackToPlayersError();
-         
+        //Decrements the different pool amount
+        uint256 poolAmountRemainingforAdmin = s_challengePool - totalPoolAmountForWinner;
+        uint256 disputePoolAmountRemainingForAdmin = s_disputePool - amountDispute;
 
+        //STEP 3 : Send back dispute fee and pool fee to the admin challenge
+        uint256 amountToSendToAdmin = poolAmountRemainingforAdmin + disputePoolAmountRemainingForAdmin;
+        (success, ) = s_admin.call{value: amountToSendToAdmin}("");
+        if (!success) revert SendMoneyBackToAdminError();
+         
+        emit PoolChallengeWithdrawed(s_winnerTeam, _msgSender());
     }
 
     /**
