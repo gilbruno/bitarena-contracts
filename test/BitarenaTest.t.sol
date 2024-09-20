@@ -603,7 +603,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
-        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        // the PLAYER3 tries to claim the victory for the team1 that is not his team (=team2)
         uint256 _3DaysInTheFuture = block.timestamp + 2 days;
         vm.warp(_3DaysInTheFuture);
 
@@ -1500,7 +1500,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
-        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        // the PLAYER3 tries to claim the victory for the team1 that is not his team (=team2)
         uint256 _3DaysInTheFuture = block.timestamp + 2 days;
         vm.warp(_3DaysInTheFuture);
 
@@ -1532,7 +1532,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
-        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        // the PLAYER3 tries to claim the victory for the team1 that is not his team (=team2)
         uint256 _3DaysInTheFuture = block.timestamp + 2 days;
         vm.warp(_3DaysInTheFuture);
 
@@ -1559,7 +1559,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
-        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        // the PLAYER3 tries to claim the victory for the team1 that is not his team (=team2)
         uint256 _3DaysInTheFuture = block.timestamp + 2 days;
         vm.warp(_3DaysInTheFuture);
 
@@ -1591,7 +1591,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
-        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        // the PLAYER3 tries to claim the victory for the team1 that is not his team (=team2)
         uint256 _3DaysInTheFuture = block.timestamp + 2 days;
         vm.warp(_3DaysInTheFuture);
 
@@ -1623,7 +1623,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
-        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        // the PLAYER3 tries to claim the victory for the team1 that is not his team (=team2)
         uint256 _3DaysInTheFuture = block.timestamp + 2 days;
         vm.warp(_3DaysInTheFuture);
 
@@ -1655,7 +1655,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
-        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        // the PLAYER3 tries to claim the victory for the team1 that is not his team (=team2)
         uint256 _3DaysInTheFuture = block.timestamp + 2 days;
         vm.warp(_3DaysInTheFuture);
 
@@ -1687,7 +1687,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
-        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        // the PLAYER3 tries to claim the victory for the team1 that is not his team (=team2)
         uint256 _3DaysInTheFuture = block.timestamp + 2 days;
         vm.warp(_3DaysInTheFuture);
 
@@ -1726,7 +1726,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
-        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        // the PLAYER3 tries to claim the victory for the team1 that is not his team (=team2)
         uint256 _3DaysInTheFuture = block.timestamp + 2 days;
         vm.warp(_3DaysInTheFuture);
 
@@ -1770,7 +1770,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
-        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        // the PLAYER3 tries to claim the victory for the team1 that is not his team (=team2)
         uint256 _3DaysInTheFuture = block.timestamp + 2 days;
         vm.warp(_3DaysInTheFuture);
 
@@ -1815,7 +1815,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
-        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        // the PLAYER3 tries to claim the victory for the team1 that is not his team (=team2)
         uint256 _3DaysInTheFuture = block.timestamp + 2 days;
         vm.warp(_3DaysInTheFuture);
 
@@ -1856,7 +1856,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
-        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        // the PLAYER3 tries to claim the victory for the team1 that is not his team (=team2)
         uint256 _3DaysInTheFuture = block.timestamp + 2 days;
         vm.warp(_3DaysInTheFuture);
 
@@ -1897,7 +1897,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
-        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        // the PLAYER3 tries to claim the victory for the team1 that is not his team (=team2)
         uint256 _3DaysInTheFuture = block.timestamp + 2 days;
         vm.warp(_3DaysInTheFuture);
 
@@ -2017,7 +2017,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
-        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        // the PLAYER3 tries to claim the victory for the team1 that is not his team (=team2)
         uint256 _3DaysInTheFuture = block.timestamp + 2 days;
         vm.warp(_3DaysInTheFuture);
 
@@ -2059,7 +2059,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
-        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        // the PLAYER3 tries to claim the victory for the team1 that is not his team (=team2)
         uint256 _3DaysInTheFuture = block.timestamp + 2 days;
         vm.warp(_3DaysInTheFuture);
 
@@ -2188,7 +2188,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
-        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        // the PLAYER3 tries to claim the victory for the team1 that is not his team (=team2)
         uint256 _3DaysInTheFuture = block.timestamp + 2 days;
         vm.warp(_3DaysInTheFuture);
 
@@ -2202,11 +2202,14 @@ contract BitarenaTest is Test {
         bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
-        //PLAYER1 participates to the dispute
-        vm.expectRevert(NoDisputeParticipantsError.selector);
+        //PLAYER1 wants to withdrathe pool 
+        vm.warp(block.timestamp + 1 weeks);
+        vm.expectRevert(WinnerNotRevealedYetError.selector);
         vm.startBroadcast(PLAYER1_CHALLENGE1);
         bitarenaChallenge.withdrawChallengePool();
         vm.stopBroadcast();         
+
+        assertEq(bitarenaChallenge.getWinnerTeam() == 0, true);
     }
 
     /**
@@ -2256,7 +2259,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
-        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        // the PLAYER3 tries to claim the victory for the team1 that is not his team (=team2)
         uint256 _3DaysInTheFuture = block.timestamp + 2 days;
         vm.warp(_3DaysInTheFuture);
 
@@ -2278,6 +2281,8 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
 
         assertEq(bitarenaChallenge.getWinnerTeam(), bitarenaChallenge.getTeamOfPlayer(PLAYER3_CHALLENGE1));
+
+        vm.warp(block.timestamp + 1 weeks);
         vm.startBroadcast(PLAYER3_CHALLENGE1);
         bitarenaChallenge.withdrawChallengePool();
         vm.stopBroadcast();         
@@ -2302,7 +2307,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
-        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        // the PLAYER3 tries to claim the victory for the team1 that is not his team (=team2)
         uint256 _3DaysInTheFuture = block.timestamp + 2 days;
         vm.warp(_3DaysInTheFuture);
 
@@ -2326,11 +2331,13 @@ contract BitarenaTest is Test {
         //PLAYER2 withdraw the pool and is autorized to do it as he's a member of the winner team like the PLAYER3 
         // So 1 member can sign the tx to participate to a dispute and another member of the same team can withdraw
         assertEq(bitarenaChallenge.getWinnerTeam(), bitarenaChallenge.getTeamOfPlayer(PLAYER3_CHALLENGE1));
+        vm.warp(block.timestamp + 1 weeks);
         vm.startBroadcast(PLAYER2_CHALLENGE1);
         bitarenaChallenge.withdrawChallengePool();
         vm.stopBroadcast();         
 
         //If the member of the winner team triesto withdraw the pool twice ==> it reverts with error
+        vm.warp(block.timestamp + 1 weeks);
         vm.expectRevert(ChallengePoolAlreadyWithdrawed.selector);
         vm.startBroadcast(PLAYER2_CHALLENGE1);
         bitarenaChallenge.withdrawChallengePool();
@@ -2374,6 +2381,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
 
         vm.expectRevert(WithdrawPoolByLooserTeamImpossibleError.selector);
+        vm.warp(block.timestamp + 1 weeks);
         vm.startBroadcast(PLAYER1_CHALLENGE1);
         bitarenaChallenge.withdrawChallengePool();
         vm.stopBroadcast();         
@@ -2424,6 +2432,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
 
         vm.expectRevert(WinnerNotRevealedYetError.selector);
+        vm.warp(block.timestamp + 1 weeks);
         vm.startBroadcast(PLAYER1_CHALLENGE1);
         bitarenaChallenge.withdrawChallengePool();
         vm.stopBroadcast();         
@@ -2445,7 +2454,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
-        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        // the PLAYER3 tries to claim the victory for the team1 that is not his team (=team2)
         uint256 _3DaysInTheFuture = block.timestamp + 2 days;
         vm.warp(_3DaysInTheFuture);
 
@@ -2510,7 +2519,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
-        // the PLAYER3 tries to claim the victory for the team1 taht is not his team (=team2)
+        // the PLAYER3 tries to claim the victory for the team1 that is not his team (=team2)
         uint256 _3DaysInTheFuture = block.timestamp + 2 days;
         vm.warp(_3DaysInTheFuture);
 
@@ -2569,6 +2578,7 @@ contract BitarenaTest is Test {
         // A player of team1 wants to withdraw the challenge pool but the winner is team2, so the tx fails 
         //with error "WithdrawPoolByLooserTeamImpossibleError"
         vm.expectRevert(WithdrawPoolByLooserTeamImpossibleError.selector);
+        vm.warp(block.timestamp + 1 weeks);
         vm.startBroadcast(PLAYER1_CHALLENGE1);
         bitarenaChallenge.withdrawChallengePool();
         vm.stopBroadcast();         

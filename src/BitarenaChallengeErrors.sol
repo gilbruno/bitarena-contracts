@@ -63,6 +63,10 @@ error DisputeParticipationNotAuthorizedError();
  */
 error FeeDisputeNotSetError();
 
+/**
+ * @dev 
+ */
+error MustWaitForEndDisputePeriodError();
 
 /**
  * @dev 

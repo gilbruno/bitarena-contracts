@@ -6,8 +6,8 @@ import {AccessControlDefaultAdminRules} from "openzeppelin-contracts/contracts/a
 import {ReentrancyGuard} from "openzeppelin-contracts/contracts/utils/ReentrancyGuard.sol";
 import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
 import {BalanceChallengePlayerError, ChallengeCanceledError, ChallengeCancelAfterStartDateError, ChallengePoolAlreadyWithdrawed, ClaimVictoryNotAuthorized, 
-    DelayClaimVictoryNotSet, DelayUnclaimVictoryNotSet, DelayStartGreaterThanDelayEnd, DelayStartClaimVictoryGreaterThanDelayEndClaimVictoryError, DisputeExistsError, DisputeParticipationNotAuthorizedError, FeeDisputeNotSetError, NbTeamsLimitReachedError, 
-    NbPlayersPerTeamsLimitReachedError, NoDisputeError, NotSufficientAmountForDisputeError, NotTeamMemberError, NotTimeYetToParticipateToDisputeError, NoDisputeParticipantsError, RefundImpossibleDueToTooManyDisputeParticipantsError, RevealWinnerImpossibleDueToTooFewDisputersError,
+    DelayClaimVictoryNotSet, DelayUnclaimVictoryNotSet, DelayStartGreaterThanDelayEnd, DelayStartClaimVictoryGreaterThanDelayEndClaimVictoryError, DisputeExistsError, DisputeParticipationNotAuthorizedError, FeeDisputeNotSetError, MustWaitForEndDisputePeriodError, 
+    NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, NoDisputeError, NotSufficientAmountForDisputeError, NotTeamMemberError, NotTimeYetToParticipateToDisputeError, NoDisputeParticipantsError, RefundImpossibleDueToTooManyDisputeParticipantsError, RevealWinnerImpossibleDueToTooFewDisputersError,
     SendMoneyBackToPlayersError, TeamDoesNotExistsError, TeamDidNotClaimVictoryError, TeamIsNotDisputerError, TeamOfSignerAlreadyParticipatesInDisputeError, TimeElapsedToClaimVictoryError, TimeElapsedToUnclaimVictoryError, TimeElapsedForDisputeParticipationError, 
     TimeElapsedToJoinTeamError, UnclaimVictoryNotAuthorized, WinnerNotRevealedYetError, WithdrawPoolNotAuthorized, WithdrawPoolByLooserTeamImpossibleError} from "./BitarenaChallengeErrors.sol";
 import {PlayerJoinsTeam, TeamCreated, Debug, VictoryClaimed, VictoryUnclaimed} from "./BitarenaChallengeEvents.sol";
@@ -163,16 +163,17 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
      * After a dispute occurs and the ADMIN revealed which team is the winner, the team member can withdraw the pool
      * Controls for that action must be : 
      *   - only a GAMER or challenge CREATOR can withdraw the challenge pool
+     *   - this action is possible only after the dispute participation period
      *   - a dispute must exist (so with 2 participants at least)
      *   - impossible to withdraw the pool if the winner has not been revealed yet with at least 2 disputers
      *   - only the member of the team who won can withdraw the challenge pool
      */
     modifier checkWithdrawPool() {
         if (!hasRole(CHALLENGE_CREATOR_ROLE, _msgSender()) && !hasRole(GAMER_ROLE, _msgSender())) revert WithdrawPoolNotAuthorized();
-        if (!atLeast1TeamParticipateToDispute()) revert NoDisputeParticipantsError();
-        if (s_winnerTeam == 0 && atLeast2TeamsParticipateToDispute()) revert WinnerNotRevealedYetError();
+        if (block.timestamp < (s_startAt + s_delayStartVictoryClaim + s_delayEndVictoryClaim + s_delayStartDisputeParticipation + s_delayEndDisputeParticipation)) revert MustWaitForEndDisputePeriodError();
+        if (s_winnerTeam == 0) revert WinnerNotRevealedYetError();
         uint16 teamIndex = getTeamOfPlayer(_msgSender());
-        if (teamIndex != s_winnerTeam) revert WithdrawPoolByLooserTeamImpossibleError();
+        if (s_winnerTeam != 0 && teamIndex != s_winnerTeam) revert WithdrawPoolByLooserTeamImpossibleError();
         if (getIsPoolWithdrawed() == true) revert ChallengePoolAlreadyWithdrawed();
         _;
     }
@@ -456,8 +457,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
      */
     function withdrawChallengePool() public checkWithdrawPool() nonReentrant {
         s_isPoolWithdrawed = true;
-        //CASE 1 : Only 1 participant to a dispute, so the team is automatically the winner
-
+        
         //CASE2
          
     }
