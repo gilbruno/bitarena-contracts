@@ -250,6 +250,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
 
     /**
      * @dev If a team decides to unclaimVictory after claiming it, we must provide a fonction for that
+     * Not suggested in this V1. May be later if needed
      */
     /*
     function unclaimVictory() public checkUnclaimVictory() {

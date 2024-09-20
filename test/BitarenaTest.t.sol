@@ -1124,6 +1124,9 @@ contract BitarenaTest is Test {
         assertEq(bitarenaChallenge.getWinnerClaimed(teamIndexPlayer1), true);
         assertEq(bitarenaChallenge.getWinnerClaimed(teamIndexPlayer3), true);
         assertEq(bitarenaChallenge.getWinnersClaimedCount(), 2);
+        //There is no winner team as at least claimed the victory
+        assertEq(bitarenaChallenge.getWinnerTeam(), 0);
+
 
     }   
 
@@ -1273,6 +1276,8 @@ contract BitarenaTest is Test {
         uint16 teamIndex = bitarenaChallenge.getTeamOfPlayer(PLAYER3_CHALLENGE1);
         assertEq(bitarenaChallenge.getWinnerClaimed(teamIndex), true);
         assertEq(bitarenaChallenge.getWinnersClaimedCount(), 1);
+        //The winner team is automatically the team of Player3 so team2
+        assertEq(bitarenaChallenge.getWinnerTeam(), 2);
     }   
 
     /********  TESTS ON UNCLAIM VICTORY ***************/
