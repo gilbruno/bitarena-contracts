@@ -99,12 +99,11 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
     /**
      * @dev Modifier for the "claimVictory" function
      */
-    modifier checkClaimVictory(uint16 _teamIndex) {
+    modifier checkClaimVictory() {
         if (s_delayStartVictoryClaim == 0 || s_delayEndVictoryClaim == 0) revert DelayClaimVictoryNotSet();
         if (!hasRole(CHALLENGE_CREATOR_ROLE, _msgSender()) && !hasRole(GAMER_ROLE, _msgSender())) revert ClaimVictoryNotAuthorized();
-        if (_teamIndex > s_teamCounter) revert TeamDoesNotExistsError();
+        uint16 _teamIndex = getTeamOfPlayer(_msgSender());
         if (block.timestamp > (s_startAt + s_delayStartVictoryClaim + s_delayEndVictoryClaim)) revert TimeElapsedToClaimVictoryError();
-        if (s_players[_msgSender()] != _teamIndex) revert NotTeamMemberError();
         if (s_isCanceled) revert ChallengeCanceledError();
         _;
     }
@@ -138,12 +137,11 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
     /**
      * Modifier for 'unclaimVictory' fonction
      */
-    modifier checkUnclaimVictory(uint16 _teamIndex) {
+    modifier checkUnclaimVictory() {
         if (s_delayStartVictoryClaim == 0 || s_delayEndVictoryClaim == 0) revert DelayUnclaimVictoryNotSet();
         if (!hasRole(CHALLENGE_CREATOR_ROLE, _msgSender()) && !hasRole(GAMER_ROLE, _msgSender())) revert UnclaimVictoryNotAuthorized();
-        if (_teamIndex > s_teamCounter) revert TeamDoesNotExistsError();
+        uint16 _teamIndex = getTeamOfPlayer(_msgSender());
         if (block.timestamp > (s_startAt + s_delayStartVictoryClaim + s_delayEndVictoryClaim)) revert TimeElapsedToUnclaimVictoryError();
-        if (s_players[_msgSender()] != _teamIndex) revert NotTeamMemberError();
         if (s_isCanceled) revert ChallengeCanceledError();
         _;
     }
@@ -244,20 +242,21 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
     
     /**
      * @dev It can be done only between (s_startAt + s_delayStartVictoryClaim) and (s_startAt + s_delayStartVictoryClaim + s_delayEndVictoryClaim)
-     * @param _teamIndex : index of the team
+     * 
      */
-    function claimVictory(uint16 _teamIndex) public checkClaimVictory(_teamIndex) {
-        s_winners[_teamIndex] = true;
+    function claimVictory() public checkClaimVictory() {
+        uint16 teamIndex = getTeamOfPlayer(_msgSender()); 
+        s_winners[teamIndex] = true;
         s_winnersCount++;
-        emit VictoryClaimed(_teamIndex, _msgSender());
+        emit VictoryClaimed(teamIndex, _msgSender());
     }
 
     /**
      * @dev If a team decides to unclaimVictory after claiming it, we must provide a fonction for that
-     * @param _teamIndex : index of the team
      */
-    function unclaimVictory(uint16 _teamIndex) public checkUnclaimVictory(_teamIndex) {
-        s_winners[_teamIndex] = true;
+    function unclaimVictory() public checkUnclaimVictory() {
+        uint16 _teamIndex = getTeamOfPlayer(_msgSender());
+        s_winners[_teamIndex] = false;
         //We decrement only if we have at least 1 winner claimed
         if (s_winnersCount > 0) {
             s_winnersCount--;
@@ -445,7 +444,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
      */
     function withdrawChallengePool() public checkWithdrawPool() nonReentrant {
         s_isPoolWithdrawed = true;
-        //CASE 1 : Only 1 participant to a dispute, so
+        //CASE 1 : Only 1 participant to a dispute, so the team is automatically the winner
          
     }
 
@@ -638,6 +637,20 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
      */
     function getDisputeParticipants(uint16 _teamIndex) public view returns (address) {
         return s_disputeParticipants[_teamIndex];
+    }
+
+    /**
+     * @dev get the state var "s_winners"
+     */
+    function getWinnerClaimed(uint16 _teamIndex) public view returns (bool) {
+        return s_winners[_teamIndex];
+    }
+
+    /**
+     * @dev get the state var "s_winnersCount"
+     */
+    function getWinnersClaimedCount() public view returns (uint16) {
+        return s_winnersCount;
     }
 
     /**

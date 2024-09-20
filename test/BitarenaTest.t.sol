@@ -609,12 +609,12 @@ contract BitarenaTest is Test {
 
         //PLAYER1 claims victory for his team = team1
         vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.claimVictory(1);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //PLAYER3 claims victory for his team = team2
         vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.claimVictory(2);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //There is a dispute so 1 member of a team participate in a dispute
@@ -1111,8 +1111,20 @@ contract BitarenaTest is Test {
         uint256 _1Day15HoursInTheFuture = block.timestamp + 1 days + 15 hours;
         vm.warp(_1Day15HoursInTheFuture);
         vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.claimVictory(2);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
+
+        vm.warp(_1Day15HoursInTheFuture);
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.claimVictory();
+        vm.stopBroadcast();         
+
+        uint16 teamIndexPlayer1 = bitarenaChallenge.getTeamOfPlayer(PLAYER1_CHALLENGE1);
+        uint16 teamIndexPlayer3 = bitarenaChallenge.getTeamOfPlayer(PLAYER3_CHALLENGE1);
+        assertEq(bitarenaChallenge.getWinnerClaimed(teamIndexPlayer1), true);
+        assertEq(bitarenaChallenge.getWinnerClaimed(teamIndexPlayer3), true);
+        assertEq(bitarenaChallenge.getWinnersClaimedCount(), 2);
+
     }   
 
     /**
@@ -1135,7 +1147,7 @@ contract BitarenaTest is Test {
         vm.warp(_3DaysInTheFuture);
         vm.expectRevert(TimeElapsedToClaimVictoryError.selector);
         vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.claimVictory(2);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
     }   
 
@@ -1157,7 +1169,7 @@ contract BitarenaTest is Test {
         vm.warp(_3DaysInTheFuture);
         vm.expectRevert(DelayClaimVictoryNotSet.selector);
         vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.claimVictory(2);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
     }   
 
@@ -1180,32 +1192,10 @@ contract BitarenaTest is Test {
         vm.warp(_3DaysInTheFuture);
         vm.expectRevert(DelayClaimVictoryNotSet.selector);
         vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.claimVictory(2);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
     }   
 
-    /**
-     * @dev Test that it's impossible to claim victory if a player claim victory for a team that does not exist
-     */
-    function testClaimVictory5() public {
-        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
-        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
-
-        //The admin of the challenge set delay for victory claim
-        //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
-        vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
-        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
-        vm.stopBroadcast();         
-
-        //As the challenge must start 1 day after its creation, we try to claim 15 hours after the start date
-        uint256 _3DaysInTheFuture = block.timestamp + 3 days;
-        vm.warp(_3DaysInTheFuture);
-        vm.expectRevert(TeamDoesNotExistsError.selector);
-        vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.claimVictory(3);
-        vm.stopBroadcast();         
-    }   
 
     /** @dev Test that it's impossible to claim victory if a challenge is canceled
      * 
@@ -1230,7 +1220,7 @@ contract BitarenaTest is Test {
         vm.warp(_3DaysInTheFuture);
         vm.expectRevert(ChallengeCanceledError.selector);
         vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.claimVictory(2);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
     }   
 
@@ -1254,12 +1244,12 @@ contract BitarenaTest is Test {
         vm.warp(_3DaysInTheFuture);
         vm.expectRevert(ClaimVictoryNotAuthorized.selector);
         vm.startBroadcast(PLAYER4_CHALLENGE1);
-        bitarenaChallenge.claimVictory(2);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
     }   
 
     /** 
-     * @dev Test that it's impossible to claim victory for a team that is not yours
+     * @dev Test state vars for claim victory
      */
     function testClaimVictory8() public {
         BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
@@ -1276,10 +1266,13 @@ contract BitarenaTest is Test {
         // the PLAYER3 tries to claim the victory for the team1 that is not his team (=team2)
         uint256 _3DaysInTheFuture = block.timestamp + 2 days;
         vm.warp(_3DaysInTheFuture);
-        vm.expectRevert(NotTeamMemberError.selector);
         vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.claimVictory(1);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
+
+        uint16 teamIndex = bitarenaChallenge.getTeamOfPlayer(PLAYER3_CHALLENGE1);
+        assertEq(bitarenaChallenge.getWinnerClaimed(teamIndex), true);
+        assertEq(bitarenaChallenge.getWinnersClaimedCount(), 1);
     }   
 
     /********  TESTS ON UNCLAIM VICTORY ***************/
@@ -1302,7 +1295,7 @@ contract BitarenaTest is Test {
         uint256 _1Day15HoursInTheFuture = block.timestamp + 1 days + 15 hours;
         vm.warp(_1Day15HoursInTheFuture);
         vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.unclaimVictory(2);
+        bitarenaChallenge.unclaimVictory();
         vm.stopBroadcast();         
     }   
 
@@ -1326,7 +1319,7 @@ contract BitarenaTest is Test {
         vm.warp(_3DaysInTheFuture);
         vm.expectRevert(TimeElapsedToUnclaimVictoryError.selector);
         vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.unclaimVictory(2);
+        bitarenaChallenge.unclaimVictory();
         vm.stopBroadcast();         
     }   
 
@@ -1352,7 +1345,7 @@ contract BitarenaTest is Test {
         vm.warp(_3DaysInTheFuture);
         vm.expectRevert(DelayUnclaimVictoryNotSet.selector);
         vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.unclaimVictory(2);
+        bitarenaChallenge.unclaimVictory();
         vm.stopBroadcast();         
     }   
 
@@ -1375,30 +1368,7 @@ contract BitarenaTest is Test {
         vm.warp(_3DaysInTheFuture);
         vm.expectRevert(TimeElapsedToUnclaimVictoryError.selector);
         vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.unclaimVictory(2);
-        vm.stopBroadcast();         
-    }   
-
-    /**
-     * @dev Test that it's impossible to unclaim victory if a player unclaim victory for a team that does not exist
-     */
-    function testUnclaimVictory5() public {
-        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
-        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
-
-        //The admin of the challenge set delay for victory claim
-        //With that example, the victory unclaim is possible between 10 hours after the start date and 20 hours after the start date 
-        vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
-        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
-        vm.stopBroadcast();         
-
-        //As the challenge must start 1 day after its creation, we try to unclaim 15 hours after the start date
-        uint256 _3DaysInTheFuture = block.timestamp + 3 days;
-        vm.warp(_3DaysInTheFuture);
-        vm.expectRevert(TeamDoesNotExistsError.selector);
-        vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.unclaimVictory(3);
+        bitarenaChallenge.unclaimVictory();
         vm.stopBroadcast();         
     }   
 
@@ -1425,7 +1395,7 @@ contract BitarenaTest is Test {
         vm.warp(_3DaysInTheFuture);
         vm.expectRevert(ChallengeCanceledError.selector);
         vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.unclaimVictory(2);
+        bitarenaChallenge.unclaimVictory();
         vm.stopBroadcast();         
     }   
 
@@ -1449,16 +1419,19 @@ contract BitarenaTest is Test {
         vm.warp(_3DaysInTheFuture);
         vm.expectRevert(UnclaimVictoryNotAuthorized.selector);
         vm.startBroadcast(PLAYER4_CHALLENGE1);
-        bitarenaChallenge.unclaimVictory(2);
+        bitarenaChallenge.unclaimVictory();
         vm.stopBroadcast();         
     }   
 
     /** 
-     * @dev Test that it's impossible to unclaim victory for a team that is not yours
+     * @dev Test state vars linked to claim victory
      */
-    function testUclaimVictory8() public {
+    function testUnclaimVictory9() public {
         BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
         joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
+
+        uint16 team1Index = bitarenaChallenge.getTeamOfPlayer(PLAYER1_CHALLENGE1);
+        uint16 team2Index = bitarenaChallenge.getTeamOfPlayer(PLAYER3_CHALLENGE1);
 
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
@@ -1467,14 +1440,30 @@ contract BitarenaTest is Test {
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
         vm.stopBroadcast();         
 
-        //As the challenge must start 1 day after its creation, 
-        // the PLAYER3 tries to unclaim the victory for the team1 that is not his team (=team2)
         uint256 _3DaysInTheFuture = block.timestamp + 2 days;
         vm.warp(_3DaysInTheFuture);
-        vm.expectRevert(NotTeamMemberError.selector);
-        vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.unclaimVictory(1);
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
+
+        vm.warp(_3DaysInTheFuture);
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.claimVictory();
+        vm.stopBroadcast();      
+
+        assertEq(bitarenaChallenge.getWinnerClaimed(team2Index), true);
+
+        // the PLAYER3 finally unclaims the victory
+        vm.warp(_3DaysInTheFuture);
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.unclaimVictory();
+        vm.stopBroadcast();         
+
+        //Player1 & Player3 claim victory but player3 unclaims so the total victory claimed is 1
+        assertEq(bitarenaChallenge.getWinnerClaimed(team1Index), true);
+        assertEq(bitarenaChallenge.getWinnerClaimed(team2Index), false);
+        assertEq(bitarenaChallenge.getWinnersClaimedCount(), 1);
+
     }   
 
     /********  TESTS ON DISPUTE ***************/
@@ -1499,12 +1488,12 @@ contract BitarenaTest is Test {
 
         //PLAYER1 claims victory for his team = team1
         vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.claimVictory(1);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //PLAYER3 claims victory for his team = team2
         vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.claimVictory(2);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         assertEq(bitarenaChallenge.atLeast2TeamsClaimVictory(), true);
@@ -1531,7 +1520,7 @@ contract BitarenaTest is Test {
 
         //PLAYER1 claims victory for his team = team1
         vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.claimVictory(1);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         assertEq(bitarenaChallenge.atLeast2TeamsClaimVictory(), false);
@@ -1558,7 +1547,7 @@ contract BitarenaTest is Test {
 
         //PLAYER1 claims victory for his team = team1
         vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.claimVictory(1);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //ADMIN_CHALLENGE1 sets fee dispute after that
@@ -1590,7 +1579,7 @@ contract BitarenaTest is Test {
 
         //PLAYER1 claims victory for his team = team1
         vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.claimVictory(1);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //PLAYER1_CHALLENGE1 sets fee dispute but it reverts with AccessControl error
@@ -1622,17 +1611,17 @@ contract BitarenaTest is Test {
 
         //PLAYER1 claims victory for his team = team1
         vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.claimVictory(1);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //PLAYER3 claims victory for his team = team2
         vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.claimVictory(2);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //PLAYER1 finally unclaims victory for his team = team1
         vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.unclaimVictory(1);
+        bitarenaChallenge.unclaimVictory();
         vm.stopBroadcast();         
 
         assertEq(bitarenaChallenge.atLeast2TeamsClaimVictory(), false);
@@ -1659,17 +1648,17 @@ contract BitarenaTest is Test {
 
         //PLAYER1 claims victory for his team = team1
         vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.claimVictory(1);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //PLAYER3 claims victory for his team = team2
         vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.claimVictory(2);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //PLAYER1 finally unclaims victory for his team = team1
         vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.unclaimVictory(1);
+        bitarenaChallenge.unclaimVictory();
         vm.stopBroadcast();         
 
         //The ADMIN set the fee for the dispute
@@ -1703,12 +1692,12 @@ contract BitarenaTest is Test {
 
         //PLAYER1 claims victory for his team = team1
         vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.claimVictory(1);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //PLAYER3 claims victory for his team = team2
         vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.claimVictory(2);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //There is a dispute so anyone can participate to a dispute
@@ -1742,12 +1731,12 @@ contract BitarenaTest is Test {
 
         //PLAYER1 claims victory for his team = team1
         vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.claimVictory(1);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //PLAYER3 claims victory for his team = team2
         vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.claimVictory(2);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //ADMIN_CHALLENGE set fee dispute to 0
@@ -1786,12 +1775,12 @@ contract BitarenaTest is Test {
 
         //PLAYER1 claims victory for his team = team1
         vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.claimVictory(1);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //PLAYER3 claims victory for his team = team2
         vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.claimVictory(2);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //ADMIN_CHALLENGE set fee dispute to 0
@@ -1831,12 +1820,12 @@ contract BitarenaTest is Test {
 
         //PLAYER1 claims victory for his team = team1
         vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.claimVictory(1);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //PLAYER3 claims victory for his team = team2
         vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.claimVictory(2);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //There is a dispute so anyone who is granted can participate to a dispute
@@ -1872,12 +1861,12 @@ contract BitarenaTest is Test {
 
         //PLAYER1 claims victory for his team = team1
         vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.claimVictory(1);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //PLAYER3 claims victory for his team = team2
         vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.claimVictory(2);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //There is a dispute so anyone who is granted can participate to a dispute
@@ -1913,12 +1902,12 @@ contract BitarenaTest is Test {
 
         //PLAYER1 claims victory for his team = team1
         vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.claimVictory(1);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //PLAYER3 claims victory for his team = team2
         vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.claimVictory(2);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         // //ADMIN of the CHALLENGE wants to refund Dispute amount but it fails because there is no dispute participants
@@ -1977,12 +1966,12 @@ contract BitarenaTest is Test {
 
         //PLAYER1 claims victory for his team = team1
         vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.claimVictory(1);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //PLAYER3 claims victory for his team = team2
         vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.claimVictory(2);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //There is a dispute so PLAYER3 wants to participate to a dispute 
@@ -2033,12 +2022,12 @@ contract BitarenaTest is Test {
 
         //PLAYER1 claims victory for his team = team1
         vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.claimVictory(1);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //PLAYER3 claims victory for his team = team2
         vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.claimVictory(2);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //There is a dispute so anyone can participate to a dispute
@@ -2075,12 +2064,12 @@ contract BitarenaTest is Test {
 
         //PLAYER1 claims victory for his team = team1
         vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.claimVictory(1);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //PLAYER3 claims victory for his team = team2
         vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.claimVictory(2);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //There is a dispute so anyone can participate to a dispute
@@ -2116,12 +2105,12 @@ contract BitarenaTest is Test {
 
         //PLAYER1 claims victory for his team = team1
         vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.claimVictory(1);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //PLAYER3 claims victory for his team = team2
         vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.claimVictory(2);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //There is a dispute so anyone can participate to a dispute
@@ -2163,12 +2152,12 @@ contract BitarenaTest is Test {
 
         //PLAYER1 claims victory for his team = team1
         vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.claimVictory(1);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //PLAYER3 claims victory for his team = team2
         vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.claimVictory(2);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //PLAYER4 of team3 wants to participate to a dispute but did not claim its victory
@@ -2204,12 +2193,12 @@ contract BitarenaTest is Test {
 
         //PLAYER1 claims victory for his team = team1
         vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.claimVictory(1);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //PLAYER3 claims victory for his team = team2
         vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.claimVictory(2);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //PLAYER1 participates to the dispute
@@ -2241,7 +2230,7 @@ contract BitarenaTest is Test {
 
         //PLAYER1 claims victory for his team = team1
         vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.claimVictory(1);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //PLAYER4 wants to withdraw the pool as he did not participate to the challenge
@@ -2272,12 +2261,12 @@ contract BitarenaTest is Test {
 
         //PLAYER1 claims victory for his team = team1
         vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.claimVictory(1);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //PLAYER3 claims victory for his team = team2
         vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.claimVictory(2);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //PLAYER3 participates to the dispute 1 hour after the "claim victory period"
@@ -2318,12 +2307,12 @@ contract BitarenaTest is Test {
 
         //PLAYER1 claims victory for his team = team1
         vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.claimVictory(1);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //PLAYER3 claims victory for his team = team2
         vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.claimVictory(2);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //PLAYER3 participates to the dispute 1 hour after the "claim victory period"
@@ -2368,12 +2357,12 @@ contract BitarenaTest is Test {
 
         //PLAYER1 claims victory for his team = team1
         vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.claimVictory(1);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //PLAYER3 claims victory for his team = team2
         vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.claimVictory(2);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //PLAYER3 participates to the dispute 1 hour after the "claim victory period" and that's the only disputer of the dispute
@@ -2411,12 +2400,12 @@ contract BitarenaTest is Test {
 
         //PLAYER1 claims victory for his team = team1
         vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.claimVictory(1);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //PLAYER3 claims victory for his team = team2
         vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.claimVictory(2);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         uint256 amountDispute = bitarenaChallenge.getDisputeAmountParticipation();
@@ -2461,12 +2450,12 @@ contract BitarenaTest is Test {
 
         //PLAYER1 claims victory for his team = team1
         vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.claimVictory(1);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //PLAYER3 claims victory for his team = team2
         vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.claimVictory(2);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         uint256 amountDispute = bitarenaChallenge.getDisputeAmountParticipation();
@@ -2526,12 +2515,12 @@ contract BitarenaTest is Test {
 
         //PLAYER1 claims victory for his team = team1
         vm.startBroadcast(PLAYER1_CHALLENGE1);
-        bitarenaChallenge.claimVictory(1);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         //PLAYER3 claims victory for his team = team2
         vm.startBroadcast(PLAYER3_CHALLENGE1);
-        bitarenaChallenge.claimVictory(2);
+        bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
         uint256 amountDispute = bitarenaChallenge.getDisputeAmountParticipation();
