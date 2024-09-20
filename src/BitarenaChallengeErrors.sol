@@ -113,11 +113,21 @@ error RefundImpossibleDueToTooManyDisputeParticipantsError();
  */
 error 
 RevealWinnerImpossibleDueToTooFewDisputersError();
+
+/**
+ * @dev 
+ */
+error SendMoneyBackToAdminError();
+
 /**
  * @dev 
  */
 error SendMoneyBackToPlayersError();
 
+/**
+ * @dev 
+ */
+error SendDisputeAmountBackToWinnerError();
 
 /**
  * @dev 

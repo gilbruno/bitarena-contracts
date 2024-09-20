@@ -8,7 +8,8 @@ import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
 import {BalanceChallengePlayerError, ChallengeCanceledError, ChallengeCancelAfterStartDateError, ChallengePoolAlreadyWithdrawed, ClaimVictoryNotAuthorized, 
     DelayClaimVictoryNotSet, DelayUnclaimVictoryNotSet, DelayStartGreaterThanDelayEnd, DelayStartClaimVictoryGreaterThanDelayEndClaimVictoryError, DisputeExistsError, DisputeParticipationNotAuthorizedError, FeeDisputeNotSetError, MustWaitForEndDisputePeriodError, 
     NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, NoDisputeError, NotSufficientAmountForDisputeError, NotTeamMemberError, NotTimeYetToParticipateToDisputeError, NoDisputeParticipantsError, RefundImpossibleDueToTooManyDisputeParticipantsError, RevealWinnerImpossibleDueToTooFewDisputersError,
-    SendMoneyBackToPlayersError, TeamDoesNotExistsError, TeamDidNotClaimVictoryError, TeamIsNotDisputerError, TeamOfSignerAlreadyParticipatesInDisputeError, TimeElapsedToClaimVictoryError, TimeElapsedToUnclaimVictoryError, TimeElapsedForDisputeParticipationError, 
+    SendMoneyBackToPlayersError, SendDisputeAmountBackToWinnerError, SendMoneyBackToAdminError,
+    TeamDoesNotExistsError, TeamDidNotClaimVictoryError, TeamIsNotDisputerError, TeamOfSignerAlreadyParticipatesInDisputeError, TimeElapsedToClaimVictoryError, TimeElapsedToUnclaimVictoryError, TimeElapsedForDisputeParticipationError, 
     TimeElapsedToJoinTeamError, UnclaimVictoryNotAuthorized, WinnerNotRevealedYetError, WithdrawPoolNotAuthorized, WithdrawPoolByLooserTeamImpossibleError} from "./BitarenaChallengeErrors.sol";
 import {PlayerJoinsTeam, TeamCreated, Debug, VictoryClaimed, VictoryUnclaimed} from "./BitarenaChallengeEvents.sol";
 import {ChallengeParams} from "./ChallengeParams.sol";
@@ -457,9 +458,40 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
      */
     function withdrawChallengePool() public checkWithdrawPool() nonReentrant {
         s_isPoolWithdrawed = true;
-        
-        //CASE2
+
+        address[] memory winningTeam = s_teams[s_winnerTeam];
+        uint256 playerWinnersCount = winningTeam.length;
+
+        //STEP 1: Send dispute amount back to the winner
+        address disputeParticipant = s_disputeParticipants[s_winnerTeam];
+        uint256 amountDispute = getDisputeAmountParticipation();
+        (bool success, ) = disputeParticipant.call{value: amountDispute}("");
+        if (!success) revert SendDisputeAmountBackToWinnerError();
+        s_disputePool = s_disputePool - amountDispute;
+
+        //STEP 2 : Send challenge pool to players of winner team
+        //First we must substract the fee of the challenge pool
+        uint256 feeAmount = getFeePercentage() * getChallengePool();
+        feeAmount = feeAmount / 100;
+        uint256 poolAmount = getChallengePool() - feeAmount;
+        uint256 remainder = poolAmount % playerWinnersCount;
+        //We substract the remainder of the euclidian divide in order to make the amount to send back dividable 
+        poolAmount = poolAmount - remainder;
+        uint256 amountPerPlayer = poolAmount / playerWinnersCount;
+
+
+        s_challengePool = s_challengePool - poolAmount;
+        for (uint256 i = 0; i < playerWinnersCount; i++) {
+            (success, ) = winningTeam[i].call{value: amountPerPlayer}("");
+            if (!success) revert SendMoneyBackToPlayersError();
+        }     
+
+        //STEP 3 : Send back dispute fee and pool fee to the admin challenge
+        uint256 amountToSendToAdmin = getChallengePool() + s_disputePool;
+        (success, ) = s_admin.call{value: amountToSendToAdmin}("");
+        if (!success) revert SendMoneyBackToPlayersError();
          
+
     }
 
     /**
@@ -598,7 +630,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
     /**
      * @dev getter for state variable s_challengePool
      */
-    function getChallengePool() external view returns (uint256) {
+    function getChallengePool() public view returns (uint256) {
         return s_challengePool;
     }
 
@@ -621,7 +653,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
     /**
      * @dev getter for state variable s_feePercentage
      */
-    function getFeePercentage() external view returns (uint16) {
+    function getFeePercentage() public view returns (uint16) {
         return s_feePercentage;
     }
 
