@@ -120,6 +120,10 @@ error SendMoneyBackToPlayersError();
  */
 error TeamDoesNotExistsError();
 
+/**
+ * @dev 
+ */
+error TeamDidNotClaimVictoryError();
 
 /**
  * @dev 

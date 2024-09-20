@@ -8,7 +8,7 @@ import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
 import {BalanceChallengePlayerError, ChallengeCanceledError, ChallengeCancelAfterStartDateError, ChallengePoolAlreadyWithdrawed, ClaimVictoryNotAuthorized, 
     DelayClaimVictoryNotSet, DelayUnclaimVictoryNotSet, DelayStartGreaterThanDelayEnd, DelayStartClaimVictoryGreaterThanDelayEndClaimVictoryError, DisputeExistsError, DisputeParticipationNotAuthorizedError, FeeDisputeNotSetError, NbTeamsLimitReachedError, 
     NbPlayersPerTeamsLimitReachedError, NoDisputeError, NotSufficientAmountForDisputeError, NotTeamMemberError, NotTimeYetToParticipateToDisputeError, NoDisputeParticipantsError, RefundImpossibleDueToTooManyDisputeParticipantsError, RevealWinnerImpossibleDueToTooFewDisputersError,
-    SendMoneyBackToPlayersError, TeamDoesNotExistsError, TeamIsNotDisputerError, TeamOfSignerAlreadyParticipatesInDisputeError, TimeElapsedToClaimVictoryError, TimeElapsedToUnclaimVictoryError, TimeElapsedForDisputeParticipationError, 
+    SendMoneyBackToPlayersError, TeamDoesNotExistsError, TeamDidNotClaimVictoryError, TeamIsNotDisputerError, TeamOfSignerAlreadyParticipatesInDisputeError, TimeElapsedToClaimVictoryError, TimeElapsedToUnclaimVictoryError, TimeElapsedForDisputeParticipationError, 
     TimeElapsedToJoinTeamError, UnclaimVictoryNotAuthorized, WinnerNotRevealedYetError, WithdrawPoolNotAuthorized, WithdrawPoolByLooserTeamImpossibleError} from "./BitarenaChallengeErrors.sol";
 import {PlayerJoinsTeam, TeamCreated, Debug, VictoryClaimed, VictoryUnclaimed} from "./BitarenaChallengeEvents.sol";
 import {ChallengeParams} from "./ChallengeParams.sol";
@@ -118,6 +118,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
      *  - only a GAMER or challenge CREATOR can participate to a dispute 
      *  - a disputer can not participate twice
      *  - a dispute participation is only allowed after the delay of claim victory so after startat + delayStartClaimVictory + delayEndClaimVictory
+     *  - only a team that claim victory can participate to a dispute
      */
     modifier checkDisputeParticipation() {
         if (getDelayStartVictoryClaim() == 0 || getDelayEndVictoryClaim() == 0) revert DelayClaimVictoryNotSet();
@@ -130,6 +131,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
         if (teamIsDisputer(teamIndex)) revert TeamOfSignerAlreadyParticipatesInDisputeError();
         if (block.timestamp < (s_startAt + s_delayStartVictoryClaim + s_delayEndVictoryClaim + s_delayStartDisputeParticipation)) revert NotTimeYetToParticipateToDisputeError();
         if (block.timestamp > (s_startAt + s_delayStartVictoryClaim + s_delayEndVictoryClaim + s_delayStartDisputeParticipation + s_delayEndDisputeParticipation)) revert TimeElapsedForDisputeParticipationError();
+        if (s_winners[teamIndex] == false) revert TeamDidNotClaimVictoryError();
         _;
     }
 
@@ -443,6 +445,8 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
      */
     function withdrawChallengePool() public checkWithdrawPool() nonReentrant {
         s_isPoolWithdrawed = true;
+        //CASE 1 : Only 1 participant to a dispute, so
+         
     }
 
     /**
