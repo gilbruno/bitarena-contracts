@@ -1,3 +1,20 @@
+## Specific commands for the Bitarena smart contracts
+
+### Deploy Bitarena Factory
+
+```
+make deployFactory
+```
+
+### See uncovered lines by units tests
+
+
+```
+forge coverage --report debug
+```
+
+
+
 ## Foundry
 
 **Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
@@ -65,11 +82,3 @@ $ anvil --help
 $ cast --help
 ```
 
-## Spcific commands for the Bitarena smart contracts
-
-### See uncovered lines by units tests
-
-
-```
-forge coverage --fork-url $SEPOLIA_RPC_URL --report debug
-```
