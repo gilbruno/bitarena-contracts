@@ -2844,7 +2844,17 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
     }
 
-    
+    /**
+     * @dev Test taht roels are correctlygranted after deployment 
+     */
+    function testRolesGrantedJustAfterDeployment() public {
+        BitarenaChallenge bitarenaChallenge = createChallenge(THREE_TEAMS, TWO_PLAYERS);
+        assertEq(bitarenaChallenge.hasRole(CHALLENGE_ADMIN_ROLE, ADMIN_CHALLENGE1), true);
+        assertEq(bitarenaChallenge.hasRole(CHALLENGE_DISPUTE_ADMIN_ROLE, ADMIN_DISPUTE_CHALLENGE1), true);
+        assertEq(bitarenaChallenge.hasRole(CHALLENGE_CREATOR_ROLE, CREATOR_CHALLENGE1), true);
+        
+    }
+
     //TODO : Tests balance of challenge smart contract after many joining teams
 
     
