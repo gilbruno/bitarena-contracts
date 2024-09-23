@@ -6,5 +6,8 @@ BITARENA_FACTORY_ADDRESS=
 
 deployFactory:
 	@echo "Deploying the Bitarena Factory contract..."
-	forge script script/DeployBitarenaFactory.s.s.sol:DeployBitarenaFactory.s --broadcast --rpc-url $(RPC_URL) --private-key $(PRIVATE_KEY)
+	forge script script/DeployBitarenaFactory.s.sol:DeployBitarenaFactory --rpc-url $(RPC_URL) --private-key $(PRIVATE_KEY) --broadcast --legacy
 
+generateFactoryAbi:
+	@echo "Generate Factory ABI"
+	forge build --silent && jq '.abi' ./out/BitarenaFactory.sol/BitarenaFactory.json > ./abi/BitarenaFactory.json

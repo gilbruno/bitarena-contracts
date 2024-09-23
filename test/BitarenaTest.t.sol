@@ -7,7 +7,7 @@ import {BitarenaFactory} from "../src/BitarenaFactory.sol";
 import {CHALLENGE_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_CREATOR_ROLE, GAMER_ROLE, FEE_PERCENTAGE_AMOUNT_BY_DEFAULT} from "../src/BitarenaChallengeConstants.sol";
 import {BalanceChallengeCreatorError, ChallengeAdminAddressZeroError, 
     ChallengeCounterError, ChallengeCreatorAddressZeroError, ChallengeDisputeAdminAddressZeroError, ChallengeGameError, 
-    ChallengeNameError, ChallengePlatformError, ChallengeStartDateError, NbTeamsError, NbPlayersPerTeamsError, 
+    ChallengePlatformError, ChallengeStartDateError, NbTeamsError, NbPlayersPerTeamsError, 
     SendMoneyToChallengeError} from '../src/BitarenaFactoryErrors.sol';
 import {Challenge} from '../src/ChallengeStruct.sol';
 import {BitarenaChallenge} from '../src/BitarenaChallenge.sol';
@@ -85,7 +85,6 @@ contract BitarenaTest is Test {
         deployFactory();
         vm.startBroadcast(CREATOR_CHALLENGE1);
         bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
-            CHALLENGE1,
             GAME1,
             PLATFORM1,
             TWO_TEAMS,
@@ -105,7 +104,6 @@ contract BitarenaTest is Test {
         
         vm.startBroadcast(CREATOR_CHALLENGE1);
         bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
-            CHALLENGE1,
             GAME1,
             PLATFORM1,
             nbTeams,
@@ -158,27 +156,6 @@ contract BitarenaTest is Test {
 
     }
     
-
-    /**
-     * @dev Test revert with "ChallengeNameError" when no name is provided for challenge
-     */
-    function testIntentChallengeCreationError1() public {
-        deployFactory();
-        vm.expectRevert(ChallengeNameError.selector);
-        vm.startBroadcast(CREATOR_CHALLENGE1);
-        bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
-            '',
-            GAME1,
-            PLATFORM1,
-            TWO_TEAMS,
-            ONE_PLAYER,
-            AMOUNT_PER_PLAYER,
-            block.timestamp + 10 hours,
-            false
-        );
-        vm.stopBroadcast();
-    }
-
     /**
      * @dev Test revert with "ChallengeGameError" when no game is provided for challenge
      */
@@ -187,7 +164,6 @@ contract BitarenaTest is Test {
         vm.expectRevert(ChallengeGameError.selector);
         vm.startBroadcast(CREATOR_CHALLENGE1);
         bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
-            CHALLENGE1,
             '',
             PLATFORM1,
             TWO_TEAMS,
@@ -207,7 +183,6 @@ contract BitarenaTest is Test {
         vm.expectRevert(ChallengePlatformError.selector);
         vm.startBroadcast(CREATOR_CHALLENGE1);
         bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
-            CHALLENGE1,
             GAME1,
             '',
             TWO_TEAMS,
@@ -227,7 +202,6 @@ contract BitarenaTest is Test {
         vm.expectRevert(NbTeamsError.selector);
         vm.startBroadcast(CREATOR_CHALLENGE1);
         bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
-            CHALLENGE1,
             GAME1,
             PLATFORM1,
             1,
@@ -247,7 +221,6 @@ contract BitarenaTest is Test {
         vm.expectRevert(NbPlayersPerTeamsError.selector);
         vm.startBroadcast(CREATOR_CHALLENGE1);
         bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
-            CHALLENGE1,
             GAME1,
             PLATFORM1,
             TWO_TEAMS,
@@ -267,7 +240,6 @@ contract BitarenaTest is Test {
         vm.expectRevert(ChallengeStartDateError.selector);
         vm.startBroadcast(CREATOR_CHALLENGE1);
         bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
-            CHALLENGE1,
             GAME1,
             PLATFORM1,
             TWO_TEAMS,
@@ -287,7 +259,6 @@ contract BitarenaTest is Test {
         vm.expectRevert(BalanceChallengeCreatorError.selector);
         vm.startBroadcast(CREATOR_CHALLENGE1);
         bitarenaFactory.intentChallengeCreation{value: 1000 gwei}(
-            CHALLENGE1,
             GAME1,
             PLATFORM1,
             TWO_TEAMS,
@@ -307,14 +278,6 @@ contract BitarenaTest is Test {
         assertEq(bitarenaFactory.getChallengeCounter(), 1);
     }
 
-    /**
-     * @dev Test value of mapping "s_challengesMap" after intent challenge creation 
-     */
-    function testStateVariableAfterIntentChallengeCreation1() public {
-        intentChallengeCreationWith2TeamsAnd1Player();
-        Challenge memory challengeStructCreated = bitarenaFactory.getChallengeByIndex(1); 
-        assertEq(challengeStructCreated.challengeName, CHALLENGE1);
-    }
     /**
      * @dev Test value of mapping "s_challengesMap" after intent challenge creation 
      */

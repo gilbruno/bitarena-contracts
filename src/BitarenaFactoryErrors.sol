@@ -40,11 +40,6 @@ error ChallengeDisputeAdminAddressZeroError();
 /**
  * @dev 
  */
-error ChallengeNameError();
-
-/**
- * @dev 
- */
 error ChallengeGameError();
 
 /**

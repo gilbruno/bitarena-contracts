@@ -7,8 +7,7 @@ import {AccessControl} from "openzeppelin-contracts/contracts/access/AccessContr
 import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
 import {BalanceChallengeCreatorError, ChallengeAdminAddressZeroError, 
     ChallengeCounterError, ChallengeDeployedError, ChallengeCreatorAddressZeroError, ChallengeDisputeAdminAddressZeroError, ChallengeGameError, 
-    ChallengeNameError, ChallengePlatformError, 
-    ChallengeStartDateError, NbTeamsError, NbPlayersPerTeamsError, SendMoneyToChallengeError} from './BitarenaFactoryErrors.sol';
+    ChallengePlatformError, ChallengeStartDateError, NbTeamsError, NbPlayersPerTeamsError, SendMoneyToChallengeError} from './BitarenaFactoryErrors.sol';
 import {IntentChallengeCreation, ChallengeDeployed} from './BitarenaFactoryEvents.sol';
 import {Challenge} from './ChallengeStruct.sol';
 import {ChallengeParams} from './ChallengeParams.sol';
@@ -30,7 +29,6 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
 	}
 
     function intentChallengeCreation(
-        bytes32 _challengeName,
         bytes32 _game,
         bytes32 _platform,
         uint16 _nbTeams,
@@ -39,7 +37,6 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
         uint256 _startAt,
         bool _isPrivate
     ) public payable {
-        if (_challengeName == 0) revert ChallengeNameError();
         if (_game == 0) revert ChallengeGameError();
         if (_platform == 0) revert ChallengePlatformError();
         if(_nbTeams < 2) revert NbTeamsError();
@@ -53,7 +50,6 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
         Challenge memory newChallenge;
         newChallenge.challengeCreator = _msgSender();
         newChallenge.challengeAddress = address(0);
-        newChallenge.challengeName = _challengeName;
         newChallenge.game = _game;
         newChallenge.platform = _platform;
         newChallenge.nbTeams = _nbTeams;
@@ -113,6 +109,10 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
         emit ChallengeDeployed(_challengeCounter, address(bitarenaChallenge), address(this));
 
         return bitarenaChallenge;
+    }
+
+    function deployAndCreateChallenge() public {
+        
     }
 
     /**

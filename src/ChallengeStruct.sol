@@ -5,7 +5,6 @@ pragma solidity 0.8.26;
 struct Challenge {
     address challengeCreator;
     address challengeAddress;
-    bytes32 challengeName;
     bytes32 game;
     bytes32 platform;
     uint16 nbTeams;
