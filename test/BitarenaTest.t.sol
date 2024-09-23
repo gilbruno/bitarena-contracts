@@ -2845,7 +2845,7 @@ contract BitarenaTest is Test {
     }
 
     /**
-     * @dev Test taht roels are correctlygranted after deployment 
+     * @dev Test that roles are correctlygranted after deployment 
      */
     function testRolesGrantedJustAfterDeployment() public {
         BitarenaChallenge bitarenaChallenge = createChallenge(THREE_TEAMS, TWO_PLAYERS);
