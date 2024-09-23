@@ -1,7 +1,7 @@
 .PHONY: deploy
 
 # Définir les variables pour les adresses des tokens et les paramètres de déploiement
-# Remplacez par l'adresse du token de staking
+# Remplacez par l'adresse de la factory une fois déployée
 BITARENA_FACTORY_ADDRESS=  
 
 deployFactory:

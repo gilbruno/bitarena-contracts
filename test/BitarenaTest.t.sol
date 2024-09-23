@@ -18,6 +18,7 @@ import {BalanceChallengePlayerError, ChallengeCancelAfterStartDateError, Challen
     RevealWinnerImpossibleDueToTooFewDisputersError, TeamDoesNotExistsError, TeamDidNotClaimVictoryError, TeamIsNotDisputerError, TeamOfSignerAlreadyParticipatesInDisputeError, TimeElapsedToJoinTeamError, 
     TimeElapsedForDisputeParticipationError, TimeElapsedToClaimVictoryError, TimeElapsedToUnclaimVictoryError, UnclaimVictoryNotAuthorized, WinnerNotRevealedYetError, 
     WithdrawPoolByLooserTeamImpossibleError, WithdrawPoolNotAuthorized} from "../src/BitarenaChallengeErrors.sol";
+import {ParticipateToDispute, PlayerJoinsTeam, PoolChallengeWithdrawed, RevealWinner, TeamCreated, Debug, VictoryClaimed, VictoryUnclaimed} from "../src/BitarenaChallengeEvents.sol";
 import {MockFailingReceiver} from "./MockContracts.sol";
 
 
@@ -2813,9 +2814,37 @@ contract BitarenaTest is Test {
 
     }
 
+    /**
+     * Test on some events emitted
+     */
+    function testEventEmitted1() public {
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
 
-    //TODO : TEST withdraw pool
+                //send players some native tokens to enable them to jointeams
+        //A second player joins the team 1
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.createOrJoinTeam{value: AMOUNT_PER_PLAYER}(1);
+        vm.stopBroadcast();               
 
+
+        //The PLAYER2 creates a new team : team with index 2 is created
+        //Test that an event TeamCreated with team index = 2 is emitted
+        vm.expectEmit(true, false, false, false);
+        emit TeamCreated(2);
+        vm.startBroadcast(PLAYER2_CHALLENGE1);
+        bitarenaChallenge.createOrJoinTeam{value: AMOUNT_PER_PLAYER}(0);
+        vm.stopBroadcast();               
+
+        //The PLAYER3 joins the team2 (with index 2) 
+        vm.expectEmit(true, true, false, false);
+        //Test that an event PlayerJoinsTeam with team index = 2 and signer = PLAYER3_CHALLENGE1 is emitted
+        emit PlayerJoinsTeam(2, PLAYER3_CHALLENGE1);
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.createOrJoinTeam{value: AMOUNT_PER_PLAYER}(2);
+        vm.stopBroadcast();         
+    }
+
+    
     //TODO : Tests balance of challenge smart contract after many joining teams
 
     
