@@ -2,11 +2,12 @@
 
 pragma solidity 0.8.26;
 
-import {AccessControlDefaultAdminRules} from "openzeppelin-contracts/contracts/access/extensions/AccessControlDefaultAdminRules.sol";
+import {AccessControl} from "openzeppelin-contracts/contracts/access/AccessControl.sol";
 import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
 import {ADMIN_GAMES} from "./BitarenaChallengeConstants.sol";
+import {IBitarenaGames} from "./IBitarenaGames.sol";
 
-contract BitarenaGames is Context, AccessControlDefaultAdminRules {
+contract BitarenaGames is Context, AccessControl, IBitarenaGames {
 
     address[] private s_admins;
 
@@ -14,8 +15,8 @@ contract BitarenaGames is Context, AccessControlDefaultAdminRules {
 
     string[] private s_platforms;
 
-    constructor(address _adminGames) AccessControlDefaultAdminRules(1 days, _adminGames) {
-        _grantRole(ADMIN_GAMES, _adminGames);
+    constructor() {
+        _grantRole(ADMIN_GAMES, _msgSender());
     }
 
 

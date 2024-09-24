@@ -11,11 +11,13 @@ import {BalanceChallengeCreatorError, ChallengeAdminAddressZeroError,
 import {IntentChallengeCreation, ChallengeDeployed} from './BitarenaFactoryEvents.sol';
 import {Challenge} from './ChallengeStruct.sol';
 import {ChallengeParams} from './ChallengeParams.sol';
+import {IBitarenaGames} from "./IBitarenaGames.sol";
 
 contract BitarenaFactory is Context, Ownable, AccessControl {
 
     uint256 private s_challengeCounter;
 
+    IBitarenaGames private s_bitarenaGames;
 
     mapping(uint256 indexChallenge => Challenge) private s_challengesMap;
     
@@ -23,26 +25,71 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
     
     bytes32 public constant BITARENA_FACTORY_ADMIN = keccak256("BITARENA_FACTORY_ADMIN");
 
-	constructor () Ownable(msg.sender) {
+	constructor (address _bitarenaGames) Ownable(msg.sender) {
         s_challengeCounter = 0;
+        s_bitarenaGames = IBitarenaGames(_bitarenaGames);
 		_grantRole(BITARENA_FACTORY_ADMIN, msg.sender);
 	}
 
+    modifier checkIntentCreation(string calldata _game,
+        string calldata _platform,
+        uint16 _nbTeams,
+        uint16 _nbTeamPlayers,
+        uint256 _amountPerPlayer,
+        uint256 _startAt,
+        bool _isPrivate) {
+            if (keccak256(abi.encodePacked(_game)) == keccak256(abi.encodePacked(""))) revert ChallengeGameError();
+            if (keccak256(abi.encodePacked(_platform)) == keccak256(abi.encodePacked(""))) revert ChallengePlatformError();
+            if(_nbTeams < 2) revert NbTeamsError();
+            if(_nbTeamPlayers < 1) revert NbPlayersPerTeamsError();
+            if (_startAt <= block.timestamp) revert ChallengeStartDateError();
+            if (msg.value < _amountPerPlayer) revert BalanceChallengeCreatorError();
+
+            _;
+    }
+
+    /**
+     * @dev Returns true if a game exists in the state var array of games of BitarenaGames smart contract
+     * False otherwise
+     */
+    function gameExists(string memory _game) internal view returns(bool) {
+        string[] memory games = s_bitarenaGames.getGames();
+        bool _gameExists = false;
+        for (uint256 i = 0; i < games.length; i++) {
+            if (keccak256(abi.encodePacked(games[i])) == keccak256(abi.encodePacked(_game))) {
+                _gameExists = true;
+                break;
+            }
+        }
+        return _gameExists;
+    }
+    /**
+     * @dev Returns true if a platform exists in the state var array of platforms of BitarenaGames smart contract.
+     * False otherwise
+     */
+    function platformExists(string memory _platform) internal view returns(bool) {
+        string[] memory platforms = s_bitarenaGames.getPlatforms();
+        bool _platformExists = false;
+        for (uint256 i = 0; i < platforms.length; i++) {
+            if (keccak256(abi.encodePacked(platforms[i])) == keccak256(abi.encodePacked(_platform))) {
+                _platformExists = true;
+                break;
+            }
+        }
+        return _platformExists;
+
+    }
+
     function intentChallengeCreation(
-        bytes32 _game,
-        bytes32 _platform,
+        string calldata _game,
+        string calldata _platform,
         uint16 _nbTeams,
         uint16 _nbTeamPlayers,
         uint256 _amountPerPlayer,
         uint256 _startAt,
         bool _isPrivate
-    ) public payable {
-        if (_game == 0) revert ChallengeGameError();
-        if (_platform == 0) revert ChallengePlatformError();
-        if(_nbTeams < 2) revert NbTeamsError();
-        if(_nbTeamPlayers < 1) revert NbPlayersPerTeamsError();
-        if (_startAt <= block.timestamp) revert ChallengeStartDateError();
-        if (msg.value < _amountPerPlayer) revert BalanceChallengeCreatorError();
+    ) public payable checkIntentCreation(_game, _platform, _nbTeams, _nbTeamPlayers, _amountPerPlayer, _startAt, _isPrivate) {
+        
 
         //Increment counter of challenges
         s_challengeCounter++;

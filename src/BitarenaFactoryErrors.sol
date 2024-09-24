@@ -52,6 +52,11 @@ error ChallengePlatformError();
  */
 error ChallengeStartDateError();
 
+/**
+ * @dev an incorrect value for game
+ */
+error GameDoesNotExistError();
+
 
 /**
  * @dev an incorrect value for nbTeams
@@ -62,6 +67,11 @@ error NbTeamsError();
  * @dev an incorrect value for nbPlayersPerTeam
  */
 error NbPlayersPerTeamsError();
+
+/**
+ * @dev an incorrect value for platform
+ */
+error PlatformDoesNotExistError();
 
 /**
  * @dev 

@@ -19,8 +19,8 @@ import {CHALLENGE_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_CREATOR_RO
 
 contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, ReentrancyGuard{
 
-    bytes32 private s_game;
-    bytes32 private s_platform;
+    string private s_game;
+    string private s_platform;
 
     uint16 private immutable s_nbTeams;
     uint16 private immutable s_nbTeamPlayers;
@@ -528,14 +528,14 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
     /**
      * @dev getter for state variable s_game
      */
-    function getGame() external view returns (bytes32) {
+    function getGame() external view returns (string memory) {
         return s_game;
     }
 
     /**
      * @dev getter for state variable s_platform
      */
-    function getPlatform() external view returns (bytes32) {
+    function getPlatform() external view returns (string memory) {
         return s_platform;
     }
     /**

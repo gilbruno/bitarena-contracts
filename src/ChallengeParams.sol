@@ -7,8 +7,8 @@ struct ChallengeParams {
     address challengeAdmin;
     address challengeDisputeAdmin;
     address challengeCreator;
-    bytes32 game;
-    bytes32 platform;
+    string game;
+    string platform;
     uint16 nbTeams;
     uint16 nbTeamPlayers;
     uint256 amountPerPlayer;

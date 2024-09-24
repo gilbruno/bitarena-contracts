@@ -4,6 +4,7 @@ pragma solidity ^0.8.13;
 import {Test, console} from "forge-std/Test.sol";
 import {IAccessControl} from "openzeppelin-contracts/contracts/access/IAccessControl.sol";
 import {BitarenaFactory} from "../src/BitarenaFactory.sol";
+import {BitarenaGames} from "../src/BitarenaGames.sol";
 import {CHALLENGE_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_CREATOR_ROLE, GAMER_ROLE, FEE_PERCENTAGE_AMOUNT_BY_DEFAULT} from "../src/BitarenaChallengeConstants.sol";
 import {BalanceChallengeCreatorError, ChallengeAdminAddressZeroError, 
     ChallengeCounterError, ChallengeCreatorAddressZeroError, ChallengeDisputeAdminAddressZeroError, ChallengeGameError, 
@@ -24,6 +25,8 @@ import {MockFailingReceiver} from "./MockContracts.sol";
 
 contract BitarenaTest is Test {
     BitarenaFactory public bitarenaFactory;
+    BitarenaGames public bitarenaGames;
+    address ADMIN_GAMES = makeAddr("adminGames");
     address ADMIN_FACTORY = makeAddr("adminFactory");
     address ADMIN_CHALLENGE1 = makeAddr("adminChallenge1");
     address ADMIN_CHALLENGE2 = makeAddr("adminChallenge2");
@@ -38,12 +41,10 @@ contract BitarenaTest is Test {
     address PLAYER5_CHALLENGE1 = makeAddr("player5Challenge1");
     address PLAYER_WITH_NOT_SUFFICIENT_BALANCE = makeAddr("playerWithBalanceZero");
 
-    bytes32 CHALLENGE1 = "Challenge 1";
-    bytes32 CHALLENGE2 = "Challenge 2";
-    bytes32 GAME1 = "Counter Strike";
-    bytes32 GAME2 = "Far cry";
-    bytes32 PLATFORM1 = "UOS";
-    bytes32 PLATFORM2 = "Steam";
+    string GAME1 = "Counter Strike";
+    string GAME2 = "Far cry";
+    string PLATFORM1 = "UOS";
+    string PLATFORM2 = "Steam";
     uint16 ONE_TEAM = 1;
     uint16 TWO_TEAMS = 2;
     uint16 THREE_TEAMS = 3;
@@ -72,8 +73,13 @@ contract BitarenaTest is Test {
     }
 
     function deployFactory() public {
+        vm.startBroadcast(ADMIN_GAMES);
+        bitarenaGames = new BitarenaGames();
+        vm.stopBroadcast();
+
+
         vm.startBroadcast(ADMIN_FACTORY);
-        bitarenaFactory = new BitarenaFactory();
+        bitarenaFactory = new BitarenaFactory(address(bitarenaGames));
         vm.stopBroadcast();
         vm.deal(address(bitarenaFactory), STARTING_BALANCE_ETH);
     }
