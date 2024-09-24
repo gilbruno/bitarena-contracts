@@ -40,9 +40,16 @@ contract BitarenaGames is Context, AccessControl, IBitarenaGames {
     function getGames() public view returns (string[] memory) { 
         return s_games;
     }
+    function getGameByIndex(uint256 _gameIndex) public view returns (string memory) { 
+        return s_games[_gameIndex];
+    }
 
     function getPlatforms() public view returns (string[] memory){
         return s_platforms;
+    }
+
+    function getPlatformByIndex(uint256 _platformIndex) public view returns (string memory){
+        return s_platforms[_platformIndex];
     }
 
 }

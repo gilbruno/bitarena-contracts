@@ -62,8 +62,51 @@ cast send $ADDRESS_LAST_DEPLOYED_FACTORY "intentChallengeCreation(bytes32,bytes3
 
 In order to work this tx must respect implemented rules. See the code for revert errors.
 
+This method is working if you decide to have _game_ and _platform_ as _byte32_ type.<br>
+
 
 The <factory_address> is given by the script that deploys the factory (_make deployFactory_)
+
+## Set Games
+
+```
+make setGame GAME_NAME="Counter Strike"
+```
+
+## Get Games
+
+To see the Hex value of the game by providing the index of games array
+
+```
+make getGame GAME_INDEX=0
+```
+
+the terminal returns a hex value.
+To decode it, you can run the followingcommand
+
+## Decode Hex value
+
+```
+make decode HEX_VALUE=0x0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000e436f756e74657220537472696b65000000000000000000000000000000000000
+```
+
+This returns : <br>
+
+```
+Counter Strike
+```
+
+## Get Platforms
+
+To see the Hex value of the game by providing the index of platforms array
+
+```
+make getPlatform PLATFORM_INDEX=0
+```
+
+the terminal returns a hex value.
+To decode it, you can run the command to decode hex value
+
 
 ## Foundry
 

@@ -13,9 +13,10 @@ contract DeployBitarenaFactory is Script {
 
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY_ADMIN_FACTORY");
 
-        vm.startBroadcast(deployerPrivateKey);
         DeployBitarenaGames deployBitarenaGames = new DeployBitarenaGames();
         BitarenaGames bitarenaGames = deployBitarenaGames.run();
+
+        vm.startBroadcast(deployerPrivateKey);
         BitarenaFactory bitarenaFactory = new BitarenaFactory(address(bitarenaGames));
         vm.stopBroadcast();
 
