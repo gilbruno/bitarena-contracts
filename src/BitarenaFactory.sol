@@ -7,7 +7,7 @@ import {AccessControl} from "openzeppelin-contracts/contracts/access/AccessContr
 import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
 import {BalanceChallengeCreatorError, ChallengeAdminAddressZeroError, 
     ChallengeCounterError, ChallengeDeployedError, ChallengeCreatorAddressZeroError, ChallengeDisputeAdminAddressZeroError, ChallengeGameError, 
-    ChallengePlatformError, ChallengeStartDateError, NbTeamsError, NbPlayersPerTeamsError, SendMoneyToChallengeError} from './BitarenaFactoryErrors.sol';
+    ChallengePlatformError, ChallengeStartDateError, GameDoesNotExistError, NbTeamsError, NbPlayersPerTeamsError, SendMoneyToChallengeError, PlatformDoesNotExistError} from './BitarenaFactoryErrors.sol';
 import {IntentChallengeCreation, ChallengeDeployed} from './BitarenaFactoryEvents.sol';
 import {Challenge} from './ChallengeStruct.sol';
 import {ChallengeParams} from './ChallengeParams.sol';
@@ -44,7 +44,8 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
             if(_nbTeamPlayers < 1) revert NbPlayersPerTeamsError();
             if (_startAt <= block.timestamp) revert ChallengeStartDateError();
             if (msg.value < _amountPerPlayer) revert BalanceChallengeCreatorError();
-
+            if (!gameExists(_game)) revert GameDoesNotExistError();
+            if (!platformExists(_platform)) revert PlatformDoesNotExistError();
             _;
     }
 

@@ -3,8 +3,8 @@ src = "src"
 out = "out"
 libs = ["lib"]
 solc = "0.8.26"
-viaIR = true
 optimizer = true
+viaIR = true
 optimize_runs = 200
 
 

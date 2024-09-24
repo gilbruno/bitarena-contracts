@@ -72,16 +72,26 @@ contract BitarenaTest is Test {
 
     }
 
-    function deployFactory() public {
+    function deployFactory() internal {
         vm.startBroadcast(ADMIN_GAMES);
         bitarenaGames = new BitarenaGames();
         vm.stopBroadcast();
 
+        setGames();
 
         vm.startBroadcast(ADMIN_FACTORY);
         bitarenaFactory = new BitarenaFactory(address(bitarenaGames));
         vm.stopBroadcast();
         vm.deal(address(bitarenaFactory), STARTING_BALANCE_ETH);
+    }
+
+    function setGames() internal {
+        vm.startBroadcast(ADMIN_GAMES);
+        bitarenaGames.setPlatform(PLATFORM1);
+        bitarenaGames.setPlatform(PLATFORM2);
+        bitarenaGames.setGame(GAME1);
+        bitarenaGames.setGame(GAME2);
+        vm.stopBroadcast();
     }
 
     /**
