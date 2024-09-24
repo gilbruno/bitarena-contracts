@@ -93,11 +93,6 @@
             "internalType": "address"
           },
           {
-            "name": "challengeName",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
             "name": "game",
             "type": "bytes32",
             "internalType": "bytes32"
@@ -169,11 +164,6 @@
             "name": "challengeAddress",
             "type": "address",
             "internalType": "address"
-          },
-          {
-            "name": "challengeName",
-            "type": "bytes32",
-            "internalType": "bytes32"
           },
           {
             "name": "game",
@@ -280,11 +270,6 @@
     "type": "function",
     "name": "intentChallengeCreation",
     "inputs": [
-      {
-        "name": "_challengeName",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
       {
         "name": "_game",
         "type": "bytes32",
@@ -617,11 +602,6 @@
   {
     "type": "error",
     "name": "ChallengeGameError",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "ChallengeNameError",
     "inputs": []
   },
   {
