@@ -2,6 +2,12 @@
 pragma solidity 0.8.26;
 
 import { BitarenaChallenge } from './BitarenaChallenge.sol';
+/*
+Replace with these imports to test in Remix
+import {Ownable} from "https://raw.githubusercontent.com/OpenZeppelin/openzeppelin-contracts/refs/heads/master/contracts/access/Ownable.sol";
+import {AccessControl} from "https://raw.githubusercontent.com/OpenZeppelin/openzeppelin-contracts/refs/heads/master/contracts/access/AccessControl.sol";
+import {Context} from "https://raw.githubusercontent.com/OpenZeppelin/openzeppelin-contracts/refs/heads/master/contracts/utils/Context.sol";
+*/
 import {Ownable} from "openzeppelin-contracts/contracts/access/Ownable.sol";
 import {AccessControl} from "openzeppelin-contracts/contracts/access/AccessControl.sol";
 import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
@@ -80,7 +86,9 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
         return _platformExists;
 
     }
-
+    /**
+     * Intent challenge creation
+     */
     function intentChallengeCreation(
         string calldata _game,
         string calldata _platform,
@@ -90,8 +98,6 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
         uint256 _startAt,
         bool _isPrivate
     ) public payable checkIntentCreation(_game, _platform, _nbTeams, _nbTeamPlayers, _amountPerPlayer, _startAt, _isPrivate) {
-        
-
         //Increment counter of challenges
         s_challengeCounter++;
         //Create challenge struct
@@ -111,7 +117,33 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
         emit IntentChallengeCreation(s_challengeCounter);
     }
 
+    /**
+     * @dev Get the bytecode of BitarenaChallenge SC with ChallengeParams
+     */
+    function getChallengeBytecode(ChallengeParams memory _params) public pure returns (bytes memory) {
+        bytes memory bytecode = type(BitarenaChallenge).creationCode;
+        return abi.encodePacked(bytecode, abi.encode(_params));
+    }
 
+    function deployChallenge(uint256 _salt, ChallengeParams memory _params) public returns (address payable) {
+        address payable addr;
+        
+        // Get bytecode with the struct ChallengeParams as constructor argument
+        bytes memory bytecode = getChallengeBytecode(_params);
+
+        assembly {
+            // Deploy the contract using CREATE2
+            addr := create2(0, add(bytecode, 0x20), mload(bytecode), _salt)
+            if iszero(extcodesize(addr)) {
+                revert(0, 0)
+            }
+        }
+        return addr;
+    }
+
+    /**
+     * @dev Deploy new Challenge 
+     */
     function createChallenge(
         address _challengeAdmin,
         address _challengeDisputeAdmin,
@@ -126,8 +158,26 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
         if(_challengeAdmin == address(0)) revert ChallengeAdminAddressZeroError();
         if(_challengeDisputeAdmin == address(0)) revert ChallengeDisputeAdminAddressZeroError();
         
+        // BitarenaChallenge bitarenaChallenge = new BitarenaChallenge(
+        //         ChallengeParams({
+        //         factory: address(this),
+        //         challengeAdmin: _challengeAdmin,
+        //         challengeDisputeAdmin: _challengeDisputeAdmin,
+        //         challengeCreator: challenge.challengeCreator,
+        //         game: challenge.game,
+        //         platform: challenge.platform,
+        //         nbTeams: challenge.nbTeams,
+        //         nbTeamPlayers: challenge.nbTeamPlayers,
+        //         amountPerPlayer: challenge.amountPerPlayer,
+        //         startAt: challenge.startAt,
+        //         isPrivate: challenge.isPrivate
+        //     })
+        // );
 
-        ChallengeParams memory challengeParams = ChallengeParams({
+        //Generate salt based on deterministic output 
+        uint256 salt = uint256(keccak256(abi.encodePacked('bitarena')));
+
+        address deployedChallengeAddress = deployChallenge(salt, ChallengeParams({
             factory: address(this),
             challengeAdmin: _challengeAdmin,
             challengeDisputeAdmin: _challengeDisputeAdmin,
@@ -139,12 +189,13 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
             amountPerPlayer: challenge.amountPerPlayer,
             startAt: challenge.startAt,
             isPrivate: challenge.isPrivate
-        });
+            }));
 
-        BitarenaChallenge bitarenaChallenge = new BitarenaChallenge(challengeParams);
+        BitarenaChallenge bitarenaChallenge = BitarenaChallenge(payable(deployedChallengeAddress));
+
 
         //Hydrate challenges array
-        s_challengesMap[_challengeCounter].challengeAddress = address(bitarenaChallenge);
+        s_challengesMap[_challengeCounter].challengeAddress = deployedChallengeAddress;
         s_challenges.push(challenge);
 
         //Create the firstTeam and add the creator of the challenge in this first team

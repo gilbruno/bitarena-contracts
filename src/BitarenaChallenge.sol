@@ -2,6 +2,12 @@
 
 pragma solidity 0.8.26;
 
+/*
+Replace with these imports to test in Remix
+import {AccessControlDefaultAdminRules} from "https://raw.githubusercontent.com/OpenZeppelin/openzeppelin-contracts/refs/heads/master/contracts/access/extensions/AccessControlDefaultAdminRules.sol";
+import {ReentrancyGuard} from "https://raw.githubusercontent.com/OpenZeppelin/openzeppelin-contracts/refs/heads/master/contracts/utils/ReentrancyGuard.sol";
+import {Context} from "https://raw.githubusercontent.com/OpenZeppelin/openzeppelin-contracts/refs/heads/master/contracts/utils/Context.sol";
+*/
 import {AccessControlDefaultAdminRules} from "openzeppelin-contracts/contracts/access/extensions/AccessControlDefaultAdminRules.sol";
 import {ReentrancyGuard} from "openzeppelin-contracts/contracts/utils/ReentrancyGuard.sol";
 import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
