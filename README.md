@@ -1,3 +1,10 @@
+## Introduction
+
+This project aims at building smart contracts for the Bitarena Platform.<br>
+You can see the project at : https://bitarena.app
+
+<img src="./img/bitarena.png" alt="Bitarena" title="Optional title">
+
 ## Specific commands for the Bitarena smart contracts
 
 ### Deploy Bitarena Factory
