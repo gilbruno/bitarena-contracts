@@ -4,10 +4,6 @@
 include .env
 export $(shell sed 's/=.*//' .env)
 
-# Définir les variables pour les adresses des tokens et les paramètres de déploiement
-# Remplacez par l'adresse de la factory une fois déployée
-BITARENA_FACTORY_ADDRESS=  
-
 deployGames:
 	@echo "Deploying the BitarenaGames contract..."
 	forge script script/DeployBitarenaGames.s.sol:DeployBitarenaGames --rpc-url $(RPC_URL) --private-key $(PRIVATE_KEY_ADMIN_GAMES) --broadcast --legacy
@@ -54,3 +50,8 @@ decode:
 	exit 1; \
 	fi
 	python3 decode_hex.py $(HEX_VALUE)
+
+intentChallengeCreation:
+	@echo "Intent challenge creation ...."
+	cast send $(ADDRESS_LAST_DEPLOYED_FACTORY) "intentChallengeCreation(string,string,uint16,uint16,uint256,uint256,bool)" "Counter Strike" "Steam" 2 2 10000000000000000 1727254236 true --rpc-url $(RPC_URL) --private-key $(PRIVATE_KEY_ADMIN_FACTORY) --legacy --value 10000000000000000
+

@@ -63,6 +63,11 @@ cast send $ADDRESS_LAST_DEPLOYED_FACTORY "intentChallengeCreation(bytes32,bytes3
 In order to work this tx must respect implemented rules. See the code for revert errors.
 
 This method is working if you decide to have _game_ and _platform_ as _byte32_ type.<br>
+If you decide to have these fields as _string_ type, the command is : <br>
+
+```shell
+cast send $ADDRESS_LAST_DEPLOYED_FACTORY "intentChallengeCreation(string,string,uint16,uint16,uint256,uint256,bool)" "Counter Strike" "Steam" 2 2 10000000000000000 1727254236 true --rpc-url $RPC_URL --private-key $PRIVATE_KEY_ADMIN_FACTORY --legacy --value 10000000000000000
+```
 
 
 The <factory_address> is given by the script that deploys the factory (_make deployFactory_)
