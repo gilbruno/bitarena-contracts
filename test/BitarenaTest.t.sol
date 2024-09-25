@@ -150,6 +150,7 @@ contract BitarenaTest is Test {
 
         //The PLAYER2 creates a new team : team with index 2 is created
         vm.startBroadcast(PLAYER2_CHALLENGE1);
+        // bitarenaChallenge.createOrJoinTeam{value: AMOUNT_PER_PLAYER}(0);
         bitarenaChallenge.createOrJoinTeam{value: AMOUNT_PER_PLAYER}(0);
         vm.stopBroadcast();               
 
@@ -926,6 +927,32 @@ contract BitarenaTest is Test {
     }
 
     /**
+     * @dev Test that you can not create a team without sending money
+     */
+    function testCannotCreateTeamWithoutSendingMoney() public {
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+
+        //The PLAYER2 creates a new team : team with index 2 is created
+        vm.expectRevert(BalanceChallengePlayerError.selector);
+        vm.startBroadcast(PLAYER2_CHALLENGE1);
+        bitarenaChallenge.createOrJoinTeam{value: 0}(0);
+        vm.stopBroadcast();               
+    }
+
+    /**
+     * Test that roles are correct after joining teams
+     */
+    function testRolesAfterJoiningTeams() public {
+        BitarenaChallenge bitarenaChallenge = createChallenge(THREE_TEAMS,TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
+
+        assertEq(bitarenaChallenge.hasRole(CHALLENGE_CREATOR_ROLE, CREATOR_CHALLENGE1), true);
+        assertEq(bitarenaChallenge.hasRole(GAMER_ROLE, PLAYER1_CHALLENGE1), true);
+        assertEq(bitarenaChallenge.hasRole(GAMER_ROLE, PLAYER2_CHALLENGE1), true);
+        assertEq(bitarenaChallenge.hasRole(GAMER_ROLE, PLAYER3_CHALLENGE1), true);
+    }
+
+    /**
      * @dev Test that some players can not join team after challenge start date
      */
     function testPlayersCanNotJoinExistingTeamsAfterChallengeStartDate() public {
@@ -1071,8 +1098,9 @@ contract BitarenaTest is Test {
         MockFailingReceiver failingPlayer = new MockFailingReceiver();
         
         // This player create a team
+        vm.deal(address(failingPlayer), 1 ether);
         vm.startPrank(address(failingPlayer));
-        bitarenaChallenge.createOrJoinTeam(0);
+        bitarenaChallenge.createOrJoinTeam{value: AMOUNT_PER_PLAYER}(0);
         vm.stopPrank();
 
         // The creator cancel the challenge and the tx fails with "SendMoneyBackToPlayersError" error

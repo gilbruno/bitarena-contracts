@@ -56,7 +56,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
     uint16[] private s_disputeTeams;
     uint16[] private s_claimVictoryTeams;
 
-    constructor(ChallengeParams memory params) AccessControlDefaultAdminRules(1 days, params.challengeAdmin) {
+    constructor(ChallengeParams memory params) payable AccessControlDefaultAdminRules(1 days, params.challengeAdmin) {
         s_factory = params.factory;
         s_admin = params.challengeAdmin;
         s_disputeAdmin = params.challengeDisputeAdmin;
@@ -92,6 +92,11 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
         if (_teamIndex > s_teamCounter) revert TeamDoesNotExistsError();        
         if (s_isCanceled) revert ChallengeCanceledError();
         if (block.timestamp >= s_startAt) revert TimeElapsedToJoinTeamError();
+        if (msg.value < s_amountPerPlayer && _msgSender() != s_factory) revert BalanceChallengePlayerError();
+        _;
+    }
+
+    modifier checkCreateTeam() {
         if (msg.value < s_amountPerPlayer && _msgSender() != s_factory) revert BalanceChallengePlayerError();
         _;
     }
@@ -209,7 +214,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
     /**
      * @dev Create a team
      */    
-    function createTeam() internal {
+    function createTeam() internal checkCreateTeam() {
         unchecked {
             ++s_teamCounter;
         }
@@ -228,7 +233,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
     function joinTeamInternal(uint16 _teamIndex, address _player) internal {
         s_teams[_teamIndex].push(_player);
         s_players[_player] = _teamIndex;
-        _grantRole(GAMER_ROLE, _msgSender());
+        _grantRole(GAMER_ROLE, _player);
         incrementChallengePool(s_amountPerPlayer);
     }
 

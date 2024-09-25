@@ -53,16 +53,15 @@ decode:
 
 intentChallengeCreation:
 	@echo "Intent challenge creation ...."
-	cast send $(ADDRESS_LAST_DEPLOYED_FACTORY) "intentChallengeCreation(string,string,uint16,uint16,uint256,uint256,bool)" "Counter Strike" "Steam" 2 2 10000000000000000 1727257937 true --rpc-url $(RPC_URL) --private-key $(PRIVATE_KEY_ADMIN_FACTORY) --legacy --value 10000000000000000
-
+	cast send $(ADDRESS_LAST_DEPLOYED_FACTORY) "intentChallengeCreation(string,string,uint16,uint16,uint256,uint256,bool)" "Counter Strike" "Steam" 2 2 10000000000000000 1727268662 true --rpc-url $(RPC_URL) --private-key $(PRIVATE_KEY_ADMIN_FACTORY) --legacy --value 10000000000000000
 
 deployChallenge:
 	@if [ -z "$(CHALLENGE_INDEX)" ]; then \
-        echo "Usage: make deployChallenge ARG=<value>"; \
-        exit 1; \
-    fi
-	@echo "Challenge Deployment of challenge with index ...." $(CHALLENGE_INDEX)
-	cast send $(ADDRESS_LAST_DEPLOYED_FACTORY) "createChallenge(address,address,uint256)" $(PUBLIC_KEY_ADMIN_CHALLENGE) $(PUBLIC_KEY_ADMIN_DISPUTE_CHALLENGE) $(CHALLENGE_INDEX)
+		echo "Usage: make deployChallenge ARG=<value>"; \
+		exit 1; \
+	fi
+	@echo "Challenge Deployment of challenge with index ...."
+	cast send $(ADDRESS_LAST_DEPLOYED_FACTORY) "createChallenge(address,address,uint256)" $(PUBLIC_KEY_ADMIN_CHALLENGE) $(PUBLIC_KEY_ADMIN_DISPUTE_CHALLENGE) $(CHALLENGE_INDEX) --rpc-url $(RPC_URL) --private-key $(PRIVATE_KEY_ADMIN_FACTORY) --legacy --json
 
 getFactoryChallengeCounter:
 	@echo "Get Factory Challenge Counter ...."
