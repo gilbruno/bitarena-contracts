@@ -117,7 +117,7 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
         address _challengeDisputeAdmin,
         uint256 _challengeCounter
     ) public onlyRole(BITARENA_FACTORY_ADMIN) returns (BitarenaChallenge){
-        if (_challengeCounter > s_challengeCounter) revert ChallengeCounterError();
+        if (_challengeCounter == 0 || _challengeCounter > s_challengeCounter) revert ChallengeCounterError();
         if (isChallengeDeployed(_challengeCounter)) revert ChallengeDeployedError();
 
         Challenge memory challenge = s_challengesMap[_challengeCounter];

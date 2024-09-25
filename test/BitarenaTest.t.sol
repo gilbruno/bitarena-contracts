@@ -706,6 +706,17 @@ contract BitarenaTest is Test {
     }
 
     /**
+     * @dev Test challenge creation fails if an index of 0 is provided
+     */
+    function testChallengeCreationRevertIfBadCounterIsProvided2() public {
+        intentChallengeCreationWith2TeamsAnd1Player();
+        vm.expectRevert(ChallengeCounterError.selector);
+        vm.startBroadcast(ADMIN_FACTORY);
+        bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, 0);
+        vm.stopBroadcast();       
+    }
+
+    /**
      * @dev Test balance factory before deploying a challenge
      * The factory owns 'STARTING_BALANCE_ETH' before the challenge intent creation
      * After the Challenge intent creation it must own 'STARTING_BALANCE_ETH' + AMOUNT_PER_PLAYER

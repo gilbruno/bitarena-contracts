@@ -1,7 +1,13 @@
 [
   {
     "type": "constructor",
-    "inputs": [],
+    "inputs": [
+      {
+        "name": "_bitarenaGames",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
     "stateMutability": "nonpayable"
   },
   {
@@ -94,13 +100,13 @@
           },
           {
             "name": "game",
-            "type": "bytes32",
-            "internalType": "bytes32"
+            "type": "string",
+            "internalType": "string"
           },
           {
             "name": "platform",
-            "type": "bytes32",
-            "internalType": "bytes32"
+            "type": "string",
+            "internalType": "string"
           },
           {
             "name": "nbTeams",
@@ -167,13 +173,13 @@
           },
           {
             "name": "game",
-            "type": "bytes32",
-            "internalType": "bytes32"
+            "type": "string",
+            "internalType": "string"
           },
           {
             "name": "platform",
-            "type": "bytes32",
-            "internalType": "bytes32"
+            "type": "string",
+            "internalType": "string"
           },
           {
             "name": "nbTeams",
@@ -272,13 +278,13 @@
     "inputs": [
       {
         "name": "_game",
-        "type": "bytes32",
-        "internalType": "bytes32"
+        "type": "string",
+        "internalType": "string"
       },
       {
         "name": "_platform",
-        "type": "bytes32",
-        "internalType": "bytes32"
+        "type": "string",
+        "internalType": "string"
       },
       {
         "name": "_nbTeams",
@@ -616,6 +622,11 @@
   },
   {
     "type": "error",
+    "name": "GameDoesNotExistError",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "NbPlayersPerTeamsError",
     "inputs": []
   },
@@ -645,6 +656,11 @@
         "internalType": "address"
       }
     ]
+  },
+  {
+    "type": "error",
+    "name": "PlatformDoesNotExistError",
+    "inputs": []
   },
   {
     "type": "error",
