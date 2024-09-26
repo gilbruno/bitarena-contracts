@@ -13,10 +13,10 @@ import {AccessControl} from "openzeppelin-contracts/contracts/access/AccessContr
 import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
 import {BalanceChallengeCreatorError, ChallengeAdminAddressZeroError, 
     ChallengeCounterError, ChallengeDeployedError, ChallengeCreatorAddressZeroError, ChallengeDisputeAdminAddressZeroError, ChallengeGameError, 
-    ChallengePlatformError, ChallengeStartDateError, GameDoesNotExistError, NbTeamsError, NbPlayersPerTeamsError, SendMoneyToChallengeError, PlatformDoesNotExistError} from './BitarenaFactoryErrors.sol';
-import {IntentChallengeCreation, ChallengeDeployed} from './BitarenaFactoryEvents.sol';
-import {Challenge} from './ChallengeStruct.sol';
-import {ChallengeParams} from './ChallengeParams.sol';
+    ChallengePlatformError, ChallengeStartDateError, GameDoesNotExistError, NbTeamsError, NbPlayersPerTeamsError, SendMoneyToChallengeError, PlatformDoesNotExistError} from "./BitarenaFactoryErrors.sol";
+import {IntentChallengeCreation, ChallengeDeployed} from "./BitarenaFactoryEvents.sol";
+import {Challenge} from "./ChallengeStruct.sol";
+import {ChallengeParams} from "./ChallengeParams.sol";
 import {IBitarenaGames} from "./IBitarenaGames.sol";
 
 contract BitarenaFactory is Context, Ownable, AccessControl {
@@ -175,7 +175,7 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
         // );
 
         //Generate salt based on deterministic output 
-        uint256 salt = uint256(keccak256(abi.encodePacked('bitarena')));
+        uint256 salt = uint256(keccak256(abi.encodePacked("bitarena")));
 
         address deployedChallengeAddress = deployChallenge(salt, ChallengeParams({
             factory: address(this),
@@ -208,10 +208,6 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
         emit ChallengeDeployed(_challengeCounter, address(bitarenaChallenge), address(this));
 
         return bitarenaChallenge;
-    }
-
-    function deployAndCreateChallenge() public {
-        
     }
 
     /**

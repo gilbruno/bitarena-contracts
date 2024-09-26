@@ -53,7 +53,7 @@ decode:
 
 intentChallengeCreation:
 	@echo "Intent challenge creation ...."
-	cast send $(ADDRESS_LAST_DEPLOYED_FACTORY) "intentChallengeCreation(string,string,uint16,uint16,uint256,uint256,bool)" "Counter Strike" "Steam" 2 2 10000000000000000 1727268662 true --rpc-url $(RPC_URL) --private-key $(PRIVATE_KEY_ADMIN_FACTORY) --legacy --value 10000000000000000
+	cast send $(ADDRESS_LAST_DEPLOYED_FACTORY) "intentChallengeCreation(string,string,uint16,uint16,uint256,uint256,bool)" "Counter Strike" "Steam" 2 2 10000000000000000 1727268662 true --rpc-url $(RPC_URL) --private-key $(PRIVATE_KEY_CREATOR_CHALLENGE) --legacy --value 10000000000000000
 
 deployChallenge:
 	@if [ -z "$(CHALLENGE_INDEX)" ]; then \
