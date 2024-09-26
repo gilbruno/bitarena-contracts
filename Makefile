@@ -16,6 +16,10 @@ generateFactoryAbi:
 	@echo "Generate Factory ABI"
 	forge build --silent && jq '.abi' ./out/BitarenaFactory.sol/BitarenaFactory.json > ./abi/BitarenaFactory.json
 
+generateChallengeAbi:
+	@echo "Generate Challenge ABI"
+	forge build --silent && jq '.abi' ./out/BitarenaChallenge.sol/BitarenaChallenge.json > ./abi/BitarenaChallenge.json
+
 setGame:
 	@if [ -z "$(GAME_NAME)" ]; then \
         echo "Usage: make setGame ARG=<value>"; \
