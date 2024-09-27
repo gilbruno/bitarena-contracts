@@ -6,6 +6,16 @@
         "name": "_bitarenaGames",
         "type": "address",
         "internalType": "address"
+      },
+      {
+        "name": "_challengeAdmin",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "_challengeDisputeAdmin",
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "stateMutability": "nonpayable"
@@ -463,6 +473,55 @@
       }
     ],
     "outputs": [],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "intentChallengeDeployment",
+    "inputs": [
+      {
+        "name": "_game",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "_platform",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "_nbTeams",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "_nbTeamPlayers",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "_amountPerPlayer",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "_startAt",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "_isPrivate",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract BitarenaChallenge"
+      }
+    ],
     "stateMutability": "payable"
   },
   {
