@@ -12,15 +12,14 @@ contract DeployBitarenaFactory is Script {
     function run() public returns (BitarenaFactory) {
 
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY_ADMIN_FACTORY");
-
-        DeployBitarenaGames deployBitarenaGames = new DeployBitarenaGames();
-        BitarenaGames bitarenaGames = deployBitarenaGames.run();
+        address addressBitarenaGames = vm.envAddress("ADDRESS_LAST_DEPLOYED_GAMES");
+        address adminChallenge = vm.envAddress("PUBLIC_KEY_ADMIN_CHALLENGE");
+        address adminDisputeChallenge = vm.envAddress("PUBLIC_KEY_ADMIN_DISPUTE_CHALLENGE");
 
         vm.startBroadcast(deployerPrivateKey);
-        BitarenaFactory bitarenaFactory = new BitarenaFactory(address(bitarenaGames));
+        BitarenaFactory bitarenaFactory = new BitarenaFactory(addressBitarenaGames, adminChallenge, adminDisputeChallenge);
         vm.stopBroadcast();
 
-        console.log("BitarenaGames deployed to address:", address(bitarenaGames));
         console.log("BitarenaFactory deployed to address:", address(bitarenaFactory));
 
         return bitarenaFactory;

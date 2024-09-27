@@ -13,6 +13,9 @@ contract DeployBitarenaGames is Script {
         vm.startBroadcast(deployerPrivateKey);
         BitarenaGames bitarenaGames = new BitarenaGames();
         vm.stopBroadcast();
+
+        console.log("BitarenaGames deployed to address:", address(bitarenaGames));
+
         return bitarenaGames;
     }
 }

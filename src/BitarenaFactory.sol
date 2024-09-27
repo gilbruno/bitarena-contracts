@@ -31,9 +31,16 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
     
     bytes32 public constant BITARENA_FACTORY_ADMIN = keccak256("BITARENA_FACTORY_ADMIN");
 
-	constructor (address _bitarenaGames) Ownable(msg.sender) {
+    address private s_challengeAdmin;
+    address private s_challengeDisputeAdmin;
+
+	constructor (address _bitarenaGames, address _challengeAdmin, address _challengeDisputeAdmin) Ownable(msg.sender) {
+        if(_challengeAdmin == address(0)) revert ChallengeAdminAddressZeroError();
+        if(_challengeDisputeAdmin == address(0)) revert ChallengeDisputeAdminAddressZeroError();
         s_challengeCounter = 0;
         s_bitarenaGames = IBitarenaGames(_bitarenaGames);
+        s_challengeAdmin = _challengeAdmin;
+        s_challengeDisputeAdmin = _challengeDisputeAdmin;
 		_grantRole(BITARENA_FACTORY_ADMIN, msg.sender);
 	}
 
@@ -87,7 +94,9 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
 
     }
     /**
-     * Intent challenge creation
+     * Intent challenge creation. This function must be used in case the process is divided in 2 steps :
+     * Step 1 : A gamer wants to create a challeneg and sign a tx to intent a challenge Creation
+     * Step 1 : The Bitarena protocol is in charge to deploy the SC og the challenge
      */
     function intentChallengeCreation(
         string calldata _game,
@@ -118,6 +127,40 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
     }
 
     /**
+     * Intent challenge creation + deployment version 2. This function must be used in case the process is  :
+     * A gamer wants to create a challeneg and sign a tx to intent a challenge Creation and deploy a SC of challenge so he's in charge of deploying SC of challenge
+     * In that case we call the function 'createChallenge_byCreator' inside
+     */
+    function intentChallengeDeployment(
+        string calldata _game,
+        string calldata _platform,
+        uint16 _nbTeams,
+        uint16 _nbTeamPlayers,
+        uint256 _amountPerPlayer,
+        uint256 _startAt,
+        bool _isPrivate
+    ) public payable checkIntentCreation(_game, _platform, _nbTeams, _nbTeamPlayers, _amountPerPlayer, _startAt, _isPrivate) returns (BitarenaChallenge) {
+        //Increment counter of challenges
+        s_challengeCounter++;
+        //Create challenge struct
+        Challenge memory newChallenge;
+        newChallenge.challengeCreator = _msgSender();
+        newChallenge.challengeAddress = address(0);
+        newChallenge.game = _game;
+        newChallenge.platform = _platform;
+        newChallenge.nbTeams = _nbTeams;
+        newChallenge.nbTeamPlayers = _nbTeamPlayers;
+        newChallenge.amountPerPlayer = _amountPerPlayer;
+        newChallenge.startAt = _startAt;
+        newChallenge.isPrivate = _isPrivate;
+        //Hydrate the challenges mapping
+        s_challengesMap[s_challengeCounter] = newChallenge;
+
+        BitarenaChallenge bitarenaChallenge = createChallenge_byCreator(s_challengeCounter);
+        return bitarenaChallenge;
+    }
+
+    /**
      * @dev Get the bytecode of BitarenaChallenge SC with ChallengeParams
      */
     function getChallengeBytecode(ChallengeParams memory _params) public pure returns (bytes memory) {
@@ -142,7 +185,56 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
     }
 
     /**
-     * @dev Deploy new Challenge 
+     * @dev Deploy new Challenge.
+     * This function must be used in the case of Bitarena is in charge to deploy new challenge smart contract
+     */
+    function createChallenge_byCreator(uint256 _challengeCounter) internal returns (BitarenaChallenge) {
+        if (_challengeCounter == 0 || _challengeCounter > s_challengeCounter) revert ChallengeCounterError();
+        if (isChallengeDeployed(_challengeCounter)) revert ChallengeDeployedError();
+
+        Challenge memory challenge = s_challengesMap[_challengeCounter];
+
+        if(challenge.challengeCreator == address(0)) revert ChallengeCreatorAddressZeroError();
+        
+        //Generate salt based on deterministic output 
+        uint256 salt = uint256(keccak256(abi.encodePacked(string(abi.encodePacked("bitarena", _challengeCounter)))));
+
+        address deployedChallengeAddress = deployChallenge(salt, ChallengeParams({
+            factory: address(this),
+            challengeAdmin: s_challengeAdmin,
+            challengeDisputeAdmin: s_challengeDisputeAdmin,
+            challengeCreator: challenge.challengeCreator,
+            game: challenge.game,
+            platform: challenge.platform,
+            nbTeams: challenge.nbTeams,
+            nbTeamPlayers: challenge.nbTeamPlayers,
+            amountPerPlayer: challenge.amountPerPlayer,
+            startAt: challenge.startAt,
+            isPrivate: challenge.isPrivate
+            }));
+
+        BitarenaChallenge bitarenaChallenge = BitarenaChallenge(payable(deployedChallengeAddress));
+
+
+        //Hydrate challenges array
+        s_challengesMap[_challengeCounter].challengeAddress = deployedChallengeAddress;
+        s_challenges.push(challenge);
+
+        //Create the firstTeam and add the creator of the challenge in this first team
+        bitarenaChallenge.createOrJoinTeam(0);
+
+        //Send amountPerPlayer from creator to challenge smart contract
+        (bool sent, ) = address(bitarenaChallenge).call{value: challenge.amountPerPlayer}("");
+        if (!sent) revert SendMoneyToChallengeError();
+
+        emit ChallengeDeployed(_challengeCounter, address(bitarenaChallenge), address(this));
+
+        return bitarenaChallenge;
+    }
+
+    /**
+     * @dev Deploy new Challenge.
+     * This function must be used in the case of Bitarena is in charge to deploy new challenge smart contract
      */
     function createChallenge(
         address _challengeAdmin,
@@ -158,24 +250,8 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
         if(_challengeAdmin == address(0)) revert ChallengeAdminAddressZeroError();
         if(_challengeDisputeAdmin == address(0)) revert ChallengeDisputeAdminAddressZeroError();
         
-        // BitarenaChallenge bitarenaChallenge = new BitarenaChallenge(
-        //         ChallengeParams({
-        //         factory: address(this),
-        //         challengeAdmin: _challengeAdmin,
-        //         challengeDisputeAdmin: _challengeDisputeAdmin,
-        //         challengeCreator: challenge.challengeCreator,
-        //         game: challenge.game,
-        //         platform: challenge.platform,
-        //         nbTeams: challenge.nbTeams,
-        //         nbTeamPlayers: challenge.nbTeamPlayers,
-        //         amountPerPlayer: challenge.amountPerPlayer,
-        //         startAt: challenge.startAt,
-        //         isPrivate: challenge.isPrivate
-        //     })
-        // );
-
         //Generate salt based on deterministic output 
-        uint256 salt = uint256(keccak256(abi.encodePacked("bitarena")));
+        uint256 salt = uint256(keccak256(abi.encodePacked(string(abi.encodePacked("bitarena", _challengeCounter)))));
 
         address deployedChallengeAddress = deployChallenge(salt, ChallengeParams({
             factory: address(this),

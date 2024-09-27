@@ -80,7 +80,7 @@ contract BitarenaTest is Test {
         setGames();
 
         vm.startBroadcast(ADMIN_FACTORY);
-        bitarenaFactory = new BitarenaFactory(address(bitarenaGames));
+        bitarenaFactory = new BitarenaFactory(address(bitarenaGames), ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1);
         vm.stopBroadcast();
         vm.deal(address(bitarenaFactory), STARTING_BALANCE_ETH);
     }
@@ -114,8 +114,11 @@ contract BitarenaTest is Test {
 
     /**
      * Create a challenge by indicating nbTeams and nbPlayersPerTeam. The challenge is set to begin 1 day later
+     * This version is the v1 where the process is divided in 2 transactions.
+     * Tx 1 : A gamer signs a tx to intent a challenge creation
+     * Tx 1 : The Bitarena protocol deploys the SC of the created challenge 
      */
-    function createChallenge(uint16 nbTeams, uint16 nbPlayersPerTeam) public returns(BitarenaChallenge) {
+    function createChallengeV1(uint16 nbTeams, uint16 nbPlayersPerTeam) public returns(BitarenaChallenge) {
         deployFactory();
         
         vm.startBroadcast(CREATOR_CHALLENGE1);
@@ -133,6 +136,30 @@ contract BitarenaTest is Test {
         vm.startBroadcast(ADMIN_FACTORY);
         BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, 1);
         vm.stopBroadcast();       
+
+        return bitarenaChallenge;
+    }
+    /**
+     * Create a challenge by indicating nbTeams and nbPlayersPerTeam. The challenge is set to begin 1 day later
+     * This version is the v2 where theere is onlt 1 Tx signed by a gamer for
+     *  - intent a challenge creation
+     *  - deployment of the SC of the created challenge 
+     */
+    function createChallenge(uint16 nbTeams, uint16 nbPlayersPerTeam) public returns(BitarenaChallenge) {
+        deployFactory();
+        
+        BitarenaChallenge bitarenaChallenge;
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaChallenge = bitarenaFactory.intentChallengeDeployment{value: AMOUNT_PER_PLAYER}(
+            GAME1,
+            PLATFORM1,
+            nbTeams,
+            nbPlayersPerTeam,
+            AMOUNT_PER_PLAYER,
+            block.timestamp + 1 days,
+            false
+        );
+        vm.stopBroadcast();
 
         return bitarenaChallenge;
     }
@@ -725,8 +752,6 @@ contract BitarenaTest is Test {
     function testBalanceFactoryBeforeDeployingChallenge() public {
         intentChallengeCreationWith2TeamsAnd1Player();
         vm.startBroadcast(ADMIN_FACTORY);
-        // BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, 1);
-        // console.log('BALANCE OF FACTORY AFTER ', address(bitarenaFactory).balance);
         vm.stopBroadcast();       
         assertEq(address(bitarenaFactory).balance, STARTING_BALANCE_ETH + AMOUNT_PER_PLAYER);
     }
