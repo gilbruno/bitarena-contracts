@@ -29,9 +29,19 @@ forge build --silent && jq '.abi' ./out/BitarenaFactory.sol/BitarenaFactory.json
 ```
 
 
-### INTERACT WITH SMART CONTRACT FACTORY
+## INTERACT WITH SMART CONTRACT FACTORY
 
-## Challenge intent creation
+### Challenge intent creation
+
+#### Remarks : 
+
+<b>
+This function must be used if trhe process of challenge is divided in 2 transactions.
+Tx #1 : The gamer who wants to create a challenge signs a Tx to intent the challenge creation
+Tx #2 : The Bitarena protocol signs a second Tx to deploy dynamically the smart contract of the challenge
+</b>
+
+<br>
 
 Reminder : <br>
 The function signature is <br>
@@ -79,7 +89,18 @@ cast send $ADDRESS_LAST_DEPLOYED_FACTORY "intentChallengeCreation(string,string,
 
 The <factory_address> is given by the script that deploys the factory (_make deployFactory_)
 
+### Challenge intent deployment
+
+This version is used if the process of challenge deployment is done by a single transaction where the gamer who wants to create a challenge is in charge to supporrt fees for the smart contract deployment of the challenge
+
+```shell
+cast send $ADDRESS_LAST_DEPLOYED_FACTORY "intentChallengeDeployment(bytes32,bytes32,uint16,uint16,uint256,uint256,bool)" 0x67616d6531000000000000000000000000000000000000000000000000000000 0x706c6174666f726d310000000000000000000000000000000000000000000000 2 2 10000000000000000 1727102520 true --rpc-url $RPC_URL --private-key $PRIVATE_KEY_ADMIN_FACTORY --legacy --value 10000000000000000
+```
+
+
 ## Set Games
+
+Transaction to set games on the blockchain
 
 ```
 make setGame GAME_NAME="Counter Strike"
@@ -106,6 +127,14 @@ This returns : <br>
 
 ```
 Counter Strike
+```
+
+## Set Platforms
+
+Transaction to set platforms on the blockchain
+
+```
+make setPlatform PLATFORM_NAME="steam"
 ```
 
 ## Get Platforms
