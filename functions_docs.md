@@ -78,9 +78,9 @@ Returns _true_ if the challenge with index _index_ is deployed or not
 
 ## createOrJoinTeam
 
-### Description
-
+### Description 
 This function must be call by anyone who wants to join an existing team or create a team.
+
 
 ### parameters
 
@@ -88,7 +88,7 @@ This function must be call by anyone who wants to join an existing team or creat
 
 ## cancelChallenge
 
-### Description 
+### Description 
 
 This function is callable only by the creator og the challenge.
 An error will be thrown if it's not the case
@@ -99,7 +99,7 @@ none
 
 ## claimVictory
 
-### Description 
+### Description 
 
 This function is callable by one of the player of the challenge to claim the victory for the current challenge
 
@@ -109,7 +109,7 @@ none
 
 ## participateToDispute
 
-### Description 
+### Description 
 
 This function is callable by one of the player of the challenge to participate to a challenge duspute in case of at least 2 teams claimed the victory
 
@@ -130,7 +130,7 @@ If at least 2 teams particpated to a dispute, this function reveals the real win
 
 ## calculateFeeAmount
 
-### Description 
+### Description 
 
 This function calculates the fee amount for the current challenge
 
@@ -140,7 +140,7 @@ none
 
 ## calculatePoolAmountToSendBackForWinnerTeam
 
-### Description 
+### Description 
 
 This function calculates the total amount that the winner team can withdraw after the winner was revealed or not
 
@@ -150,7 +150,7 @@ none
 
 ## withdrawChallengePool
 
-### Description 
+### Description 
 
 This function is callable only by the real winner of the challenge and it dispatches this won amount to each team participant. It give back amount disputye participation to the address that participated to the dispute
 
@@ -160,7 +160,7 @@ none
 
 ## getIsCanceled
 
-### Description 
+### Description 
 
 Returns true if the challenge was canceled by its creator.
 False otherwise.
@@ -171,7 +171,7 @@ none
 
 ## getIsPoolWithdrawed
 
-### Description 
+### Description 
 
 Returns true if the pool challenge was withdrawed by a winner team member
 False otherwise.
@@ -182,7 +182,7 @@ none
 
 ## getTeamOfPlayer
 
-### Description 
+### Description 
 
 Returns the team index of the address as parameter
 
@@ -192,7 +192,7 @@ Returns the team index of the address as parameter
 
 ## getTeamOfPlayegetChallengePool
 
-### Description 
+### Description 
 
 Returns the pool amount when the function is called
 
@@ -202,7 +202,7 @@ none
 
 ## getDisputeAmountParticipation
 
-### Description 
+### Description 
 
 Returns the amount a player must pay to participate to a dispute 
 
@@ -212,7 +212,7 @@ none
 
 ## getChallengeAdmin
 
-### Description 
+### Description 
 
 Returns the address of the admin of the challenge
 
@@ -222,7 +222,7 @@ none
 
 ## getDisputeAdmin
 
-### Description 
+### Description 
 
 Returns the address of the admin of dispute of the challenge
 
@@ -232,7 +232,7 @@ none
 
 ## getDisputeParticipantsCount
 
-### Description 
+### Description 
 
 Returns number of dispute participants 
 
@@ -242,7 +242,7 @@ none
 
 ## getWinnersClaimedCount
 
-### Description 
+### Description 
 
 Returns the number of teams that claim the victory
 
