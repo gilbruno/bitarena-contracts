@@ -16,7 +16,7 @@ import {BalanceChallengePlayerError, ChallengeCancelAfterStartDateError, Challen
     DelayClaimVictoryNotSet, DelayUnclaimVictoryNotSet, DelayStartGreaterThanDelayEnd, 
     DisputeExistsError, DisputeParticipationNotAuthorizedError, FeeDisputeNotSetError, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, 
     NotSufficientAmountForDisputeError, NotTimeYetToParticipateToDisputeError, NoDisputeError, NoDisputeParticipantsError, NotTeamMemberError, RefundImpossibleDueToTooManyDisputeParticipantsError, 
-    RevealWinnerImpossibleDueToTooFewDisputersError, TeamDoesNotExistsError, TeamDidNotClaimVictoryError, TeamIsNotDisputerError, TeamOfSignerAlreadyParticipatesInDisputeError, TimeElapsedToJoinTeamError, 
+    RevealWinnerImpossibleDueToTooFewDisputersError, TeamAlreadyClaimedVictoryError, TeamDoesNotExistsError, TeamDidNotClaimVictoryError, TeamIsNotDisputerError, TeamOfSignerAlreadyParticipatesInDisputeError, TimeElapsedToJoinTeamError, 
     TimeElapsedForDisputeParticipationError, TimeElapsedToClaimVictoryError, TimeElapsedToUnclaimVictoryError, TimeTooSoonToClaimVictoryError, UnclaimVictoryNotAuthorized, WinnerNotRevealedYetError, 
     WithdrawPoolByLooserTeamImpossibleError, WithdrawPoolNotAuthorized} from "../src/BitarenaChallengeErrors.sol";
 import {ParticipateToDispute, PlayerJoinsTeam, PoolChallengeWithdrawed, RevealWinner, TeamCreated, Debug, VictoryClaimed, VictoryUnclaimed} from "../src/BitarenaChallengeEvents.sol";
@@ -1344,6 +1344,41 @@ contract BitarenaTest is Test {
         // La tentative de réclamer la victoire doit échouer car trop tôt
         vm.expectRevert(TimeTooSoonToClaimVictoryError.selector);
         vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.claimVictory();
+        vm.stopBroadcast();
+    }
+
+    /**
+     * @dev Test a member of a team can not clail victory twice for his team
+     */
+    function testCannotClaimVictoryTwiceForSameTeam() public {
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
+        
+        // L'admin du challenge définit les délais pour la réclamation de victoire
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        vm.stopBroadcast();         
+
+        // On avance le temps dans la période valide pour réclamer la victoire
+        uint256 validClaimTime = block.timestamp + 1 days + 15 hours; // 15 heures après le début
+        vm.warp(validClaimTime);
+
+        // Premier claim de victoire (devrait réussir)
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.claimVictory();
+        vm.stopBroadcast();         
+
+        // Deuxième claim de victoire par le même joueur (devrait échouer)
+        vm.expectRevert(TeamAlreadyClaimedVictoryError.selector);
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.claimVictory();
+        vm.stopBroadcast();
+
+        // Deuxième claim de victoire par un autre joueur de la même équipe (devrait échouer aussi)
+        vm.expectRevert(TeamAlreadyClaimedVictoryError.selector);
+        vm.startBroadcast(CREATOR_CHALLENGE1); // Le créateur est dans la même équipe que PLAYER1
         bitarenaChallenge.claimVictory();
         vm.stopBroadcast();
     }

@@ -132,6 +132,11 @@ error SendDisputeAmountBackToWinnerError();
 /**
  * @dev 
  */
+error TeamAlreadyClaimedVictoryError();
+
+/**
+ * @dev 
+ */
 error TeamDoesNotExistsError();
 
 /**
