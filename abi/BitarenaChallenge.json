@@ -1326,6 +1326,11 @@
   },
   {
     "type": "error",
+    "name": "TeamAlreadyClaimedVictoryError",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "TeamDidNotClaimVictoryError",
     "inputs": []
   },
@@ -1357,6 +1362,11 @@
   {
     "type": "error",
     "name": "TimeElapsedToJoinTeamError",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "TimeTooSoonToClaimVictoryError",
     "inputs": []
   },
   {
