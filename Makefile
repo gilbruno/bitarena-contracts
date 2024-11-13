@@ -72,6 +72,8 @@ getFactoryChallengeCounter:
 	cast call $(ADDRESS_LAST_DEPLOYED_FACTORY) "getChallengeCounter()" --rpc-url $(RPC_URL) --legacy	
 
 # Add X minutes to claim victory
+# To call it: make setDelayStartForVictoryClaim CHALLENGE_ADDRESS=0x2eb1.... MINUTES=20 
+# to add only20minutes instead of 1 hour
 setDelayStartForVictoryClaim:
 	@if [ -z "$(CHALLENGE_ADDRESS)" ] || [ -z "$(MINUTES)" ]; then \
 		echo "Usage: make setDelayStartForVictoryClaim CHALLENGE_ADDRESS=<challenge_address> MINUTES=<number_of_minutes>"; \
@@ -88,3 +90,10 @@ getDelayStartVictoryClaim:
 	cast call $(CHALLENGE_ADDRESS) "getDelayStartVictoryClaim()" --rpc-url $(RPC_URL) --legacy	
 
 
+getChallengeAdmin:
+	@if [ -z "$(CHALLENGE_ADDRESS)" ]; then \
+		echo "Usage: make getChallengeAdmin CHALLENGE_ADDRESS=<challenge_address>"; \
+		exit 1; \
+	fi
+	@echo "Get Challenge Admin ...."
+	cast call $(CHALLENGE_ADDRESS) "getChallengeAdmin()" --rpc-url $(RPC_URL) --legacy
