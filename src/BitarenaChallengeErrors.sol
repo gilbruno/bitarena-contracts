@@ -167,6 +167,11 @@ error TimeElapsedToClaimVictoryError();
 /**
  * @dev 
  */
+error TimeTooSoonToClaimVictoryError();
+
+/**
+ * @dev 
+ */
 error TimeElapsedToUnclaimVictoryError();
 
 /**

@@ -17,7 +17,7 @@ import {BalanceChallengePlayerError, ChallengeCancelAfterStartDateError, Challen
     DisputeExistsError, DisputeParticipationNotAuthorizedError, FeeDisputeNotSetError, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, 
     NotSufficientAmountForDisputeError, NotTimeYetToParticipateToDisputeError, NoDisputeError, NoDisputeParticipantsError, NotTeamMemberError, RefundImpossibleDueToTooManyDisputeParticipantsError, 
     RevealWinnerImpossibleDueToTooFewDisputersError, TeamDoesNotExistsError, TeamDidNotClaimVictoryError, TeamIsNotDisputerError, TeamOfSignerAlreadyParticipatesInDisputeError, TimeElapsedToJoinTeamError, 
-    TimeElapsedForDisputeParticipationError, TimeElapsedToClaimVictoryError, TimeElapsedToUnclaimVictoryError, UnclaimVictoryNotAuthorized, WinnerNotRevealedYetError, 
+    TimeElapsedForDisputeParticipationError, TimeElapsedToClaimVictoryError, TimeElapsedToUnclaimVictoryError, TimeTooSoonToClaimVictoryError, UnclaimVictoryNotAuthorized, WinnerNotRevealedYetError, 
     WithdrawPoolByLooserTeamImpossibleError, WithdrawPoolNotAuthorized} from "../src/BitarenaChallengeErrors.sol";
 import {ParticipateToDispute, PlayerJoinsTeam, PoolChallengeWithdrawed, RevealWinner, TeamCreated, Debug, VictoryClaimed, VictoryUnclaimed} from "../src/BitarenaChallengeEvents.sol";
 import {MockFailingReceiver} from "./MockContracts.sol";
@@ -1323,6 +1323,30 @@ contract BitarenaTest is Test {
         //The winner team is automatically the team of Player3 so team2
         assertEq(bitarenaChallenge.getWinnerTeam(), 2);
     }   
+
+    /**
+     * @dev Test that is impossible to claim victory before s_startAt + s_delayStartVictoryClaim
+     */
+    function testClaimVictory9() public {
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
+
+        // Challenge admin setup delays to claim victory
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        vm.stopBroadcast();         
+
+        // On avance le temps juste après le début du challenge mais avant s_startAt + s_delayStartVictoryClaim
+        uint256 timeJustAfterStart = block.timestamp + 1 days + 5 hours; // 5 heures après le début, mais avant les 10 heures requises
+        vm.warp(timeJustAfterStart);
+
+        // La tentative de réclamer la victoire doit échouer car trop tôt
+        vm.expectRevert(TimeTooSoonToClaimVictoryError.selector);
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.claimVictory();
+        vm.stopBroadcast();
+    }
 
     /********  TESTS ON UNCLAIM VICTORY ***************/
     /**

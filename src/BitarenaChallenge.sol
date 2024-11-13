@@ -16,7 +16,7 @@ import {BalanceChallengePlayerError, ChallengeCanceledError, ChallengeCancelAfte
     NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, NoDisputeError, NotSufficientAmountForDisputeError, NotTeamMemberError, NotTimeYetToParticipateToDisputeError, NoDisputeParticipantsError, RefundImpossibleDueToTooManyDisputeParticipantsError, RevealWinnerImpossibleDueToTooFewDisputersError,
     SendMoneyBackToPlayersError, SendDisputeAmountBackToWinnerError, SendMoneyBackToAdminError,
     TeamDoesNotExistsError, TeamDidNotClaimVictoryError, TeamIsNotDisputerError, TeamOfSignerAlreadyParticipatesInDisputeError, TimeElapsedToClaimVictoryError, TimeElapsedToUnclaimVictoryError, TimeElapsedForDisputeParticipationError, 
-    TimeElapsedToJoinTeamError, UnclaimVictoryNotAuthorized, WinnerNotRevealedYetError, WithdrawPoolNotAuthorized, WithdrawPoolByLooserTeamImpossibleError} from "./BitarenaChallengeErrors.sol";
+    TimeElapsedToJoinTeamError, TimeTooSoonToClaimVictoryError, UnclaimVictoryNotAuthorized, WinnerNotRevealedYetError, WithdrawPoolNotAuthorized, WithdrawPoolByLooserTeamImpossibleError} from "./BitarenaChallengeErrors.sol";
 import {ParticipateToDispute, PlayerJoinsTeam, PoolChallengeWithdrawed, RevealWinner, TeamCreated, Debug, VictoryClaimed, VictoryUnclaimed} from "./BitarenaChallengeEvents.sol";
 import {ChallengeParams} from "./ChallengeParams.sol";
 import {CHALLENGE_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_CREATOR_ROLE, DELAY_START_VICTORY_CLAIM_BY_DEFAULT, DELAY_END_VICTORY_CLAIM_BY_DEFAULT, 
@@ -114,6 +114,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
         if (s_delayStartVictoryClaim == 0 || s_delayEndVictoryClaim == 0) revert DelayClaimVictoryNotSet();
         if (!hasRole(CHALLENGE_CREATOR_ROLE, _msgSender()) && !hasRole(GAMER_ROLE, _msgSender())) revert ClaimVictoryNotAuthorized();
         uint16 _teamIndex = getTeamOfPlayer(_msgSender());
+        if (block.timestamp < (s_startAt + s_delayStartVictoryClaim)) revert TimeTooSoonToClaimVictoryError();
         if (block.timestamp > (s_startAt + s_delayStartVictoryClaim + s_delayEndVictoryClaim)) revert TimeElapsedToClaimVictoryError();
         if (s_isCanceled) revert ChallengeCanceledError();
         _;
@@ -258,7 +259,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
         else {
             s_winnerTeam = 0;
         }
-        emit VictoryClaimed(teamIndex, _msgSender());
+        emit VictoryClaimed(teamIndex, _msgSender());   
     }
 
     /**

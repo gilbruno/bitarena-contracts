@@ -71,3 +71,20 @@ getFactoryChallengeCounter:
 	@echo "Get Factory Challenge Counter ...."
 	cast call $(ADDRESS_LAST_DEPLOYED_FACTORY) "getChallengeCounter()" --rpc-url $(RPC_URL) --legacy	
 
+# Add X minutes to claim victory
+setDelayStartForVictoryClaim:
+	@if [ -z "$(CHALLENGE_ADDRESS)" ] || [ -z "$(MINUTES)" ]; then \
+		echo "Usage: make setDelayStartForVictoryClaim CHALLENGE_ADDRESS=<challenge_address> MINUTES=<number_of_minutes>"; \
+		exit 1; \
+	fi
+	cast send $(CHALLENGE_ADDRESS) "setDelayStartForVictoryClaim(uint256)" $(shell expr $(MINUTES) \* 60) --rpc-url $(RPC_URL) --private-key $(PRIVATE_KEY_ADMIN_FACTORY) --legacy
+
+getDelayStartVictoryClaim:
+	@if [ -z "$(CHALLENGE_ADDRESS)" ]; then \
+		echo "Usage: make getDelayStartVictoryClaim CHALLENGE_ADDRESS=<challenge_adddress>"; \
+		exit 1; \
+	fi
+	@echo "Get Delay start victory claim ...."
+	cast call $(CHALLENGE_ADDRESS) "getDelayStartVictoryClaim()" --rpc-url $(RPC_URL) --legacy	
+
+
