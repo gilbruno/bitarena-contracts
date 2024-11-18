@@ -147,7 +147,6 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
         if (!hasRole(CHALLENGE_CREATOR_ROLE, _msgSender()) && !hasRole(GAMER_ROLE, _msgSender())) revert DisputeParticipationNotAuthorizedError();
         uint16 teamIndex = getTeamOfPlayer(_msgSender());
         if (teamIsDisputer(teamIndex)) revert TeamOfSignerAlreadyParticipatesInDisputeError();
-        if (block.timestamp < (s_startAt + s_delayStartVictoryClaim + s_delayEndVictoryClaim + s_delayStartDisputeParticipation)) revert NotTimeYetToParticipateToDisputeError();
         if (block.timestamp > (s_startAt + s_delayStartVictoryClaim + s_delayEndVictoryClaim + s_delayStartDisputeParticipation + s_delayEndDisputeParticipation)) revert TimeElapsedForDisputeParticipationError();
         if (s_winners[teamIndex] == false) revert TeamDidNotClaimVictoryError();
         _;

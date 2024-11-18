@@ -1280,11 +1280,6 @@
   },
   {
     "type": "error",
-    "name": "NotTimeYetToParticipateToDisputeError",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "ReentrancyGuardReentrantCall",
     "inputs": []
   },

@@ -5,8 +5,8 @@ import {Test, console} from "forge-std/Test.sol";
 import {IAccessControl} from "openzeppelin-contracts/contracts/access/IAccessControl.sol";
 import {BitarenaFactory} from "../src/BitarenaFactory.sol";
 import {BitarenaGames} from "../src/BitarenaGames.sol";
-import {CHALLENGE_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_CREATOR_ROLE, GAMER_ROLE, FEE_PERCENTAGE_AMOUNT_BY_DEFAULT} from "../src/BitarenaChallengeConstants.sol";
-import {BalanceChallengeCreatorError, ChallengeAdminAddressZeroError, 
+import {CHALLENGE_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_CREATOR_ROLE, DELAY_START_VICTORY_CLAIM_BY_DEFAULT, GAMER_ROLE, FEE_PERCENTAGE_AMOUNT_BY_DEFAULT} from "../src/BitarenaChallengeConstants.sol";
+import {BalanceChallengeCreatorError, ChallengeAdminAddressZeroError,
     ChallengeCounterError, ChallengeCreatorAddressZeroError, ChallengeDisputeAdminAddressZeroError, ChallengeGameError, 
     ChallengePlatformError, ChallengeStartDateError, NbTeamsError, NbPlayersPerTeamsError, 
     SendMoneyToChallengeError} from '../src/BitarenaFactoryErrors.sol';
@@ -524,8 +524,8 @@ contract BitarenaTest is Test {
         BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
         joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(1 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(1 hours);
         vm.stopBroadcast();
         assertEq(bitarenaChallenge.getDelayStartVictoryClaim(), 1 hours);
         assertEq(bitarenaChallenge.getDelayEndVictoryClaim(), 10 hours);
@@ -539,8 +539,8 @@ contract BitarenaTest is Test {
         BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
         joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(5 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(5 hours);
         vm.stopBroadcast();
         console.log('DELAY 2', bitarenaChallenge.getDelayEndVictoryClaim());
         assertEq(bitarenaChallenge.getDelayStartVictoryClaim(), 5 hours);
@@ -555,19 +555,19 @@ contract BitarenaTest is Test {
         BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
         joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayEndForVictoryClaim(5 hours);
         vm.stopBroadcast();
 
         vm.expectRevert(DelayStartGreaterThanDelayEnd.selector);
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayEndForVictoryClaim(5 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();
-
+     
         vm.startBroadcast(ADMIN_CHALLENGE1);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
         vm.stopBroadcast();
 
-        assertEq(bitarenaChallenge.getDelayStartVictoryClaim(), 10 hours);
+        assertEq(bitarenaChallenge.getDelayStartVictoryClaim(), DELAY_START_VICTORY_CLAIM_BY_DEFAULT);
         assertEq(bitarenaChallenge.getDelayEndVictoryClaim(), 20 hours);
     }
 
@@ -606,8 +606,8 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
@@ -1146,8 +1146,8 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, we try to claim 15 hours after the start date
@@ -1185,8 +1185,8 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, we try to claim 3 days after the start date
@@ -1207,8 +1207,8 @@ contract BitarenaTest is Test {
 
         //The admin of the challenge set delay for victory claim with values 0 for both
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(0);
         bitarenaChallenge.setDelayEndForVictoryClaim(0);
+        bitarenaChallenge.setDelayStartForVictoryClaim(0);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, we try to claim 3 days after the start date
@@ -1230,8 +1230,8 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(0);
         bitarenaChallenge.setDelayEndForVictoryClaim(10 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(0);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, we try to claim 15 hours after the start date
@@ -1254,8 +1254,8 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
         vm.startBroadcast(CREATOR_CHALLENGE1);
@@ -1281,8 +1281,8 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
@@ -1305,8 +1305,8 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
@@ -1333,8 +1333,8 @@ contract BitarenaTest is Test {
 
         // Challenge admin setup delays to claim victory
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
         // On avance le temps juste après le début du challenge mais avant s_startAt + s_delayStartVictoryClaim
@@ -1357,8 +1357,8 @@ contract BitarenaTest is Test {
         
         // L'admin du challenge définit les délais pour la réclamation de victoire
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
         // On avance le temps dans la période valide pour réclamer la victoire
@@ -1598,8 +1598,8 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
@@ -1630,8 +1630,8 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
@@ -1657,8 +1657,8 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
@@ -1689,8 +1689,8 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
@@ -1721,8 +1721,8 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
@@ -1753,8 +1753,8 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
@@ -1785,8 +1785,8 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
@@ -1824,8 +1824,8 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
@@ -1868,8 +1868,8 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
@@ -1913,8 +1913,8 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
@@ -1954,8 +1954,8 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
@@ -1995,8 +1995,8 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
@@ -2059,8 +2059,8 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
@@ -2115,8 +2115,8 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
@@ -2157,8 +2157,8 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
@@ -2176,11 +2176,10 @@ contract BitarenaTest is Test {
         bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
 
-        //There is a dispute so anyone can participate to a dispute
-        //PLAYER1 wants to participate to a dispute after a wrong delay : it reverts with TimeElapsedForDisputeParticipationError
+        //There is a dispute as 2 teams at least claim victory so anyone can participate to a dispute
         uint256 amountDispute = bitarenaChallenge.getDisputeAmountParticipation();
 
-        vm.expectRevert(NotTimeYetToParticipateToDisputeError.selector);
+        //There is no minimum delay to participate to the dispute so a player of a disputer can sign a tx for that
         vm.startBroadcast(PLAYER1_CHALLENGE1);
         bitarenaChallenge.participateToDispute{value: amountDispute}();
         vm.stopBroadcast();         
@@ -2198,8 +2197,8 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
@@ -2245,8 +2244,8 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
@@ -2286,8 +2285,8 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
@@ -2326,8 +2325,8 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
@@ -2357,8 +2356,8 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
@@ -2405,8 +2404,8 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
@@ -2457,8 +2456,8 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
@@ -2501,8 +2500,8 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
@@ -2559,8 +2558,8 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
@@ -2668,8 +2667,8 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
@@ -2779,8 +2778,8 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
@@ -2844,8 +2843,8 @@ contract BitarenaTest is Test {
         //The admin of the challenge set delay for victory claim
         //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
         vm.startBroadcast(ADMIN_CHALLENGE1);
-        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();         
 
         //As the challenge must start 1 day after its creation, 
