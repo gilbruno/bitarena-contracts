@@ -21,7 +21,7 @@ import {ParticipateToDispute, PlayerJoinsTeam, PoolChallengeWithdrawed, RevealWi
 import {ChallengeParams} from "./ChallengeParams.sol";
 import {CHALLENGE_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_CREATOR_ROLE, DELAY_START_VICTORY_CLAIM_BY_DEFAULT, DELAY_END_VICTORY_CLAIM_BY_DEFAULT, 
     DELAY_START_DISPUTE_PARTICIPATION_BY_DEFAULT, DELAY_END_DISPUTE_PARTICIPATION_BY_DEFAULT,
-    GAMER_ROLE, FEE_PERCENTAGE_AMOUNT_BY_DEFAULT, FEE_PERCENTAGE_DISPUTE_AMOUNT_BY_DEFAULT} from "./BitarenaChallengeConstants.sol";
+    GAMER_ROLE, FEE_PERCENTAGE_AMOUNT_BY_DEFAULT, FEE_PERCENTAGE_DISPUTE_AMOUNT_BY_DEFAULT, PERCENTAGE_BASE} from "./BitarenaChallengeConstants.sol";
 
 contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, ReentrancyGuard{
 
@@ -35,7 +35,10 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
     uint16 private s_teamCounter;
     uint16 private s_winnerTeam;
 
-    
+    bool private s_isPrivate;
+    bool private s_isCanceled;
+    bool private s_isPoolWithdrawed;
+
     uint256 private immutable s_startAt;
     uint256 private immutable s_amountPerPlayer;
     uint256 private s_delayStartVictoryClaim;
@@ -44,10 +47,6 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
     uint256 private s_delayEndDisputeParticipation;
     uint256 private s_challengePool;
     uint256 private s_disputePool;
-
-    bool private s_isPrivate;
-    bool private s_isCanceled;
-    bool private s_isPoolWithdrawed;
 
     address private s_admin;
     address private s_disputeAdmin;
@@ -117,12 +116,15 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
      * 
      */
     modifier checkClaimVictory() {
+        address sender = _msgSender();
+        uint16 _teamIndex = getTeamOfPlayer(sender);
+        uint256 startClaimTime = s_startAt + s_delayStartVictoryClaim;
+        
         if (s_delayStartVictoryClaim == 0 || s_delayEndVictoryClaim == 0) revert DelayClaimVictoryNotSet();
-        if (!hasRole(CHALLENGE_CREATOR_ROLE, _msgSender()) && !hasRole(GAMER_ROLE, _msgSender())) revert ClaimVictoryNotAuthorized();
-        uint16 _teamIndex = getTeamOfPlayer(_msgSender());
+        if (!isAuthorizedPlayer(sender)) revert ClaimVictoryNotAuthorized();
         if (s_winners[_teamIndex] == true) revert TeamAlreadyClaimedVictoryError();
-        if (block.timestamp < (s_startAt + s_delayStartVictoryClaim)) revert TimeTooSoonToClaimVictoryError();
-        if (block.timestamp > (s_startAt + s_delayStartVictoryClaim + s_delayEndVictoryClaim)) revert TimeElapsedToClaimVictoryError();
+        if (block.timestamp < (startClaimTime)) revert TimeTooSoonToClaimVictoryError();
+        if (block.timestamp > (startClaimTime + s_delayEndVictoryClaim)) revert TimeElapsedToClaimVictoryError();
         if (s_isCanceled) revert ChallengeCanceledError();
         _;
     }
@@ -139,13 +141,14 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
      *  - only a team that claim victory can participate to a dispute
      */
     modifier checkDisputeParticipation() {
+        address sender = _msgSender();
         if (getDelayStartVictoryClaim() == 0 || getDelayEndVictoryClaim() == 0) revert DelayClaimVictoryNotSet();
         if (s_feePercentageDispute == 0) revert FeeDisputeNotSetError();
         uint256 disputeParticipationAmount = getDisputeAmountParticipation();
         if (msg.value < disputeParticipationAmount) revert NotSufficientAmountForDisputeError();
         if (!atLeast2TeamsClaimVictory()) revert NoDisputeError();
-        if (!hasRole(CHALLENGE_CREATOR_ROLE, _msgSender()) && !hasRole(GAMER_ROLE, _msgSender())) revert DisputeParticipationNotAuthorizedError();
-        uint16 teamIndex = getTeamOfPlayer(_msgSender());
+        if (!isAuthorizedPlayer(sender)) revert DisputeParticipationNotAuthorizedError();
+        uint16 teamIndex = getTeamOfPlayer(sender);
         if (teamIsDisputer(teamIndex)) revert TeamOfSignerAlreadyParticipatesInDisputeError();
         if (block.timestamp > (s_startAt + s_delayStartVictoryClaim + s_delayEndVictoryClaim + s_delayStartDisputeParticipation + s_delayEndDisputeParticipation)) revert TimeElapsedForDisputeParticipationError();
         if (s_winners[teamIndex] == false) revert TeamDidNotClaimVictoryError();
@@ -188,10 +191,11 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
      *   - only the member of the team who won can withdraw the challenge pool
      */
     modifier checkWithdrawPool() {
-        if (!hasRole(CHALLENGE_CREATOR_ROLE, _msgSender()) && !hasRole(GAMER_ROLE, _msgSender())) revert WithdrawPoolNotAuthorized();
+        address sender = _msgSender();
+        if (!isAuthorizedPlayer(sender)) revert WithdrawPoolNotAuthorized();
         if (block.timestamp < (s_startAt + s_delayStartVictoryClaim + s_delayEndVictoryClaim + s_delayStartDisputeParticipation + s_delayEndDisputeParticipation)) revert MustWaitForEndDisputePeriodError();
         if (s_winnerTeam == 0) revert WinnerNotRevealedYetError();
-        uint16 teamIndex = getTeamOfPlayer(_msgSender());
+        uint16 teamIndex = getTeamOfPlayer(sender);
         if (s_winnerTeam != 0 && teamIndex != s_winnerTeam) revert WithdrawPoolByLooserTeamImpossibleError();
         if (getIsPoolWithdrawed() == true) revert ChallengePoolAlreadyWithdrawed();
         _;
@@ -220,8 +224,9 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
      * 
      */
     function joinTeam(uint16 _teamIndex) internal checkJoinTeam(_teamIndex) {
-        joinTeamInternal(_teamIndex, _msgSender());
-        emit PlayerJoinsTeam(_teamIndex, _msgSender());
+        address sender = _msgSender();
+        joinTeamInternal(_teamIndex, sender);
+        emit PlayerJoinsTeam(_teamIndex, sender);
     }
 
     /**
@@ -256,7 +261,8 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
      * 
      */
     function claimVictory() public checkClaimVictory() {
-        uint16 teamIndex = getTeamOfPlayer(_msgSender()); 
+        address sender = _msgSender();
+        uint16 teamIndex = getTeamOfPlayer(sender); 
         s_winners[teamIndex] = true;
         s_claimVictoryTeams.push(teamIndex);
         if (s_claimVictoryTeams.length == 1) {
@@ -265,7 +271,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
         else {
             s_winnerTeam = 0;
         }
-        emit VictoryClaimed(teamIndex, _msgSender());   
+        emit VictoryClaimed(teamIndex, sender);   
     }
 
     /**
@@ -342,8 +348,9 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
      *  @dev : Only one player create a dispute for his team.
      */
     function participateToDispute() public payable checkDisputeParticipation()  {
-        uint16 teamSigner = getTeamOfPlayer(_msgSender());
-        s_disputeParticipants[teamSigner] = _msgSender(); 
+        address sender = _msgSender();
+        uint16 teamSigner = getTeamOfPlayer(sender);
+        s_disputeParticipants[teamSigner] = sender; 
         s_disputeTeams.push(teamSigner);
         // The first team to participate to the dispute is revealed as winner
         // Then, if no other teams participate to the dispute, the winer is the first team to participate
@@ -356,7 +363,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
         }
         
         incrementDisputePool(getDisputeAmountParticipation());
-        emit ParticipateToDispute(_msgSender());
+        emit ParticipateToDispute(sender);
     }
 
     /**
@@ -437,13 +444,16 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
      */
     function returnMoneyBackDueToChallengeCancel() internal nonReentrant {
         uint16 teamCount = s_teamCounter;
-        for (uint16 i = 1; i <= teamCount; i++) {
+        for (uint16 i = 1; i <= teamCount;) {
             address[] memory teamPlayers = s_teams[i];
-            for (uint256 j = 0; j < teamPlayers.length; j++) {
+            uint256 playersLength = teamPlayers.length;
+            for (uint256 j = 0; j < playersLength;) {
                 address player = teamPlayers[j];
                 (bool success, ) = player.call{value: s_amountPerPlayer}("");
                 if (!success) revert SendMoneyBackToPlayersError();
+                unchecked { ++j; }
             }
+            unchecked { ++i; }
         }
         //Reset the challenge pool
         s_challengePool = 0;
@@ -476,9 +486,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
      * @dev Fee amount for Bitarena protocol
      */
     function calculateFeeAmount() public view returns (uint256) {
-        uint256 feeAmount = getFeePercentage() * getChallengePool();
-        feeAmount = feeAmount / 100;
-        return feeAmount;
+        return (getFeePercentage() * getChallengePool()) / PERCENTAGE_BASE;
     }
 
     /**
@@ -534,6 +542,13 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
         if (!success) revert SendMoneyBackToAdminError();
          
         emit PoolChallengeWithdrawed(s_winnerTeam, _msgSender());
+    }
+
+    /**
+     * @dev return true if a signer is authorized
+     */
+    function isAuthorizedPlayer(address account) internal view returns (bool) {
+        return hasRole(CHALLENGE_CREATOR_ROLE, account) || hasRole(GAMER_ROLE, account);
     }
 
     /**
@@ -681,7 +696,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
      */
     function getDisputeAmountParticipation() public view returns (uint256) {
         uint256 disputeParticipationAmount = s_challengePool * s_feePercentageDispute;
-        disputeParticipationAmount = disputeParticipationAmount / 100;
+        disputeParticipationAmount = disputeParticipationAmount / PERCENTAGE_BASE;
         return disputeParticipationAmount;
     }
 

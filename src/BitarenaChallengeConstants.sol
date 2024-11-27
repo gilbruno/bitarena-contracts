@@ -17,3 +17,5 @@ uint256 constant DELAY_END_VICTORY_CLAIM_BY_DEFAULT = 1 hours; //After startVict
 
 uint256 constant DELAY_START_DISPUTE_PARTICIPATION_BY_DEFAULT = 0; //After endVictoryclaim
 uint256 constant DELAY_END_DISPUTE_PARTICIPATION_BY_DEFAULT = 24 hours; //After startdisputeParticipation
+
+uint256 constant PERCENTAGE_BASE = 100;
