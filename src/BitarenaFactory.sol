@@ -168,7 +168,7 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
         return abi.encodePacked(bytecode, abi.encode(_params));
     }
 
-    function deployChallenge(uint256 _salt, ChallengeParams memory _params) public returns (address payable) {
+    function deployChallenge(uint256 _salt, ChallengeParams memory _params) internal returns (address payable) {
         address payable addr;
         
         // Get bytecode with the struct ChallengeParams as constructor argument
@@ -218,6 +218,7 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
 
         //Hydrate challenges array
         s_challengesMap[_challengeCounter].challengeAddress = deployedChallengeAddress;
+        challenge.challengeAddress = deployedChallengeAddress;
         s_challenges.push(challenge);
 
         //Create the firstTeam and add the creator of the challenge in this first team
@@ -272,6 +273,7 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
 
         //Hydrate challenges array
         s_challengesMap[_challengeCounter].challengeAddress = deployedChallengeAddress;
+        challenge.challengeAddress = deployedChallengeAddress;
         s_challenges.push(challenge);
 
         //Create the firstTeam and add the creator of the challenge in this first team

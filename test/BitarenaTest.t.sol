@@ -442,6 +442,42 @@ contract BitarenaTest is Test {
     }
 
     /**
+     * @dev Test et affiche l'adresse du challenge dans la factory après le déploiement
+     */
+    function testChallengeAddressInFactory() public {
+        intentChallengeCreationWith2TeamsAnd1Player();
+        vm.startBroadcast(ADMIN_FACTORY);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, 1);
+        vm.stopBroadcast();       
+
+        Challenge memory challengeStructCreated = bitarenaFactory.getChallengeByIndex(1);
+        console.log("Adresse du challenge dans la factory:", challengeStructCreated.challengeAddress);
+        
+        assertEq(challengeStructCreated.challengeAddress, address(bitarenaChallenge));
+    }
+
+    /**
+     * @dev Test le tableau s_challenges de la factory après création d'un challenge
+     */
+    function testChallengesArrayInFactory() public {
+        intentChallengeCreationWith2TeamsAnd1Player();
+        vm.startBroadcast(ADMIN_FACTORY);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, 1);
+        vm.stopBroadcast();       
+
+        Challenge[] memory challenges = bitarenaFactory.getChallengesArray();
+        console.log("Adresse du challenge dans le tableau s_challenges[0]:", challenges[0].challengeAddress);
+        
+        // Vérifie que l'adresse dans le tableau correspond à celle du challenge déployé
+        assertEq(challenges[0].challengeAddress, address(bitarenaChallenge));
+        
+        // Vérifie d'autres champs importants
+        assertEq(challenges[0].game, GAME1);
+        assertEq(challenges[0].platform, PLATFORM1);
+        assertEq(challenges[0].challengeCreator, CREATOR_CHALLENGE1);
+    }
+
+    /**
      * @dev Test getter "getNbTeamPlayers"
      * We create a challenge with 1 player per team so we expect that the getter returns 1
      */
