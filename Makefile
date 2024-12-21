@@ -97,3 +97,28 @@ getChallengeAdmin:
 	fi
 	@echo "Get Challenge Admin ...."
 	cast call $(CHALLENGE_ADDRESS) "getChallengeAdmin()" --rpc-url $(RPC_URL) --legacy
+
+getChallengeByIndex:
+	@if [ -z "$(FACTORY_ADDRESS)" ] || [ -z "$(CHALLENGE_INDEX)" ]; then \
+		echo "Usage: make getChallengeByIndex FACTORY_ADDRESS=<factory_address> CHALLENGE_INDEX=<index>"; \
+		exit 1; \
+	fi
+	@echo "Get Challenge at index $(CHALLENGE_INDEX) from factory $(FACTORY_ADDRESS)...."
+	cast call $(FACTORY_ADDRESS) "getChallengeByIndex(uint256)" $(CHALLENGE_INDEX) --rpc-url $(RPC_URL) --legacy
+
+getChallengesArray:
+	@if [ -z "$(FACTORY_ADDRESS)" ]; then \
+		echo "Usage: make getChallengesArray FACTORY_ADDRESS=<factory_address>"; \
+		exit 1; \
+	fi
+	@echo "Get Challenges Array from factory $(FACTORY_ADDRESS)...."
+	cast call $(FACTORY_ADDRESS) "getChallengesArray()" --rpc-url $(RPC_URL) --legacy	
+
+
+decodeChallengesArray:
+	@if [ -z "$(HEX_VALUE)" ]; then \
+		echo "Usage: make decodeChallengesArray HEX_VALUE=<hex_value>"; \
+		exit 1; \
+	fi
+	@echo "Decoding challenges array..."
+	@cast --abi-decode "getChallengesArray()((address,address,string,string,uint16,uint16,uint256,uint256,bool)[])" "$(HEX_VALUE)"

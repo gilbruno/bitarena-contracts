@@ -314,6 +314,49 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();
     }
 
+    function testAmountPerPlayerConsistency() public {
+        // Valeur à envoyer et à stocker
+        uint256 EXPECTED_AMOUNT = 850000000000000; // 0.00085 ETH
+        
+        deployFactory();
+        
+        // Création du challenge
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaFactory.intentChallengeCreation{value: EXPECTED_AMOUNT}(
+            GAME1,
+            PLATFORM1,
+            TWO_TEAMS,
+            ONE_PLAYER,
+            EXPECTED_AMOUNT,  // même valeur comme paramètre
+            block.timestamp + 1 days,
+            false
+        );
+        vm.stopBroadcast();
+
+        // Déploiement du challenge
+        vm.startBroadcast(ADMIN_FACTORY);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(
+            ADMIN_CHALLENGE1, 
+            ADMIN_DISPUTE_CHALLENGE1, 
+            1
+        );
+        vm.stopBroadcast();
+
+        // Récupération du challenge via getChallengeByIndex
+        Challenge memory storedChallenge = bitarenaFactory.getChallengeByIndex(1);
+        
+        // Log des valeurs pour debug
+        console.log("Expected amount:", EXPECTED_AMOUNT);
+        console.log("Stored amount:", storedChallenge.amountPerPlayer);
+        
+        // Vérification que la valeur stockée correspond à la valeur envoyée
+        assertEq(
+            storedChallenge.amountPerPlayer, 
+            EXPECTED_AMOUNT, 
+            "Amount per player mismatch"
+        );
+    }
+
     /**
      * @dev Test value of challenge counter after 1 intent creation. The counter must be equal to 1
      */
