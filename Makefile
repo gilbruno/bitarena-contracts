@@ -129,3 +129,38 @@ decodeChallengesArray:
 	sed 's/, /\n/g' | \
 	sed 's/\[.*\]//g' | \
 	grep -v '^[[:space:]]*$$'
+
+verifyContract:
+	@if [ -z "$(CHALLENGE_ADDRESS)" ]; then \
+		echo "Usage: make verifyContract CHALLENGE_ADDRESS=<address>"; \
+		exit 1; \
+	fi
+	@echo "Verifying contract at $(CHALLENGE_ADDRESS)..."
+	@cast code $(CHALLENGE_ADDRESS) --rpc-url $(RPC_URL)
+
+getContractFunctions:
+	@if [ -z "$(CHALLENGE_ADDRESS)" ]; then \
+		echo "Usage: make getContractFunctions CHALLENGE_ADDRESS=<address>"; \
+		exit 1; \
+	fi
+	@echo "Getting functions from contract at $(CHALLENGE_ADDRESS)..."
+	@cast storage $(CHALLENGE_ADDRESS) --rpc-url $(RPC_URL)
+
+getTeamsCount:
+	@if [ -z "$(CHALLENGE_ADDRESS)" ]; then \
+		echo "Usage: make getTeamsCount CHALLENGE_ADDRESS=<address>"; \
+		exit 1; \
+	fi
+	@echo "Getting teams count from challenge $(CHALLENGE_ADDRESS)..."
+	@cast call $(CHALLENGE_ADDRESS) "getTeamsCount()(uint256)" --rpc-url $(RPC_URL)
+
+getTeamsByTeamIndex:
+	@if [ -z "$(CHALLENGE_ADDRESS)" ] || [ -z "$(TEAM_INDEX)" ]; then \
+		echo "Usage: make getTeamsByTeamIndex CHALLENGE_ADDRESS=<address> TEAM_INDEX=<index>"; \
+		exit 1; \
+	fi
+	@echo "Getting team data for index $(TEAM_INDEX) from challenge $(CHALLENGE_ADDRESS)..."
+	@cast call $(CHALLENGE_ADDRESS) "getTeamsByTeamIndex(uint16)(address[])" $(TEAM_INDEX) --rpc-url $(RPC_URL) | \
+	sed 's/\[/\n=== Team Members ===\n/g' | \
+	sed 's/\]/\n==================/g' | \
+	sed 's/, /\n/g'
