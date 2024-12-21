@@ -121,4 +121,11 @@ decodeChallengesArray:
 		exit 1; \
 	fi
 	@echo "Decoding challenges array..."
-	@cast --abi-decode "getChallengesArray()((address,address,string,string,uint16,uint16,uint256,uint256,bool)[])" "$(HEX_VALUE)"
+	@cast --abi-decode "getChallengesArray()((address,address,string,string,uint16,uint16,uint256,uint256,bool)[])" "$(HEX_VALUE)" | \
+	sed 's/\[\([^]]*\)\]/\n\1\n/g' | \
+	sed 's/), /)\n/g' | \
+	sed 's/(/\n===== Challenge =====\n/g' | \
+	sed 's/)/\n===================\n/g' | \
+	sed 's/, /\n/g' | \
+	sed 's/\[.*\]//g' | \
+	grep -v '^[[:space:]]*$$'
