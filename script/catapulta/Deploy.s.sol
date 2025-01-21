@@ -14,7 +14,7 @@ import {BitarenaFactory} from "../../src/BitarenaFactory.sol";
 contract DeployScript is Script {
   function run() external {
 
-    uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+    uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY_ADMIN_FACTORY");
     vm.startBroadcast(deployerPrivateKey);
 
     // BitarenaGames

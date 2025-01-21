@@ -149,6 +149,15 @@ the terminal returns a hex value.
 To decode it, you can run the command to decode hex value
 
 
+# Deploy all contracts with Catapulta (Factory & Games)
+
+
+```sh
+catapulta script script/catapulta/Deploy.s.sol:DeployScript --network amoy --legacy --sender 0xdB70Ce51809af94EC2d4CC2dc2fD1f099A7cDE0C
+```
+
+
+
 ## Foundry
 
 **Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
