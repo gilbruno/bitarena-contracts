@@ -4,8 +4,9 @@ pragma solidity 0.8.26;
 
 import {AccessControl} from "openzeppelin-contracts/contracts/access/AccessControl.sol";
 import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
-import {ADMIN_GAMES} from "./BitarenaChallengeConstants.sol";
+import {GAMES_ADMIN_ROLE} from "./BitarenaChallengeConstants.sol";
 import {IBitarenaGames} from "./IBitarenaGames.sol";
+
 
 contract BitarenaGames is Context, AccessControl, IBitarenaGames {
 
@@ -15,25 +16,67 @@ contract BitarenaGames is Context, AccessControl, IBitarenaGames {
 
     string[] private s_platforms;
 
-    constructor() {
-        _grantRole(ADMIN_GAMES, _msgSender());
+    constructor(address _adminGames) {
+        _grantRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _grantRole(GAMES_ADMIN_ROLE, _adminGames);
+        s_admins.push(_adminGames);
     }
 
 
-    function grantNewAdmin(address _newAdmin) public onlyRole(ADMIN_GAMES) {
-        _grantRole(ADMIN_GAMES, _newAdmin);
+    modifier gameNotExists(string memory _game) {
+        for(uint i = 0; i < s_games.length; i++) {
+            if(keccak256(bytes(s_games[i])) == keccak256(bytes(_game))) {
+                revert GameAlreadyExists(_game);
+            }
+        }
+        _;
+    }
+
+    modifier platformNotExists(string memory _platform) {
+        for(uint i = 0; i < s_platforms.length; i++) {
+            if(keccak256(bytes(s_platforms[i])) == keccak256(bytes(_platform))) {
+                revert PlatformAlreadyExists(_platform);
+            }
+        }
+        _;
+    }
+
+    function grantNewAdmin(address _newAdmin) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        _grantRole(GAMES_ADMIN_ROLE, _newAdmin);
         s_admins.push(_newAdmin);
     }
+
+    function revokeAdmin(address _admin) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        _revokeRole(GAMES_ADMIN_ROLE, _admin);
+        _removeAdmin(_admin);
+    }
+
+    /**
+     * @dev Remove an admin from the list of admins
+     * @param account The address to remove
+     */
+    function _removeAdmin(address account) internal {
+        if(account == address(0)) revert AddressZeroError();
+        
+        for(uint i = 0; i < s_admins.length; i++) {
+            if(s_admins[i] == account) {
+                s_admins[i] = s_admins[s_admins.length - 1];
+                s_admins.pop();
+                break;
+            }
+        }
+    }
+
 
     function getAdmins() public view returns(address[] memory) {
         return s_admins;
     }
 
-    function setGame(string memory _game) public onlyRole(ADMIN_GAMES) { 
+    function setGame(string memory _game) public onlyRole(GAMES_ADMIN_ROLE) gameNotExists(_game) { 
         s_games.push(_game);
     }
 
-    function setPlatform(string memory _platform) public onlyRole(ADMIN_GAMES) {
+    function setPlatform(string memory _platform) public onlyRole(GAMES_ADMIN_ROLE) platformNotExists(_platform) {
         s_platforms.push(_platform);
     }
 

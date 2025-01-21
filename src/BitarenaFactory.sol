@@ -12,7 +12,7 @@ import {Ownable} from "openzeppelin-contracts/contracts/access/Ownable.sol";
 import {AccessControl} from "openzeppelin-contracts/contracts/access/AccessControl.sol";
 import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
 import {BalanceChallengeCreatorError, ChallengeAdminAddressZeroError, 
-    ChallengeCounterError, ChallengeDeployedError, ChallengeCreatorAddressZeroError, ChallengeDisputeAdminAddressZeroError, ChallengeGameError, 
+    ChallengeCounterError, ChallengeDeployedError, ChallengeCreatorAddressZeroError, ChallengeDisputeAdminAddressZeroError, ChallengeEmergencyAdminAddressZeroError, ChallengeGameError, 
     ChallengePlatformError, ChallengeStartDateError, GameDoesNotExistError, NbTeamsError, NbPlayersPerTeamsError, SendMoneyToChallengeError, PlatformDoesNotExistError} from "./BitarenaFactoryErrors.sol";
 import {IntentChallengeCreation, ChallengeDeployed} from "./BitarenaFactoryEvents.sol";
 import {Challenge} from "./ChallengeStruct.sol";
@@ -33,14 +33,16 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
 
     address private s_challengeAdmin;
     address private s_challengeDisputeAdmin;
-
-	constructor (address _bitarenaGames, address _challengeAdmin, address _challengeDisputeAdmin) Ownable(msg.sender) {
+    address private s_challengeEmergencyAdmin;
+	constructor (address _bitarenaGames, address _challengeAdmin, address _challengeDisputeAdmin, address _challengeEmergencyAdmin) Ownable(msg.sender) {
         if(_challengeAdmin == address(0)) revert ChallengeAdminAddressZeroError();
         if(_challengeDisputeAdmin == address(0)) revert ChallengeDisputeAdminAddressZeroError();
+        if(_challengeEmergencyAdmin == address(0)) revert ChallengeEmergencyAdminAddressZeroError();
         s_challengeCounter = 0;
         s_bitarenaGames = IBitarenaGames(_bitarenaGames);
         s_challengeAdmin = _challengeAdmin;
         s_challengeDisputeAdmin = _challengeDisputeAdmin;
+        s_challengeEmergencyAdmin = _challengeEmergencyAdmin;
 		_grantRole(BITARENA_FACTORY_ADMIN, msg.sender);
 	}
 
@@ -203,6 +205,7 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
             factory: address(this),
             challengeAdmin: s_challengeAdmin,
             challengeDisputeAdmin: s_challengeDisputeAdmin,
+            challengeEmergencyAdmin: s_challengeEmergencyAdmin,
             challengeCreator: challenge.challengeCreator,
             game: challenge.game,
             platform: challenge.platform,
@@ -258,6 +261,7 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
             factory: address(this),
             challengeAdmin: _challengeAdmin,
             challengeDisputeAdmin: _challengeDisputeAdmin,
+            challengeEmergencyAdmin: s_challengeEmergencyAdmin,
             challengeCreator: challenge.challengeCreator,
             game: challenge.game,
             platform: challenge.platform,

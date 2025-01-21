@@ -41,6 +41,19 @@ getGame:
     fi
 	cast call $(ADDRESS_LAST_DEPLOYED_GAMES) "getGameByIndex(uint256)" $(GAME_INDEX) --rpc-url $(RPC_URL) --legacy	
 
+# Returns all games playable by the contract BitarenaGames 
+# call ex :
+# make getGames BITARENA_GAMES_ADDRESS=0x123...
+getGames:
+	@if [ -z "$(BITARENA_GAMES_ADDRESS)" ]; then \
+		echo "Usage: make getGames BITARENA_GAMES_ADDRESS=<address>"; \
+		exit 1; \
+	fi
+	cast call $(BITARENA_GAMES_ADDRESS) \
+	"getGames()(string[])" \
+	--rpc-url $(RPC_URL) \
+	--legacy	
+
 getPlatform:
 	@if [ -z "$(PLATFORM_INDEX)" ]; then \
         echo "Usage: make getPlatform ARG=<value>"; \
@@ -67,6 +80,25 @@ deployChallenge:
 	@echo "Challenge Deployment of challenge with index ...."
 	cast send $(ADDRESS_LAST_DEPLOYED_FACTORY) "createChallenge(address,address,uint256)" $(PUBLIC_KEY_ADMIN_CHALLENGE) $(PUBLIC_KEY_ADMIN_DISPUTE_CHALLENGE) $(CHALLENGE_INDEX) --rpc-url $(RPC_URL) --private-key $(PRIVATE_KEY_ADMIN_FACTORY) --legacy --json
 
+intentChallengeDeployment:
+	@if [ -z "$(CONTRACT_ADDRESS)" ] || [ -z "$(GAME)" ] || [ -z "$(PLATFORM)" ] || [ -z "$(NB_TEAMS)" ] || [ -z "$(NB_PLAYERS)" ] || [ -z "$(AMOUNT)" ] || [ -z "$(START_TIME)" ] || [ -z "$(IS_PRIVATE)" ]; then \
+		echo "Usage: make intentChallengeDeployment CONTRACT_ADDRESS=<address> GAME=<game> PLATFORM=<platform> NB_TEAMS=<teams> NB_PLAYERS=<players> AMOUNT=<amount> START_TIME=<time> IS_PRIVATE=<bool>"; \
+		exit 1; \
+	fi
+	cast send $(CONTRACT_ADDRESS) \
+	"intentChallengeDeployment(string,string,uint16,uint16,uint256,uint256,bool)" \
+	"$(GAME)" \
+	"$(PLATFORM)" \
+	$(NB_TEAMS) \
+	$(NB_PLAYERS) \
+	$$(cast --to-wei $(AMOUNT) eth) \
+	$$(date -d "$(START_TIME)" +%s) \
+	$(IS_PRIVATE) \
+	--value $$(cast --to-wei $(AMOUNT) eth) \
+	--rpc-url $(RPC_URL) \
+	--private-key $(PRIVATE_KEY_ADMIN_GAMES) \
+	--legacy
+	
 getFactoryChallengeCounter:
 	@echo "Get Factory Challenge Counter ...."
 	cast call $(ADDRESS_LAST_DEPLOYED_FACTORY) "getChallengeCounter()" --rpc-url $(RPC_URL) --legacy	

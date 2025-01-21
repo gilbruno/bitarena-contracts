@@ -38,6 +38,11 @@ error ChallengeAdminAddressZeroError();
 error ChallengeDisputeAdminAddressZeroError();
 
 /**
+ * @dev an unexpected zero address was transmitted for the Challenge Emergency Admin. (eg. `address(0)`)
+ */
+error ChallengeEmergencyAdminAddressZeroError();
+
+/**
  * @dev 
  */
 error ChallengeGameError();

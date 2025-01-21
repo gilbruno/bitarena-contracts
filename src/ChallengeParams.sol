@@ -6,6 +6,7 @@ struct ChallengeParams {
     address factory;
     address challengeAdmin;
     address challengeDisputeAdmin;
+    address challengeEmergencyAdmin;
     address challengeCreator;
     string game;
     string platform;

@@ -11,6 +11,7 @@ import {Context} from "https://raw.githubusercontent.com/OpenZeppelin/openzeppel
 import {AccessControlDefaultAdminRules} from "openzeppelin-contracts/contracts/access/extensions/AccessControlDefaultAdminRules.sol";
 import {ReentrancyGuard} from "openzeppelin-contracts/contracts/utils/ReentrancyGuard.sol";
 import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
+import {Pausable} from "openzeppelin-contracts/contracts/utils/Pausable.sol";
 import {BalanceChallengePlayerError, ChallengeCanceledError, ChallengeCancelAfterStartDateError, ChallengePoolAlreadyWithdrawed, ClaimVictoryNotAuthorized, 
     DelayClaimVictoryNotSet, DelayUnclaimVictoryNotSet, DelayStartGreaterThanDelayEnd, DelayStartClaimVictoryGreaterThanDelayEndClaimVictoryError, DisputeExistsError, DisputeParticipationNotAuthorizedError, FeeDisputeNotSetError, MustWaitForEndDisputePeriodError, 
     NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, NoDisputeError, NotSufficientAmountForDisputeError, NotTeamMemberError, NotTimeYetToParticipateToDisputeError, NoDisputeParticipantsError, RefundImpossibleDueToTooManyDisputeParticipantsError, RevealWinnerImpossibleDueToTooFewDisputersError,
@@ -19,11 +20,11 @@ import {BalanceChallengePlayerError, ChallengeCanceledError, ChallengeCancelAfte
     TimeElapsedToJoinTeamError, TimeTooSoonToClaimVictoryError, UnclaimVictoryNotAuthorized, WinnerNotRevealedYetError, WithdrawPoolNotAuthorized, WithdrawPoolByLooserTeamImpossibleError} from "./BitarenaChallengeErrors.sol";
 import {ParticipateToDispute, PlayerJoinsTeam, PoolChallengeWithdrawed, RevealWinner, TeamCreated, Debug, VictoryClaimed, VictoryUnclaimed} from "./BitarenaChallengeEvents.sol";
 import {ChallengeParams} from "./ChallengeParams.sol";
-import {CHALLENGE_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_CREATOR_ROLE, DELAY_START_VICTORY_CLAIM_BY_DEFAULT, DELAY_END_VICTORY_CLAIM_BY_DEFAULT, 
+import {CHALLENGE_ADMIN_ROLE, CHALLENGE_EMERGENCY_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_CREATOR_ROLE, DELAY_START_VICTORY_CLAIM_BY_DEFAULT, DELAY_END_VICTORY_CLAIM_BY_DEFAULT, 
     DELAY_START_DISPUTE_PARTICIPATION_BY_DEFAULT, DELAY_END_DISPUTE_PARTICIPATION_BY_DEFAULT,
     GAMER_ROLE, FEE_PERCENTAGE_AMOUNT_BY_DEFAULT, FEE_PERCENTAGE_DISPUTE_AMOUNT_BY_DEFAULT, PERCENTAGE_BASE} from "./BitarenaChallengeConstants.sol";
 
-contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, ReentrancyGuard{
+contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, ReentrancyGuard, Pausable{
 
     string private s_game;
     string private s_platform;
@@ -50,6 +51,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
 
     address private s_admin;
     address private s_disputeAdmin;
+    address private s_emergencyAdmin;
     address private immutable s_creator;
     address private immutable s_factory;
 
@@ -65,6 +67,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
         s_factory = params.factory;
         s_admin = params.challengeAdmin;
         s_disputeAdmin = params.challengeDisputeAdmin;
+        s_emergencyAdmin = params.challengeEmergencyAdmin;
         s_creator = params.challengeCreator;
         s_game = params.game;
         s_platform = params.platform;
@@ -85,6 +88,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
         s_delayStartDisputeParticipation = DELAY_START_DISPUTE_PARTICIPATION_BY_DEFAULT;
         s_delayEndDisputeParticipation = DELAY_END_DISPUTE_PARTICIPATION_BY_DEFAULT;
         _grantRole(CHALLENGE_ADMIN_ROLE, params.challengeAdmin);
+        _grantRole(CHALLENGE_EMERGENCY_ADMIN_ROLE, params.challengeEmergencyAdmin);
         _grantRole(CHALLENGE_CREATOR_ROLE, params.challengeCreator);
         _grantRole(CHALLENGE_DISPUTE_ADMIN_ROLE, params.challengeDisputeAdmin);
     }
@@ -260,7 +264,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
      * @dev It can be done only between (s_startAt + s_delayStartVictoryClaim) and (s_startAt + s_delayStartVictoryClaim + s_delayEndVictoryClaim)
      * 
      */
-    function claimVictory() public checkClaimVictory() {
+    function claimVictory() public checkClaimVictory() whenNotPaused {
         address sender = _msgSender();
         uint16 teamIndex = getTeamOfPlayer(sender); 
         s_winners[teamIndex] = true;
@@ -347,7 +351,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
     /** 
      *  @dev : Only one player create a dispute for his team.
      */
-    function participateToDispute() public payable checkDisputeParticipation()  {
+    function participateToDispute() public payable checkDisputeParticipation() whenNotPaused {
         address sender = _msgSender();
         uint16 teamSigner = getTeamOfPlayer(sender);
         s_disputeParticipants[teamSigner] = sender; 
@@ -364,6 +368,22 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
         
         incrementDisputePool(getDisputeAmountParticipation());
         emit ParticipateToDispute(sender);
+    }
+
+    /**
+     * @dev Mettre le contrat en pause
+     * Only the emergency admin can call this function
+     */
+    function pause() external onlyRole(CHALLENGE_EMERGENCY_ADMIN_ROLE) {
+        _pause();
+    }
+
+    /**
+     * @dev Reprendre le contrat
+     * Only the emergency admin can call this function
+     */
+    function unpause() external onlyRole(CHALLENGE_EMERGENCY_ADMIN_ROLE) {
+        _unpause();
     }
 
     /**
@@ -508,7 +528,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
      * @dev 
      * Rules : Only the winner can withdraw the pool
      */
-    function withdrawChallengePool() public checkWithdrawPool() nonReentrant {
+    function withdrawChallengePool() public checkWithdrawPool() nonReentrant whenNotPaused {
         s_isPoolWithdrawed = true;
 
         address[] memory winningTeam = s_teams[s_winnerTeam];

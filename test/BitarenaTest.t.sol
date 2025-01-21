@@ -3,9 +3,10 @@ pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
 import {IAccessControl} from "openzeppelin-contracts/contracts/access/IAccessControl.sol";
+import {Pausable} from "openzeppelin-contracts/contracts/utils/Pausable.sol";
 import {BitarenaFactory} from "../src/BitarenaFactory.sol";
 import {BitarenaGames} from "../src/BitarenaGames.sol";
-import {CHALLENGE_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_CREATOR_ROLE, DELAY_START_VICTORY_CLAIM_BY_DEFAULT, GAMER_ROLE, FEE_PERCENTAGE_AMOUNT_BY_DEFAULT} from "../src/BitarenaChallengeConstants.sol";
+import {CHALLENGE_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_EMERGENCY_ADMIN_ROLE, CHALLENGE_CREATOR_ROLE, DELAY_START_VICTORY_CLAIM_BY_DEFAULT, GAMES_ADMIN_ROLE, GAMER_ROLE, FEE_PERCENTAGE_AMOUNT_BY_DEFAULT} from "../src/BitarenaChallengeConstants.sol";
 import {BalanceChallengeCreatorError, ChallengeAdminAddressZeroError,
     ChallengeCounterError, ChallengeCreatorAddressZeroError, ChallengeDisputeAdminAddressZeroError, ChallengeGameError, 
     ChallengePlatformError, ChallengeStartDateError, NbTeamsError, NbPlayersPerTeamsError, 
@@ -26,12 +27,14 @@ import {MockFailingReceiver} from "./MockContracts.sol";
 contract BitarenaTest is Test {
     BitarenaFactory public bitarenaFactory;
     BitarenaGames public bitarenaGames;
+    address SUPER_ADMIN_GAMES = makeAddr("superAdminGames");
     address ADMIN_GAMES = makeAddr("adminGames");
     address ADMIN_FACTORY = makeAddr("adminFactory");
     address ADMIN_CHALLENGE1 = makeAddr("adminChallenge1");
     address ADMIN_CHALLENGE2 = makeAddr("adminChallenge2");
     address ADMIN_DISPUTE_CHALLENGE1 = makeAddr("adminDisputeChallenge1");
     address ADMIN_DISPUTE_CHALLENGE2 = makeAddr("adminDisputeChallenge2");
+    address ADMIN_CHALLENGE_EMERGENCY = makeAddr("adminChallengeEmergency");
     address CREATOR_CHALLENGE1 = makeAddr("creatorChallenge1");
     address CREATOR_CHALLENGE2 = makeAddr("creatorChallenge2");
     address PLAYER1_CHALLENGE1 = makeAddr("player1Challenge1");
@@ -74,13 +77,13 @@ contract BitarenaTest is Test {
 
     function deployFactory() internal {
         vm.startBroadcast(ADMIN_GAMES);
-        bitarenaGames = new BitarenaGames();
+        bitarenaGames = new BitarenaGames(ADMIN_GAMES);
         vm.stopBroadcast();
 
         setGames();
 
         vm.startBroadcast(ADMIN_FACTORY);
-        bitarenaFactory = new BitarenaFactory(address(bitarenaGames), ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1);
+        bitarenaFactory = new BitarenaFactory(address(bitarenaGames), ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, ADMIN_CHALLENGE_EMERGENCY);
         vm.stopBroadcast();
         vm.deal(address(bitarenaFactory), STARTING_BALANCE_ETH);
     }
@@ -312,6 +315,153 @@ contract BitarenaTest is Test {
             false
         );
         vm.stopBroadcast();
+    }
+
+    function testOnlyDefaultAdminBitarenaGamesCanGrantAdminRole() public {
+            
+        // Déploie d'abord BitarenaGames avec le broadcast approprié
+        vm.startBroadcast(SUPER_ADMIN_GAMES);
+        bitarenaGames = new BitarenaGames(ADMIN_GAMES);
+        vm.stopBroadcast();
+            
+        // Vérifie que l'admin initial est bien dans le tableau
+        address[] memory initialAdmins = bitarenaGames.getAdmins();
+        assertEq(initialAdmins.length, 1);
+        assertEq(initialAdmins[0], ADMIN_GAMES);
+        
+        // Test qu'un non-super admin ne peut pas accorder le rôle d'admin
+        vm.startBroadcast(address(0x123));
+        vm.expectRevert();
+        bitarenaGames.grantNewAdmin(address(0x456));
+        vm.stopBroadcast();
+        
+        // Test que le super admin peut accorder le rôle d'admin
+        address NEW_ADMIN = address(0x456);
+        vm.startBroadcast(SUPER_ADMIN_GAMES);
+        bitarenaGames.grantNewAdmin(NEW_ADMIN);
+        vm.stopBroadcast();
+        
+        // Vérifie que le nouveau admin a bien le rôle
+        assertTrue(bitarenaGames.hasRole(GAMES_ADMIN_ROLE, NEW_ADMIN));
+        
+        // Vérifie que le tableau d'admins est correctement mis à jour
+        address[] memory updatedAdmins = bitarenaGames.getAdmins();
+        assertEq(updatedAdmins.length, 2);
+        assertEq(updatedAdmins[0], ADMIN_GAMES);
+        assertEq(updatedAdmins[1], NEW_ADMIN);
+    }
+
+    function testCannotAddSameGameTwice() public {
+        // Déploie d'abord BitarenaGames avec le broadcast approprié
+        vm.startBroadcast(SUPER_ADMIN_GAMES);
+        bitarenaGames = new BitarenaGames(ADMIN_GAMES);
+        vm.stopBroadcast();
+
+        // Ajoute un jeu une première fois
+        vm.startBroadcast(ADMIN_GAMES);
+        bitarenaGames.setGame("Counter Strike");
+        vm.stopBroadcast();
+
+        // Tente d'ajouter le même jeu une deuxième fois
+        vm.startBroadcast(ADMIN_GAMES);
+        vm.expectRevert(abi.encodeWithSignature("GameAlreadyExists(string)", "Counter Strike"));
+        bitarenaGames.setGame("Counter Strike");
+        vm.stopBroadcast();
+    }
+
+        /**
+         * @dev Test qu'une plateforme ne peut pas être ajoutée deux fois
+         */
+    function testCannotAddSamePlatformTwice() public {
+        // Déploie d'abord BitarenaGames avec le broadcast approprié
+        vm.startBroadcast(SUPER_ADMIN_GAMES);
+        bitarenaGames = new BitarenaGames(ADMIN_GAMES);
+        vm.stopBroadcast();
+
+        // Ajoute une plateforme une première fois
+        vm.startBroadcast(ADMIN_GAMES);
+        bitarenaGames.setPlatform("Steam");
+        vm.stopBroadcast();
+
+        // Tente d'ajouter la même plateforme une deuxième fois
+        vm.startBroadcast(ADMIN_GAMES);
+        vm.expectRevert(abi.encodeWithSignature("PlatformAlreadyExists(string)", "Steam"));
+        bitarenaGames.setPlatform("Steam");
+        vm.stopBroadcast();
+    }
+    function testOnlyEmergencyAdminCanPause() public {
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        
+        // Test qu'un utilisateur non autorisé ne peut pas mettre en pause
+        vm.expectRevert(abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, PLAYER1_CHALLENGE1, CHALLENGE_EMERGENCY_ADMIN_ROLE));
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.pause();
+        vm.stopBroadcast();
+        
+        // Test que l'admin normal ne peut pas mettre en pause
+        vm.expectRevert(abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, ADMIN_CHALLENGE1, CHALLENGE_EMERGENCY_ADMIN_ROLE));
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.pause();
+        vm.stopBroadcast();
+        
+        // Test que l'emergency admin peut mettre en pause
+        vm.startBroadcast(ADMIN_CHALLENGE_EMERGENCY);
+        bitarenaChallenge.pause();
+        vm.stopBroadcast();
+        
+        // Vérifie que le contrat est bien en pause
+        assertTrue(bitarenaChallenge.paused());
+    }
+
+    /**
+     * @dev Test que les fonctions "whenNotPaused" ne sont pas accessibles quand le contrat est en pause
+     */
+    function testPausedContractRestrictsFunctions() public {
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
+
+        //The admin of the challenge set delay for victory claim
+        //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        vm.stopBroadcast();         
+
+        //As the challenge must start 1 day after its creation, 
+        // the PLAYER3 tries to claim the victory for the team1 that is not his team (=team2)
+        uint256 _3DaysInTheFuture = block.timestamp + 2 days;
+        vm.warp(_3DaysInTheFuture);
+
+        //PLAYER1 claims victory for his team = team1
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.claimVictory();
+        vm.stopBroadcast();         
+
+        //PLAYER3 claims victory for his team = team2
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.claimVictory();
+        vm.stopBroadcast();         
+
+        //PLAYER3 participates to the dispute 1 hour after the "claim victory period"
+        vm.warp(bitarenaChallenge.getChallengeStartDate() + bitarenaChallenge.getDelayStartVictoryClaim() + bitarenaChallenge.getDelayEndVictoryClaim() + 1 hours);
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        uint256 amountDispute = bitarenaChallenge.getDisputeAmountParticipation();
+        bitarenaChallenge.participateToDispute{value: amountDispute}();
+        vm.stopBroadcast();         
+
+        // Mise en pause du contrat par l'emergency admin
+        vm.startBroadcast(ADMIN_CHALLENGE_EMERGENCY);
+        bitarenaChallenge.pause();
+        vm.stopBroadcast();
+
+        vm.warp(block.timestamp + 1 weeks);
+        vm.startPrank(PLAYER3_CHALLENGE1);
+        vm.expectRevert(Pausable.EnforcedPause.selector);
+        bitarenaChallenge.withdrawChallengePool();
+        vm.stopPrank();         
+
+        // Vérifie que le contrat n'est plus en pause
+        assertTrue(bitarenaChallenge.paused());
     }
 
     function testAmountPerPlayerConsistency() public {
