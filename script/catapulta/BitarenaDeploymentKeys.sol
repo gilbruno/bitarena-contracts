@@ -8,21 +8,18 @@ pragma solidity ^0.8.22;
  */
 library BitarenaDeploymentKeys {
 
-    // TESTNET SEPOLIA 
+    // TESTNET AMOY
 
     // 1- ADMIN GAMES
-    address public constant ADMIN_BITARENA_GAMES = 0x2376ef8eDAE449B19eB63e3635Ce27eb9282c348;
+    address public constant ADMIN_BITARENA_GAMES = 0x7C2e9F2Bc26a90E74b5d0eEeB5b546864DdE1FC1;
 
     // 1- CHALLENGE ADMIN
-    address internal constant CHALLENGE_ADMIN = 0x6eEc6ed4CBD3FD4eFe75754f9bb1d49c925A4180;
+    address internal constant CHALLENGE_ADMIN = 0x7C2e9F2Bc26a90E74b5d0eEeB5b546864DdE1FC1;
 
     // 2- CHALLENGE DISPUTE ADMIN
-    address internal constant CHALLENGE_DISPUTE_ADMIN = 0x6eEc6ed4CBD3FD4eFe75754f9bb1d49c925A4180;
+    address internal constant CHALLENGE_DISPUTE_ADMIN = 0x7C2e9F2Bc26a90E74b5d0eEeB5b546864DdE1FC1;
 
     // 3- EMERGENCY ADMIN GAMES
-    address public constant CHALLENGE_EMERGENCY_ADMIN = 0x2376ef8eDAE449B19eB63e3635Ce27eb9282c348;
-
-    
-
+    address public constant CHALLENGE_EMERGENCY_ADMIN = 0x7C2e9F2Bc26a90E74b5d0eEeB5b546864DdE1FC1;
 
 }

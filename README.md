@@ -156,7 +156,13 @@ To decode it, you can run the command to decode hex value
 catapulta script script/catapulta/Deploy.s.sol:DeployScript --network amoy --legacy --sender 0xdB70Ce51809af94EC2d4CC2dc2fD1f099A7cDE0C
 ```
 
+## Last deployment on Ploygon Amoy 
 
+```sh
+BitarenaGames deployed to 0x7BE9EA5CF0C5d1ECbe5a381CffC0D1AF6dbdEA69
+BitarenaFactory implementation deployed to 0xE841360c051D040C9447A667aAA9aF15EC8fF26F
+https://catapulta.sh/project/678f558bf2e1970d286019ed/op/40625bcf-ba6d-4d15-bf52-9815db15c35a
+```
 
 ## Foundry
 
