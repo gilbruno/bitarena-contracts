@@ -159,11 +159,11 @@ catapulta script script/catapulta/Deploy.s.sol:DeployScript --network amoy --leg
 ## Last deployment on Ploygon Amoy 
 
 ```sh
-BitarenaGames deployed to 0xE89d4b1Df13bE5709673810454A78F2eC044aA8A
-BitarenaChallengesData implementation deployed to 0x60208D8E3459e74fF24E2d3dc4840Be9801b971C
-BitarenaChallengesData proxy deployed to 0x87F2d1Abc599881978db442B770090d42009C901
-BitarenaFactory implementation deployed to 0x9EC56c911Fdbf1722Cd502eE48a8233a8BDf31eb
-https://catapulta.sh/project/678f558bf2e1970d286019ed/op/8b89cb17-1707-418e-ac97-d629888285bd
+BitarenaGames deployed to 0x872D4f42bED23132D38D6547945E7Aa0928C37CC
+BitarenaChallengesData implementation deployed to 0x67a55985a80efD9db8e8B1f12F1593a87D145Cd1
+BitarenaChallengesData proxy deployed to 0x440ee662a347FCd0c5384B7E301E46c9B38b349A
+BitarenaFactory implementation deployed to 0xD5A33101090344B808d028d41324F2787992d6E4
+https://catapulta.sh/project/678f558bf2e1970d286019ed/op/e5540c36-4bb3-46a5-b60f-f75cb12cfef5
 ```
 
 ## Foundry
