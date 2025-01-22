@@ -3283,50 +3283,161 @@ contract BitarenaTest is Test {
     }
 
     function testBitarenaChallengesDataAfterChallengeGaming() public {
-// Déploiement et configuration initiale
-    BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
-    joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
+        // Déploiement et configuration initiale
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
-    // Vérification des données dans BitarenaChallengesData pour chaque joueur
-    BitarenaChallengesData challengesData = BitarenaChallengesData(address(proxyChallengesData));
-    
-    // Vérification pour PLAYER1
-    ChallengeParams[] memory player1Challenges = challengesData.getPlayerChallenges(PLAYER1_CHALLENGE1);
-    assertEq(player1Challenges.length, 1, "PLAYER1 devrait avoir 1 challenge");
-    assertEq(player1Challenges[0].game, GAME1, "Jeu incorrect pour PLAYER1");
-    assertEq(player1Challenges[0].platform, PLATFORM1, "Plateforme incorrecte pour PLAYER1");
-    
-    // Vérification pour PLAYER2
-    ChallengeParams[] memory player2Challenges = challengesData.getPlayerChallenges(PLAYER2_CHALLENGE1);
-    assertEq(player2Challenges.length, 1, "PLAYER2 devrait avoir 1 challenge");
-    
-    // Vérification pour PLAYER3
-    ChallengeParams[] memory player3Challenges = challengesData.getPlayerChallenges(PLAYER3_CHALLENGE1);
-    assertEq(player3Challenges.length, 1, "PLAYER3 devrait avoir 1 challenge");
+        // Vérification des données dans BitarenaChallengesData pour chaque joueur
+        BitarenaChallengesData challengesData = BitarenaChallengesData(address(proxyChallengesData));
+        
+        // Vérification pour PLAYER1
+        ChallengeParams[] memory player1Challenges = challengesData.getPlayerChallenges(PLAYER1_CHALLENGE1);
+        assertEq(player1Challenges.length, 1, "PLAYER1 should have 1 challenge");
+        assertEq(player1Challenges[0].game, GAME1, "Incorrect game for PLAYER1");
+        assertEq(player1Challenges[0].platform, PLATFORM1, "Incorrect platform for PLAYER1");
+        
+        // Vérification pour PLAYER2
+        ChallengeParams[] memory player2Challenges = challengesData.getPlayerChallenges(PLAYER2_CHALLENGE1);
+        assertEq(player2Challenges.length, 1, "PLAYER2 should have 1 challenge");
+        
+        // Vérification pour PLAYER3
+        ChallengeParams[] memory player3Challenges = challengesData.getPlayerChallenges(PLAYER3_CHALLENGE1);
+        assertEq(player3Challenges.length, 1, "PLAYER3 should have 1 challenge");
 
-    // Configuration du challenge et simulation du gameplay
-    vm.startBroadcast(ADMIN_CHALLENGE1);
-    bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
-    bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
-    vm.stopBroadcast();         
+        // Configuration du challenge et simulation du gameplay
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        vm.stopBroadcast();         
 
-    uint256 _3DaysInTheFuture = block.timestamp + 2 days;
-    vm.warp(_3DaysInTheFuture);
-    
-    // PLAYER3 réclame la victoire
-    vm.startBroadcast(PLAYER3_CHALLENGE1);
-    bitarenaChallenge.claimVictory();
-    vm.stopBroadcast();         
+        uint256 _3DaysInTheFuture = block.timestamp + 2 days;
+        vm.warp(_3DaysInTheFuture);
+        
+        // PLAYER3 réclame la victoire
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.claimVictory();
+        vm.stopBroadcast();         
 
-    // Vérifications du statut du challenge
-    uint16 teamIndex = bitarenaChallenge.getTeamOfPlayer(PLAYER3_CHALLENGE1);
-    assertEq(bitarenaChallenge.getWinnerClaimed(teamIndex), true);
-    assertEq(bitarenaChallenge.getWinnersClaimedCount(), 1);
-    assertEq(bitarenaChallenge.getWinnerTeam(), 2);
+        // Vérification que le challenge n'est pas encore marqué comme terminé
+        assertEq(challengesData.isChallengeEnded(address(bitarenaChallenge)), false, "The challenge should not be marked as ended");
 
-    // Vérification finale des compteurs de challenges
-    assertEq(challengesData.getPlayerChallengesCount(PLAYER1_CHALLENGE1), 1, "Compteur incorrect pour PLAYER1");
-    assertEq(challengesData.getPlayerChallengesCount(PLAYER2_CHALLENGE1), 1, "Compteur incorrect pour PLAYER2");
-    assertEq(challengesData.getPlayerChallengesCount(PLAYER3_CHALLENGE1), 1, "Compteur incorrect pour PLAYER3");
+        // Vérifications du statut du challenge
+        uint16 teamIndex = bitarenaChallenge.getTeamOfPlayer(PLAYER3_CHALLENGE1);
+        assertEq(bitarenaChallenge.getWinnerClaimed(teamIndex), true);
+        assertEq(bitarenaChallenge.getWinnersClaimedCount(), 1);
+        assertEq(bitarenaChallenge.getWinnerTeam(), 2);
+
+        // Vérification finale des compteurs de challenges
+        assertEq(challengesData.getPlayerChallengesCount(PLAYER1_CHALLENGE1), 1, "Incorrect counter for PLAYER1");
+        assertEq(challengesData.getPlayerChallengesCount(PLAYER2_CHALLENGE1), 1, "Incorrect counter for PLAYER2");
+        assertEq(challengesData.getPlayerChallengesCount(PLAYER3_CHALLENGE1), 1, "Incorrect counter for PLAYER3");
+    }
+
+    function testMultipleChallengesInBitarenaChallengesData() public {
+        //Deploy the factory
+
+        deployFactory();
+        // Création du premier challenge
+        BitarenaChallenge bitarenaChallenge1;
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaChallenge1 = bitarenaFactory.intentChallengeDeployment{value: AMOUNT_PER_PLAYER}(
+            GAME1,
+            PLATFORM1,
+            TWO_TEAMS,
+            TWO_PLAYERS,
+            AMOUNT_PER_PLAYER,
+            block.timestamp + 1 days,
+            false
+        );
+        vm.stopBroadcast();
+
+        
+        // PLAYER1 et PLAYER2 rejoignent le premier challenge dans des équipes différentes
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge1.createOrJoinTeam{value: AMOUNT_PER_PLAYER}(1);
+        vm.stopBroadcast();
+
+        
+        // Récupération de l'instance BitarenaChallengesData
+        BitarenaChallengesData challengesData = BitarenaChallengesData(address(proxyChallengesData));
+
+        // Log après le premier join
+        ChallengeParams[] memory player1ChallengesAfterFirst = challengesData.getPlayerChallenges(PLAYER1_CHALLENGE1);
+        console.log("Number of challenges for PLAYER1 after the first join:", player1ChallengesAfterFirst.length);
+
+        vm.startBroadcast(PLAYER2_CHALLENGE1);
+        bitarenaChallenge1.createOrJoinTeam{value: AMOUNT_PER_PLAYER}(0); // Crée une nouvelle équipe (équipe 2)
+        vm.stopBroadcast();
+
+        // Création du deuxième challenge
+        BitarenaChallenge bitarenaChallenge2;
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaChallenge2 = bitarenaFactory.intentChallengeDeployment{value: AMOUNT_PER_PLAYER}(
+            GAME1,
+            PLATFORM1,
+            TWO_TEAMS,
+            TWO_PLAYERS,
+            AMOUNT_PER_PLAYER,
+            block.timestamp + 1 days,
+            false
+        );
+        vm.stopBroadcast();
+
+        
+        // PLAYER1 et PLAYER2 rejoignent aussi le deuxième challenge dans des équipes différentes
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge2.createOrJoinTeam{value: AMOUNT_PER_PLAYER}(1);
+        vm.stopBroadcast();
+
+        ChallengeParams[] memory player1ChallengesAfterSecond = challengesData.getPlayerChallenges(PLAYER1_CHALLENGE1);
+        console.log("Number of challenges for PLAYER1 after the second join:", player1ChallengesAfterSecond.length);
+
+
+        vm.startBroadcast(PLAYER2_CHALLENGE1);
+        bitarenaChallenge2.createOrJoinTeam{value: AMOUNT_PER_PLAYER}(0); // Crée une nouvelle équipe (équipe 2)
+        vm.stopBroadcast();
+
+
+        // Vérification pour PLAYER1
+        ChallengeParams[] memory player1Challenges = challengesData.getPlayerChallenges(PLAYER1_CHALLENGE1);
+        assertEq(player1Challenges.length, 2, "PLAYER1 should have 2 challenges");
+        
+        // Vérification des détails des challenges de PLAYER1
+        assertEq(player1Challenges[0].game, GAME1, "Incorrect game for the first challenge of PLAYER1");
+        assertEq(player1Challenges[0].platform, PLATFORM1, "Incorrect platform for the first challenge of PLAYER1");
+        assertEq(player1Challenges[0].nbTeams, TWO_TEAMS, "Incorrect number of teams for the first challenge of PLAYER1");
+        assertEq(player1Challenges[0].nbTeamPlayers, TWO_PLAYERS, "Incorrect number of players for the first challenge of PLAYER1");
+        assertEq(player1Challenges[0].amountPerPlayer, AMOUNT_PER_PLAYER, "Incorrect amount per player for the first challenge of PLAYER1");
+        
+        // Vérification pour PLAYER2
+        ChallengeParams[] memory player2Challenges = challengesData.getPlayerChallenges(PLAYER2_CHALLENGE1);
+        assertEq(player2Challenges.length, 2, "PLAYER2 should have 2 challenges");
+        
+        // Vérification des détails des challenges de PLAYER2
+        assertEq(player2Challenges[0].game, GAME1, "Incorrect game for the first challenge of PLAYER2");
+        assertEq(player2Challenges[0].platform, PLATFORM1, "Incorrect platform for the first challenge of PLAYER2");
+        assertEq(player2Challenges[0].nbTeams, TWO_TEAMS, "Incorrect number of teams for the first challenge of PLAYER2");
+        assertEq(player2Challenges[0].nbTeamPlayers, TWO_PLAYERS, "Incorrect number of players for the first challenge of PLAYER2");
+        assertEq(player2Challenges[0].amountPerPlayer, AMOUNT_PER_PLAYER, "Incorrect amount per player for the first challenge of PLAYER2");
+
+        // Vérification des compteurs de challenges
+        assertEq(challengesData.getPlayerChallengesCount(PLAYER1_CHALLENGE1), 2, "Incorrect counter for PLAYER1");
+        assertEq(challengesData.getPlayerChallengesCount(PLAYER2_CHALLENGE1), 2, "Incorrect counter for PLAYER2");
+
+        // Vérification que les challenges sont bien enregistrés comme officiels
+        assertEq(challengesData.isOfficialChallenge(address(bitarenaChallenge1)), true, "The first challenge should be official");
+        assertEq(challengesData.isOfficialChallenge(address(bitarenaChallenge2)), true, "The second challenge should be official");
+
+        // Vérification de l'état des challenges
+        assertEq(challengesData.isChallengeStarted(address(bitarenaChallenge1)), false, "The first challenge should not be marked as started");
+        assertEq(challengesData.isChallengeStarted(address(bitarenaChallenge2)), false, "The second challenge should not be marked as started");
+        assertEq(challengesData.isChallengeEnded(address(bitarenaChallenge1)), false, "The first challenge should not be marked as ended");
+        assertEq(challengesData.isChallengeEnded(address(bitarenaChallenge2)), false, "The second challenge should not be marked as ended");
+
+        // Log des informations pour debug
+        console.log("Number of challenges of PLAYER1:", challengesData.getPlayerChallengesCount(PLAYER1_CHALLENGE1));
+        console.log("Number of challenges of PLAYER2:", challengesData.getPlayerChallengesCount(PLAYER2_CHALLENGE1));
+        console.log("Address of the first challenge:", address(bitarenaChallenge1));
+        console.log("Address of the second challenge:", address(bitarenaChallenge2));
     }
 }

@@ -582,6 +582,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
         (success, ) = s_admin.call{value: amountToSendToAdmin}("");
         if (!success) revert SendMoneyBackToAdminError();
          
+        s_challengesData.setChallengeAsEnded(address(this)); 
         emit PoolChallengeWithdrawed(s_winnerTeam, _msgSender());
     }
 

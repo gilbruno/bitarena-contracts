@@ -9,19 +9,40 @@ import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
 import {AccessControlUpgradeable} from "openzeppelin-contracts-upgradeable/contracts/access/AccessControlUpgradeable.sol";
 
 contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallengesData {
-     // Role pour les contrats BitarenaChallenge autorisés
+    /**
+     * @dev Role for the authorized BitarenaChallenge contracts
+     */
     bytes32 public constant CHALLENGE_DATA_ADMIN_ROLE = keccak256("CHALLENGE_DATA_ADMIN_ROLE");
 
-    // Role pour la factory officielle
+    /**
+     * @dev Role for the official factory
+     */
     bytes32 public constant CONTRACTS_REGISTERING_ROLE = keccak256("CONTRACTS_REGISTERING_ROLE");
 
-    // Mapping d'un wallet vers un tableau de ChallengeParams
+    /**
+     * @dev Mapping from a wallet to an array of ChallengeParams
+     */
     mapping(address => ChallengeParams[]) private s_playerChallenges;
     
-    // Mapping pour tracker les challenges créés par la factory
+    /**
+     * @dev Mapping to track the challenges created by the factory
+     */
     mapping(address => bool) private s_isOfficialChallenge;
 
-    // Reserve some slots for future upgrades
+    /**
+     * @dev Mapping to track if a challenge is started
+     */
+    mapping(address => bool) private s_isChallengeStarted;
+    
+    /**
+     * @dev Mapping to track if a challenge is ended
+     */
+    mapping(address => bool) private s_isChallengeEnded;
+
+
+    /**
+     * @dev Reserve some slots for future upgrades
+     */
     uint256[50] private __gap; 
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -48,7 +69,10 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
         _;
     }
 
-
+    /**
+     * @dev Initialize the contract
+     * @param _superAdmin Address of the super admin
+     */
     function initialize(address _superAdmin) initializer public {
         if(_superAdmin == address(0)) revert AddressZeroError();
         __AccessControl_init();
@@ -56,16 +80,17 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
     }
 
     /**
-     * @dev Authorize an addresse to register challenges. Normally it' the BitarenaFactory ut can be any other address in some specific cases
+     * @dev Authorize an addresse to register challenges. 
+     * Normally it' the BitarenaFactory it can be any other address in some specific cases
      */
     function authorizeConractsRegistering(address _factoryAddress) public onlyRole(DEFAULT_ADMIN_ROLE) {
         _grantRole(CONTRACTS_REGISTERING_ROLE, _factoryAddress);
     }
 
     /**
-     * @dev Enregistre un nouveau contrat Challenge comme étant officiel
-     * @param _challengeContract L'adresse du contrat BitarenaChallenge à enregistrer
-     * @notice Seule la factory autorisée peut appeler cette fonction
+     * @dev Register a new challenge contract as official
+     * @param _challengeContract Address of the challenge contract to register
+     * @notice Only the authorized factory can call this function
      */
     function registerChallengeContract(address _challengeContract) public onlyRole(CONTRACTS_REGISTERING_ROLE) 
     {
@@ -78,9 +103,9 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
     }
 
     /**
-     * @dev Vérifie si un contrat Challenge est officiel
-     * @param _challengeContract L'adresse du contrat à vérifier
-     * @return bool true si le challenge est officiel, false sinon
+     * @dev Check if a challenge contract is official
+     * @param _challengeContract Address of the contract to check
+     * @return bool true if the challenge is official, false otherwise
      */
     function isOfficialChallenge(address _challengeContract) external view returns (bool) {
         return s_isOfficialChallenge[_challengeContract];
@@ -88,8 +113,8 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
 
 
     /**
-     * @dev Permet à l'admin d'autoriser un nouveau contrat BitarenaChallenge
-     * @param _challengeDataAdmin L'adresse à autoriser
+     * @dev Authorize a new BitarenaChallenge contract
+     * @param _challengeDataAdmin Address to authorize
      */
     function grantRoleChallangeDataAdmin(address _challengeDataAdmin) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _grantRole(CHALLENGE_DATA_ADMIN_ROLE, _challengeDataAdmin);
@@ -97,28 +122,87 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
     }
 
     /**
-     * @dev Ajoute un challenge à l'historique d'un joueur
-     * @param _player L'adresse du joueur
-     * @param _challenge Les paramètres du challenge
+     * @dev Add a challenge to a player's history
+     * @param _player Address of the player
+     * @param _challenge The challenge parameters
      */
     function addChallengeToPlayerHistory(address _player, ChallengeParams memory _challenge) public onlyOfficialChallenge() {
+        if(_player == address(0)) revert AddressZeroError();
+        // Récupérer le tableau existant
+        //ChallengeParams[] storage playerChallenges = s_playerChallenges[_player];
+        //emit Debug("Taille du tableau ", playerChallenges.length);
+
+        // Ajouter le nouveau challenge
+        //s_playerChallenges[_player].push(_challenge);
+        
+        // Mettre à jour le mapping avec le tableau modifié
         s_playerChallenges[_player].push(_challenge);
+        
         emit ChallengeAddedToHistory(_player, _challenge);
+        
+        // Debug log
+        emit Debug("Taille du tableau apres ajout", s_playerChallenges[_player].length);
+        emit Debug2("Address ChallengesData", address(this));
+    }
+
+/**
+     * @dev Mark a challenge as started
+     * @param _challengeContract Address of the challenge
+     */
+    function setChallengeAsStarted(address _challengeContract) external onlyOfficialChallenge() {
+        if(_challengeContract == address(0)) revert InvalidChallengeAddress();
+        if(s_isChallengeStarted[_challengeContract]) revert ChallengeAlreadyStarted();
+        
+        s_isChallengeStarted[_challengeContract] = true;
+        
+        emit ChallengeStarted(_challengeContract);
     }
 
     /**
-     * @dev Récupère tous les challenges d'un joueur
-     * @param _player L'adresse du joueur
-     * @return Un tableau de ChallengeParams
+     * @dev Mark a challenge as ended
+     * @param _challengeContract Address of the challenge
+     */
+    function setChallengeAsEnded(address _challengeContract) external onlyOfficialChallenge() {
+        if(_challengeContract == address(0)) revert InvalidChallengeAddress();
+        //if(!s_isChallengeStarted[_challengeContract]) revert ChallengeNotStarted();
+        if(s_isChallengeEnded[_challengeContract]) revert ChallengeAlreadyEnded();
+        
+        s_isChallengeEnded[_challengeContract] = true;
+        
+        emit ChallengeEnded(_challengeContract);
+    }
+
+    /**
+     * @dev Check if a challenge is started
+     * @param _challengeContract Address of the challenge
+     * @return bool true if the challenge is started, false otherwise
+     */
+    function isChallengeStarted(address _challengeContract) external view returns (bool) {
+        return s_isChallengeStarted[_challengeContract];
+    }
+
+    /**
+     * @dev Check if a challenge is ended
+     * @param _challengeContract Address of the challenge
+     * @return bool true if the challenge is ended, false otherwise
+     */
+    function isChallengeEnded(address _challengeContract) external view returns (bool) {
+        return s_isChallengeEnded[_challengeContract];
+    }
+
+    /**
+     * @dev Get all challenges of a player
+     * @param _player Address of the player
+     * @return An array of ChallengeParams
      */
     function getPlayerChallenges(address _player) external view returns (ChallengeParams[] memory) {
         return s_playerChallenges[_player];
     }
 
     /**
-     * @dev Récupère le nombre de challenges d'un joueur
-     * @param _player L'adresse du joueur
-     * @return Le nombre de challenges
+     * @dev Get the number of challenges of a player
+     * @param _player Address of the player
+     * @return The number of challenges
      */
     function getPlayerChallengesCount(address _player) external view returns (uint256) {
         return s_playerChallenges[_player].length;

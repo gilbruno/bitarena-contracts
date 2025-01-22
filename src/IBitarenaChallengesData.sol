@@ -16,10 +16,18 @@ interface IBitarenaChallengesData {
     // Event émis quand un nouveau challenge est enregistré
     event ChallengeContractRegistered(address indexed challengeContract);
 
+    event ChallengeStarted(address indexed challengeContract);
+    event ChallengeEnded(address indexed challengeContract);
+    event Debug(string message, uint256 value);
+    event Debug2(string message, address value);
+
     error InvalidChallengeAddress();
     error ChallengeAlreadyRegistered();
     error NotOfficialChallenge();
     error AddressZeroError();
+    error ChallengeAlreadyStarted();
+    error ChallengeAlreadyEnded();
+    error ChallengeNotStarted();
 
     function authorizeConractsRegistering(address _factoryAddress) external;
 
@@ -44,4 +52,10 @@ interface IBitarenaChallengesData {
      * @return Le nombre de challenges
      */
     function getPlayerChallengesCount(address _player) external view returns (uint256);
+
+    function isChallengeStarted(address _challengeContract) external view returns (bool);
+    function isChallengeEnded(address _challengeContract) external view returns (bool);
+
+    function setChallengeAsStarted(address _challengeContract) external;
+    function setChallengeAsEnded(address _challengeContract) external;
 }
