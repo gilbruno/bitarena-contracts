@@ -10,9 +10,16 @@ library BitarenaDeploymentKeys {
 
     // TESTNET AMOY
 
+    /*********************  BitarenaGames  *********************/
     // 1- ADMIN GAMES
     address public constant ADMIN_BITARENA_GAMES = 0x7C2e9F2Bc26a90E74b5d0eEeB5b546864DdE1FC1;
 
+    /*********************  BitarenaChallengesData  *********************/
+    // 1- SUPER ADMIN CHALLANGES DATA
+    address public constant SUPER_ADMIN_CHALLENGES_DATA = 0x7C2e9F2Bc26a90E74b5d0eEeB5b546864DdE1FC1;
+
+
+    /*********************  BitarenaChallenges  *********************/
     // 1- CHALLENGE ADMIN
     address internal constant CHALLENGE_ADMIN = 0x7C2e9F2Bc26a90E74b5d0eEeB5b546864DdE1FC1;
 

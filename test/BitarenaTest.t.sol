@@ -22,12 +22,18 @@ import {BalanceChallengePlayerError, ChallengeCancelAfterStartDateError, Challen
     WithdrawPoolByLooserTeamImpossibleError, WithdrawPoolNotAuthorized} from "../src/BitarenaChallengeErrors.sol";
 import {ParticipateToDispute, PlayerJoinsTeam, PoolChallengeWithdrawed, RevealWinner, TeamCreated, Debug, VictoryClaimed, VictoryUnclaimed} from "../src/BitarenaChallengeEvents.sol";
 import {MockFailingReceiver} from "./MockContracts.sol";
+import {BitarenaChallengesData} from "../src/BitarenaChallengesData.sol";
+import {IBitarenaChallengesData} from "../src/IBitarenaChallengesData.sol";
+import {ERC1967Proxy} from "openzeppelin-contracts/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import {ChallengeParams} from "../src/ChallengeParams.sol";
 
 
 contract BitarenaTest is Test {
     BitarenaFactory public bitarenaFactory;
     BitarenaGames public bitarenaGames;
+    ERC1967Proxy proxyChallengesData;
     address SUPER_ADMIN_GAMES = makeAddr("superAdminGames");
+    address SUPER_ADMIN_CHALLENGES_DATA = makeAddr("superAdminChallengesData");
     address ADMIN_GAMES = makeAddr("adminGames");
     address ADMIN_FACTORY = makeAddr("adminFactory");
     address ADMIN_CHALLENGE1 = makeAddr("adminChallenge1");
@@ -43,6 +49,7 @@ contract BitarenaTest is Test {
     address PLAYER4_CHALLENGE1 = makeAddr("player4Challenge1");
     address PLAYER5_CHALLENGE1 = makeAddr("player5Challenge1");
     address PLAYER_WITH_NOT_SUFFICIENT_BALANCE = makeAddr("playerWithBalanceZero");
+    bytes32 CONTRACTS_REGISTERING_ROLE = keccak256("CONTRACTS_REGISTERING_ROLE");
 
     string GAME1 = "Counter Strike";
     string GAME2 = "Far cry";
@@ -82,12 +89,32 @@ contract BitarenaTest is Test {
 
         setGames();
 
-        vm.startBroadcast(ADMIN_FACTORY);
-        bitarenaFactory = new BitarenaFactory(address(bitarenaGames), ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, ADMIN_CHALLENGE_EMERGENCY);
+        vm.startBroadcast(SUPER_ADMIN_CHALLENGES_DATA);
+        //Deploy BitarenaChallengesData
+        BitarenaChallengesData implementationChallengesData = new BitarenaChallengesData();
+        // 3. Déployer le proxy
+        proxyChallengesData = new ERC1967Proxy(
+            address(implementationChallengesData),
+            abi.encodeWithSelector(
+                BitarenaChallengesData.initialize.selector,
+                SUPER_ADMIN_CHALLENGES_DATA
+            )
+        );
         vm.stopBroadcast();
+
+        vm.startBroadcast(ADMIN_FACTORY);
+        bitarenaFactory = new BitarenaFactory(address(bitarenaGames), ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, ADMIN_CHALLENGE_EMERGENCY, address(proxyChallengesData));
+        vm.stopBroadcast();
+
+        // Grant Factory to register offical contracts in the BitarenaChallengesData
+        vm.startBroadcast(SUPER_ADMIN_CHALLENGES_DATA);
+        IBitarenaChallengesData(address(proxyChallengesData)).authorizeConractsRegistering(address(bitarenaFactory));
+        vm.stopBroadcast();
+
         vm.deal(address(bitarenaFactory), STARTING_BALANCE_ETH);
     }
 
+    
     function setGames() internal {
         vm.startBroadcast(ADMIN_GAMES);
         bitarenaGames.setPlatform(PLATFORM1);
@@ -95,6 +122,13 @@ contract BitarenaTest is Test {
         bitarenaGames.setGame(GAME1);
         bitarenaGames.setGame(GAME2);
         vm.stopBroadcast();
+    }
+
+    function testFactoryHasRoleToRegisterOfficialChallenges() public {
+        deployFactory();
+        // Check that the factory has the role CONTRACTS_REGISTERING_ROLE
+        BitarenaChallengesData challengesData = BitarenaChallengesData(address(proxyChallengesData));
+        assertTrue(challengesData.hasRole(CONTRACTS_REGISTERING_ROLE, address(bitarenaFactory)));
     }
 
     /**
@@ -3193,4 +3227,106 @@ contract BitarenaTest is Test {
     //TODO : Test after revert is done, state variables are rolled back well
 
 
+    function testBitarenaChallengesDataAfterChallengeCreation() public {
+        // Déploiement initial
+        deployFactory();
+        
+        // Intent de création d'un challenge par CREATOR_CHALLENGE1
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
+            GAME1,
+            PLATFORM1,
+            TWO_TEAMS,
+            TWO_PLAYERS,
+            AMOUNT_PER_PLAYER,
+            block.timestamp + 1 days,
+            false
+        );
+        vm.stopBroadcast();
+
+        // Création effective du challenge par l'admin de la factory
+        vm.startBroadcast(ADMIN_FACTORY);
+        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(
+            ADMIN_CHALLENGE1,
+            ADMIN_DISPUTE_CHALLENGE1,
+            1
+        );
+        vm.stopBroadcast();
+
+        // Vérifications
+        BitarenaChallengesData challengesData = BitarenaChallengesData(address(proxyChallengesData));
+        
+        // 1. Vérifier que le challenge est bien enregistré comme officiel
+        bool isOfficial = challengesData.isOfficialChallenge(address(bitarenaChallenge));
+        assertTrue(isOfficial, "The challenge is not registered as official");
+        
+        // 2. Vérifier l'historique du créateur
+        ChallengeParams[] memory creatorChallenges = challengesData.getPlayerChallenges(CREATOR_CHALLENGE1);
+        assertEq(creatorChallenges.length, 1, "The creator's history should contain 1 challenge");
+        
+        // 3. Vérifier les détails du challenge dans l'historique
+        ChallengeParams memory storedChallenge = creatorChallenges[0];
+        assertEq(storedChallenge.game, GAME1, "Incorrect game");
+        assertEq(storedChallenge.platform, PLATFORM1, "Incorrect platform");
+        assertEq(storedChallenge.nbTeams, TWO_TEAMS, "Incorrect number of teams");
+        assertEq(storedChallenge.nbTeamPlayers, TWO_PLAYERS, "Incorrect number of players per team");
+        assertEq(storedChallenge.amountPerPlayer, AMOUNT_PER_PLAYER, "Incorrect amount per player");
+        assertEq(storedChallenge.challengeCreator, CREATOR_CHALLENGE1, "Incorrect creator");
+        
+        // 4. Vérifier le nombre total de challenges du créateur
+        uint256 challengeCount = challengesData.getPlayerChallengesCount(CREATOR_CHALLENGE1);
+        assertEq(challengeCount, 1, "Incorrect challenge count");
+        
+        console.log("Deployed challenge address:", address(bitarenaChallenge));
+        console.log("Challenge registered as official:", isOfficial);
+        console.log("Number of challenges of the creator:", challengeCount);
+    }
+
+    function testBitarenaChallengesDataAfterChallengeGaming() public {
+// Déploiement et configuration initiale
+    BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+    joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
+
+    // Vérification des données dans BitarenaChallengesData pour chaque joueur
+    BitarenaChallengesData challengesData = BitarenaChallengesData(address(proxyChallengesData));
+    
+    // Vérification pour PLAYER1
+    ChallengeParams[] memory player1Challenges = challengesData.getPlayerChallenges(PLAYER1_CHALLENGE1);
+    assertEq(player1Challenges.length, 1, "PLAYER1 devrait avoir 1 challenge");
+    assertEq(player1Challenges[0].game, GAME1, "Jeu incorrect pour PLAYER1");
+    assertEq(player1Challenges[0].platform, PLATFORM1, "Plateforme incorrecte pour PLAYER1");
+    
+    // Vérification pour PLAYER2
+    ChallengeParams[] memory player2Challenges = challengesData.getPlayerChallenges(PLAYER2_CHALLENGE1);
+    assertEq(player2Challenges.length, 1, "PLAYER2 devrait avoir 1 challenge");
+    
+    // Vérification pour PLAYER3
+    ChallengeParams[] memory player3Challenges = challengesData.getPlayerChallenges(PLAYER3_CHALLENGE1);
+    assertEq(player3Challenges.length, 1, "PLAYER3 devrait avoir 1 challenge");
+
+    // Configuration du challenge et simulation du gameplay
+    vm.startBroadcast(ADMIN_CHALLENGE1);
+    bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+    bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+    vm.stopBroadcast();         
+
+    uint256 _3DaysInTheFuture = block.timestamp + 2 days;
+    vm.warp(_3DaysInTheFuture);
+    
+    // PLAYER3 réclame la victoire
+    vm.startBroadcast(PLAYER3_CHALLENGE1);
+    bitarenaChallenge.claimVictory();
+    vm.stopBroadcast();         
+
+    // Vérifications du statut du challenge
+    uint16 teamIndex = bitarenaChallenge.getTeamOfPlayer(PLAYER3_CHALLENGE1);
+    assertEq(bitarenaChallenge.getWinnerClaimed(teamIndex), true);
+    assertEq(bitarenaChallenge.getWinnersClaimedCount(), 1);
+    assertEq(bitarenaChallenge.getWinnerTeam(), 2);
+
+    // Vérification finale des compteurs de challenges
+    assertEq(challengesData.getPlayerChallengesCount(PLAYER1_CHALLENGE1), 1, "Compteur incorrect pour PLAYER1");
+    assertEq(challengesData.getPlayerChallengesCount(PLAYER2_CHALLENGE1), 1, "Compteur incorrect pour PLAYER2");
+    assertEq(challengesData.getPlayerChallengesCount(PLAYER3_CHALLENGE1), 1, "Compteur incorrect pour PLAYER3");
+    }
 }

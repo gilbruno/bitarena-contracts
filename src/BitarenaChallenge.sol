@@ -20,11 +20,14 @@ import {BalanceChallengePlayerError, ChallengeCanceledError, ChallengeCancelAfte
     TimeElapsedToJoinTeamError, TimeTooSoonToClaimVictoryError, UnclaimVictoryNotAuthorized, WinnerNotRevealedYetError, WithdrawPoolNotAuthorized, WithdrawPoolByLooserTeamImpossibleError} from "./BitarenaChallengeErrors.sol";
 import {ParticipateToDispute, PlayerJoinsTeam, PoolChallengeWithdrawed, RevealWinner, TeamCreated, Debug, VictoryClaimed, VictoryUnclaimed} from "./BitarenaChallengeEvents.sol";
 import {ChallengeParams} from "./ChallengeParams.sol";
+import {IBitarenaChallengesData} from "./IBitarenaChallengesData.sol";
 import {CHALLENGE_ADMIN_ROLE, CHALLENGE_EMERGENCY_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_CREATOR_ROLE, DELAY_START_VICTORY_CLAIM_BY_DEFAULT, DELAY_END_VICTORY_CLAIM_BY_DEFAULT, 
     DELAY_START_DISPUTE_PARTICIPATION_BY_DEFAULT, DELAY_END_DISPUTE_PARTICIPATION_BY_DEFAULT,
     GAMER_ROLE, FEE_PERCENTAGE_AMOUNT_BY_DEFAULT, FEE_PERCENTAGE_DISPUTE_AMOUNT_BY_DEFAULT, PERCENTAGE_BASE} from "./BitarenaChallengeConstants.sol";
 
 contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, ReentrancyGuard, Pausable{
+
+    IBitarenaChallengesData private immutable s_challengesData;
 
     string private s_game;
     string private s_platform;
@@ -64,6 +67,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
     uint16[] private s_claimVictoryTeams;
 
     constructor(ChallengeParams memory params) payable AccessControlDefaultAdminRules(1 days, params.challengeAdmin) {
+        s_challengesData = IBitarenaChallengesData(params.challengesData);
         s_factory = params.factory;
         s_admin = params.challengeAdmin;
         s_disputeAdmin = params.challengeDisputeAdmin;
@@ -257,6 +261,23 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
         s_players[_player] = _teamIndex;
         _grantRole(GAMER_ROLE, _player);
         incrementChallengePool(s_amountPerPlayer);
+        // Ajouter le challenge à l'historique du joueur
+        ChallengeParams memory _challengeParams = ChallengeParams({
+            factory: s_factory,
+            challengesData: address(s_challengesData),
+            challengeAdmin: s_admin,
+            challengeDisputeAdmin: s_disputeAdmin,
+            challengeEmergencyAdmin: s_emergencyAdmin,
+            challengeCreator: s_creator,
+            game: s_game,
+            platform: s_platform,
+            nbTeams: s_nbTeams,
+            nbTeamPlayers: s_nbTeamPlayers,
+            amountPerPlayer: s_amountPerPlayer,
+            startAt: s_startAt,
+            isPrivate: s_isPrivate
+        });
+        s_challengesData.addChallengeToPlayerHistory(_player, _challengeParams);
     }
 
     

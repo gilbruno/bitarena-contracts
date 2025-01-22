@@ -12,18 +12,21 @@ import {Ownable} from "openzeppelin-contracts/contracts/access/Ownable.sol";
 import {AccessControl} from "openzeppelin-contracts/contracts/access/AccessControl.sol";
 import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
 import {BalanceChallengeCreatorError, ChallengeAdminAddressZeroError, 
-    ChallengeCounterError, ChallengeDeployedError, ChallengeCreatorAddressZeroError, ChallengeDisputeAdminAddressZeroError, ChallengeEmergencyAdminAddressZeroError, ChallengeGameError, 
+    ChallengeCounterError, ChallengeDeployedError, ChallengeCreatorAddressZeroError, ChallengesDataAddressZeroError, ChallengeDisputeAdminAddressZeroError, ChallengeEmergencyAdminAddressZeroError, ChallengeGameError, 
     ChallengePlatformError, ChallengeStartDateError, GameDoesNotExistError, NbTeamsError, NbPlayersPerTeamsError, SendMoneyToChallengeError, PlatformDoesNotExistError} from "./BitarenaFactoryErrors.sol";
-import {IntentChallengeCreation, ChallengeDeployed} from "./BitarenaFactoryEvents.sol";
+import {IntentChallengeCreation, ChallengeDeployed } from "./BitarenaFactoryEvents.sol";
 import {Challenge} from "./ChallengeStruct.sol";
 import {ChallengeParams} from "./ChallengeParams.sol";
 import {IBitarenaGames} from "./IBitarenaGames.sol";
-
+import {IBitarenaChallengesData} from "./IBitarenaChallengesData.sol";
+import {BitarenaChallengesData} from "./BitarenaChallengesData.sol";
 contract BitarenaFactory is Context, Ownable, AccessControl {
 
     uint256 private s_challengeCounter;
 
     IBitarenaGames private s_bitarenaGames;
+
+    IBitarenaChallengesData private s_challengesData;
 
     mapping(uint256 indexChallenge => Challenge) private s_challengesMap;
     
@@ -34,15 +37,17 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
     address private s_challengeAdmin;
     address private s_challengeDisputeAdmin;
     address private s_challengeEmergencyAdmin;
-	constructor (address _bitarenaGames, address _challengeAdmin, address _challengeDisputeAdmin, address _challengeEmergencyAdmin) Ownable(msg.sender) {
+	constructor (address _bitarenaGames, address _challengeAdmin, address _challengeDisputeAdmin, address _challengeEmergencyAdmin, address _challengeData) Ownable(msg.sender) {
         if(_challengeAdmin == address(0)) revert ChallengeAdminAddressZeroError();
         if(_challengeDisputeAdmin == address(0)) revert ChallengeDisputeAdminAddressZeroError();
         if(_challengeEmergencyAdmin == address(0)) revert ChallengeEmergencyAdminAddressZeroError();
+        if(_challengeData == address(0)) revert ChallengesDataAddressZeroError();
         s_challengeCounter = 0;
         s_bitarenaGames = IBitarenaGames(_bitarenaGames);
         s_challengeAdmin = _challengeAdmin;
         s_challengeDisputeAdmin = _challengeDisputeAdmin;
         s_challengeEmergencyAdmin = _challengeEmergencyAdmin;
+        s_challengesData = IBitarenaChallengesData(_challengeData); 
 		_grantRole(BITARENA_FACTORY_ADMIN, msg.sender);
 	}
 
@@ -203,6 +208,7 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
 
         address deployedChallengeAddress = deployChallenge(salt, ChallengeParams({
             factory: address(this),
+            challengesData: address(s_challengesData),
             challengeAdmin: s_challengeAdmin,
             challengeDisputeAdmin: s_challengeDisputeAdmin,
             challengeEmergencyAdmin: s_challengeEmergencyAdmin,
@@ -216,8 +222,10 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
             isPrivate: challenge.isPrivate
             }));
 
-        BitarenaChallenge bitarenaChallenge = BitarenaChallenge(payable(deployedChallengeAddress));
+        // Enregistrement du challenge dans BitarenaChallengesData
+        s_challengesData.registerChallengeContract(address(deployedChallengeAddress));
 
+        BitarenaChallenge bitarenaChallenge = BitarenaChallenge(payable(deployedChallengeAddress));
 
         //Hydrate challenges array
         s_challengesMap[_challengeCounter].challengeAddress = deployedChallengeAddress;
@@ -259,6 +267,7 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
 
         address deployedChallengeAddress = deployChallenge(salt, ChallengeParams({
             factory: address(this),
+            challengesData: address(s_challengesData),
             challengeAdmin: _challengeAdmin,
             challengeDisputeAdmin: _challengeDisputeAdmin,
             challengeEmergencyAdmin: s_challengeEmergencyAdmin,
@@ -271,6 +280,9 @@ contract BitarenaFactory is Context, Ownable, AccessControl {
             startAt: challenge.startAt,
             isPrivate: challenge.isPrivate
             }));
+
+        // Enregistrement du challenge dans BitarenaChallengesData
+        s_challengesData.registerChallengeContract(address(deployedChallengeAddress));
 
         BitarenaChallenge bitarenaChallenge = BitarenaChallenge(payable(deployedChallengeAddress));
 

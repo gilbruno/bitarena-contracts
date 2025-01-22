@@ -6,6 +6,8 @@ import {console} from "forge-std/console.sol";
 import {BitarenaDeploymentKeys} from "./BitarenaDeploymentKeys.sol";
 import {BitarenaGames} from "../../src/BitarenaGames.sol";
 import {BitarenaFactory} from "../../src/BitarenaFactory.sol";
+import {BitarenaChallengesData} from "../../src/BitarenaChallengesData.sol";
+import {ERC1967Proxy} from "openzeppelin-contracts/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 /**
  * @title Deploy All contracts
  * @author 
@@ -33,11 +35,26 @@ contract DeployScript is Script {
     console.log("BitarenaGames deployed to %s", address(bitarenaGames));
 
     //******************************************************************/
-    //********* 2 - Deploy BitarenaFactory ****************/
+    // ********** 2 - Deploy BitarenaChallengesData ****************/
+    //******************************************************************/
+    // 2-1 Deploy BitarenaChallengesData implementation
+    BitarenaChallengesData implementationChallengesData = new BitarenaChallengesData();
+    // 2-2 Deploy BitarenaChallengesData proxy 
+    ERC1967Proxy proxyChallengesData = new ERC1967Proxy(
+        address(implementationChallengesData),
+        abi.encodeWithSelector(
+            BitarenaChallengesData.initialize.selector,
+            BitarenaDeploymentKeys.SUPER_ADMIN_CHALLENGES_DATA
+        )
+    );
+
+    //******************************************************************/
+    //********* 3 - Deploy BitarenaFactory ****************/
     //******************************************************************/
     //   2-1. Deploy implementation
-    BitarenaFactory bitarenaFactory = new BitarenaFactory(address(bitarenaGames), challengeAdmin, challengeDisputeAdmin, challengeEmergencyAdmin);
+    BitarenaFactory bitarenaFactory = new BitarenaFactory(address(bitarenaGames), challengeAdmin, challengeDisputeAdmin, challengeEmergencyAdmin, address(proxyChallengesData));
     console.log("BitarenaFactory implementation deployed to %s", address(bitarenaFactory));
+
 
     vm.stopBroadcast();
 

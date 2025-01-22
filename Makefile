@@ -81,11 +81,11 @@ deployChallenge:
 	cast send $(ADDRESS_LAST_DEPLOYED_FACTORY) "createChallenge(address,address,uint256)" $(PUBLIC_KEY_ADMIN_CHALLENGE) $(PUBLIC_KEY_ADMIN_DISPUTE_CHALLENGE) $(CHALLENGE_INDEX) --rpc-url $(RPC_URL) --private-key $(PRIVATE_KEY_ADMIN_FACTORY) --legacy --json
 
 intentChallengeDeployment:
-	@if [ -z "$(CONTRACT_ADDRESS)" ] || [ -z "$(GAME)" ] || [ -z "$(PLATFORM)" ] || [ -z "$(NB_TEAMS)" ] || [ -z "$(NB_PLAYERS)" ] || [ -z "$(AMOUNT)" ] || [ -z "$(START_TIME)" ] || [ -z "$(IS_PRIVATE)" ]; then \
-		echo "Usage: make intentChallengeDeployment CONTRACT_ADDRESS=<address> GAME=<game> PLATFORM=<platform> NB_TEAMS=<teams> NB_PLAYERS=<players> AMOUNT=<amount> START_TIME=<time> IS_PRIVATE=<bool>"; \
+	@if [ -z "$(FACTORY_ADDRESS)" ] || [ -z "$(GAME)" ] || [ -z "$(PLATFORM)" ] || [ -z "$(NB_TEAMS)" ] || [ -z "$(NB_PLAYERS)" ] || [ -z "$(AMOUNT)" ] || [ -z "$(START_TIME)" ] || [ -z "$(IS_PRIVATE)" ]; then \
+		echo "Usage: make intentChallengeDeployment FACTORY_ADDRESS=<address> GAME=<game> PLATFORM=<platform> NB_TEAMS=<teams> NB_PLAYERS=<players> AMOUNT=<amount> START_TIME=<time> IS_PRIVATE=<bool>"; \
 		exit 1; \
 	fi
-	cast send $(CONTRACT_ADDRESS) \
+	cast send $(FACTORY_ADDRESS) \
 	"intentChallengeDeployment(string,string,uint16,uint16,uint256,uint256,bool)" \
 	"$(GAME)" \
 	"$(PLATFORM)" \
@@ -96,9 +96,44 @@ intentChallengeDeployment:
 	$(IS_PRIVATE) \
 	--value $$(cast --to-wei $(AMOUNT) eth) \
 	--rpc-url $(RPC_URL) \
-	--private-key $(PRIVATE_KEY_ADMIN_GAMES) \
-	--legacy
+	--private-key $(PRIVATE_KEY_CREATOR_CHALLENGE) \
+	--legacy \
+
+debugIntentChallengeDeployment:
+	@if [ -z "$(FACTORY_ADDRESS)" ] || [ -z "$(GAME)" ] || [ -z "$(PLATFORM)" ] || [ -z "$(NB_TEAMS)" ] || [ -z "$(NB_PLAYERS)" ] || [ -z "$(AMOUNT)" ] || [ -z "$(START_TIME)" ] || [ -z "$(IS_PRIVATE)" ]; then \
+		echo "Usage: make intentChallengeDeployment FACTORY_ADDRESS=<address> GAME=<game> PLATFORM=<platform> NB_TEAMS=<teams> NB_PLAYERS=<players> AMOUNT=<amount> START_TIME=<time> IS_PRIVATE=<bool>"; \
+		exit 1; \
+	fi
+	cast call $(FACTORY_ADDRESS) \
+	"intentChallengeDeployment(string,string,uint16,uint16,uint256,uint256,bool)" \
+	"$(GAME)" \
+	"$(PLATFORM)" \
+	$(NB_TEAMS) \
+	$(NB_PLAYERS) \
+	$$(cast --to-wei $(AMOUNT) eth) \
+	$$(date -d "$(START_TIME)" +%s) \
+	$(IS_PRIVATE) \
+	--value $$(cast --to-wei $(AMOUNT) eth) \
+	--rpc-url $(RPC_URL) \
+	--from $(PUBLIC_KEY_CREATOR_CHALLENGE) \
+	--legacy \
+	--trace
 	
+# Ajouter cette nouvelle commande dans votre Makefile
+debug-intent:
+	@echo "Simulation de intentChallengeCreation pour debug..."
+	cast call $(ADDRESS_LAST_DEPLOYED_FACTORY) \
+	"intentChallengeCreation(string,string,uint16,uint16,uint256,uint256,bool)" \
+	"FarCry" \
+	"Steam" \
+	2 \
+	2 \
+	10000000000000000 \
+	1727268662 \
+	true \
+	--rpc-url $(RPC_URL) \
+	--from $(PUBLIC_KEY_CREATOR_CHALLENGE)
+
 getFactoryChallengeCounter:
 	@echo "Get Factory Challenge Counter ...."
 	cast call $(ADDRESS_LAST_DEPLOYED_FACTORY) "getChallengeCounter()" --rpc-url $(RPC_URL) --legacy	

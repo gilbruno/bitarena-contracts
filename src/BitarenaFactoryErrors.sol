@@ -43,6 +43,11 @@ error ChallengeDisputeAdminAddressZeroError();
 error ChallengeEmergencyAdminAddressZeroError();
 
 /**
+ * @dev an unexpected zero address was transmitted for the Challenge Data smart contract. (eg. `address(0)`)
+ */
+error ChallengesDataAddressZeroError();
+
+/**
  * @dev 
  */
 error ChallengeGameError();

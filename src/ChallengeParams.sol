@@ -4,6 +4,7 @@ pragma solidity 0.8.26;
 
 struct ChallengeParams {
     address factory;
+    address challengesData;
     address challengeAdmin;
     address challengeDisputeAdmin;
     address challengeEmergencyAdmin;
