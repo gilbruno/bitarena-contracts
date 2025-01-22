@@ -47,6 +47,8 @@ contract DeployScript is Script {
             BitarenaDeploymentKeys.SUPER_ADMIN_CHALLENGES_DATA
         )
     );
+    console.log("BitarenaChallengesData implementation deployed to %s", address(implementationChallengesData));
+    console.log("BitarenaChallengesData proxy deployed to %s", address(proxyChallengesData));
 
     //******************************************************************/
     //********* 3 - Deploy BitarenaFactory ****************/
