@@ -39,6 +39,15 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
      */
     mapping(address => bool) private s_isChallengeEnded;
 
+    // Mapping pour les challenges officiels avec leur ID
+    mapping(address => uint256) private s_challengeIds;
+    
+    // Mapping inverse pour retrouver l'adresse par ID
+    mapping(uint256 => address) private s_challengeAddresses;
+    
+    // Compteur de challenges
+    uint256 private s_challengeCounter;
+
 
     /**
      * @dev Reserve some slots for future upgrades
@@ -97,10 +106,57 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
         if(_challengeContract == address(0)) revert InvalidChallengeAddress();
         if(s_isOfficialChallenge[_challengeContract]) revert ChallengeAlreadyRegistered();
         
+        // Increment the counter and register the challenge
+        unchecked { s_challengeCounter++; }
+        uint256 challengeId = s_challengeCounter;
+        
+        s_challengeIds[_challengeContract] = challengeId;
+        s_challengeAddresses[challengeId] = _challengeContract;
         s_isOfficialChallenge[_challengeContract] = true;
         
         emit ChallengeContractRegistered(_challengeContract);
     }
+
+    /**
+     * @dev Get a batch of challenges
+     * @param _start Start index
+     * @param _size Batch size
+     */
+    function getChallengesBatch(uint256 _start, uint256 _size) external view returns (address[] memory challenges) 
+    {
+        if(_size > 100) revert BatchTooLarge();
+        if(_start + _size > s_challengeCounter && _size <= 100) revert InvalidBatch();
+        
+
+        challenges = new address[](_size);
+        for(uint256 i = 0; i < _size; i++) {
+            challenges[i] = s_challengeAddresses[_start + i + 1];
+        }
+        return challenges;
+    }
+
+     /**
+     * @dev Récupère le nombre total de challenges
+     */
+    function getTotalChallenges() external view returns (uint256) {
+        return s_challengeCounter;
+    }
+
+     /**
+     * @dev Récupère l'ID d'un challenge
+     */
+    function getChallengeId(address _challenge) external view returns (uint256) {
+        return s_challengeIds[_challenge];
+    }
+
+    /**
+     * @dev Récupère l'adresse d'un challenge par son ID
+     */
+    function getChallengeAddress(uint256 _id) external view returns (address) {
+        if(_id == 0 ||_id > s_challengeCounter) revert InvalidId();
+        return s_challengeAddresses[_id];
+    }
+
 
     /**
      * @dev Check if a challenge contract is official

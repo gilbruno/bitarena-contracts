@@ -28,6 +28,9 @@ interface IBitarenaChallengesData {
     error ChallengeAlreadyStarted();
     error ChallengeAlreadyEnded();
     error ChallengeNotStarted();
+    error InvalidBatch();
+    error BatchTooLarge();
+    error InvalidId();
 
     function authorizeConractsRegistering(address _factoryAddress) external;
 
@@ -52,6 +55,11 @@ interface IBitarenaChallengesData {
      * @return Le nombre de challenges
      */
     function getPlayerChallengesCount(address _player) external view returns (uint256);
+
+    function getChallengesBatch(uint256 _start, uint256 _size) external view returns (address[] memory);
+    function getTotalChallenges() external view returns (uint256);
+    function getChallengeId(address _challenge) external view returns (uint256);
+    function getChallengeAddress(uint256 _id) external view returns (address);
 
     function isChallengeStarted(address _challengeContract) external view returns (bool);
     function isChallengeEnded(address _challengeContract) external view returns (bool);

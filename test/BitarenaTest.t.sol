@@ -114,6 +114,90 @@ contract BitarenaTest is Test {
         vm.deal(address(bitarenaFactory), STARTING_BALANCE_ETH);
     }
 
+    function deployFactoryAndCreate2Challenges() public returns (BitarenaChallenge[] memory) {
+    // Déploiement de BitarenaGames
+    vm.startBroadcast(ADMIN_GAMES);
+    bitarenaGames = new BitarenaGames(ADMIN_GAMES);
+    vm.stopBroadcast();
+
+    // Configuration des jeux
+    setGames();
+
+    // Déploiement de BitarenaChallengesData
+    vm.startBroadcast(SUPER_ADMIN_CHALLENGES_DATA);
+    BitarenaChallengesData implementationChallengesData = new BitarenaChallengesData();
+    proxyChallengesData = new ERC1967Proxy(
+        address(implementationChallengesData),
+        abi.encodeWithSelector(
+            BitarenaChallengesData.initialize.selector,
+            SUPER_ADMIN_CHALLENGES_DATA
+        )
+    );
+    vm.stopBroadcast();
+
+    // Déploiement de la factory
+    vm.startBroadcast(ADMIN_FACTORY);
+    bitarenaFactory = new BitarenaFactory(
+        address(bitarenaGames),
+        ADMIN_CHALLENGE1,
+        ADMIN_DISPUTE_CHALLENGE1,
+        ADMIN_CHALLENGE_EMERGENCY,
+        address(proxyChallengesData)
+    );
+    vm.stopBroadcast();
+
+    // Autorisation de la factory dans BitarenaChallengesData
+    vm.startBroadcast(SUPER_ADMIN_CHALLENGES_DATA);
+    IBitarenaChallengesData(address(proxyChallengesData)).authorizeConractsRegistering(address(bitarenaFactory));
+    vm.stopBroadcast();
+
+    // Création des deux challenges
+    BitarenaChallenge[] memory challenges = new BitarenaChallenge[](2);
+
+    // Création du premier challenge
+    vm.startBroadcast(CREATOR_CHALLENGE1);
+    challenges[0] = BitarenaChallenge(
+        payable(
+            bitarenaFactory.intentChallengeDeployment{value: AMOUNT_PER_PLAYER}(
+                GAME1,
+                PLATFORM1,
+                TWO_TEAMS,
+                TWO_PLAYERS,
+                AMOUNT_PER_PLAYER,
+                block.timestamp + 1 days,
+                false
+            )
+        )
+    );
+    vm.stopBroadcast();
+
+    // Création du deuxième challenge
+    vm.startBroadcast(CREATOR_CHALLENGE1);
+    challenges[1] = BitarenaChallenge(
+        payable(
+            bitarenaFactory.intentChallengeDeployment{value: AMOUNT_PER_PLAYER}(
+                GAME1,
+                PLATFORM1,
+                TWO_TEAMS,
+                TWO_PLAYERS,
+                AMOUNT_PER_PLAYER,
+                block.timestamp + 1 days,
+                false
+            )
+        )
+    );
+    vm.stopBroadcast();
+
+    // Log des adresses pour debug
+    console.log("Factory address:", address(bitarenaFactory));
+    console.log("ChallengesData address:", address(proxyChallengesData));
+    console.log("Challenge 1 address:", address(challenges[0]));
+    console.log("Challenge 2 address:", address(challenges[1]));
+
+    return challenges;
+}
+
+
     
     function setGames() internal {
         vm.startBroadcast(ADMIN_GAMES);
@@ -3440,4 +3524,57 @@ contract BitarenaTest is Test {
         console.log("Address of the first challenge:", address(bitarenaChallenge1));
         console.log("Address of the second challenge:", address(bitarenaChallenge2));
     }
+
+    function testChallengesDataStorage() public {
+    // Déploiement de deux challenges
+    BitarenaChallenge[] memory challenges = deployFactoryAndCreate2Challenges();
+    BitarenaChallenge challenge1 = challenges[0];
+    BitarenaChallenge challenge2 = challenges[1];
+    
+    // Récupération de l'instance BitarenaChallengesData
+    BitarenaChallengesData challengesData = BitarenaChallengesData(address(proxyChallengesData));
+
+    // Test du compteur total de challenges
+    assertEq(challengesData.getTotalChallenges(), 2, "The total number of challenges should be 2");
+
+    // Test des IDs des challenges
+    uint256 challenge1Id = challengesData.getChallengeId(address(challenge1));
+    uint256 challenge2Id = challengesData.getChallengeId(address(challenge2));
+    
+    assertEq(challenge1Id, 1, "The ID of the first challenge should be 1");
+    assertEq(challenge2Id, 2, "The ID of the second challenge should be 2");
+
+    // Test of the retrieval of addresses by ID
+    address challenge1Address = challengesData.getChallengeAddress(1);
+    address challenge2Address = challengesData.getChallengeAddress(2);
+    
+    assertEq(challenge1Address, address(challenge1), "The address retrieved for ID 1 does not match");
+    assertEq(challenge2Address, address(challenge2), "The address retrieved for ID 2 does not match");
+
+    // Test of the retrieval by batch
+    address[] memory batchChallenges = challengesData.getChallengesBatch(0, 2);
+    assertEq(batchChallenges.length, 2, "Le batch devrait contenir 2 challenges");
+    assertEq(batchChallenges[0], address(challenge1), "Premier challenge du batch incorrect");
+    assertEq(batchChallenges[1], address(challenge2), "Deuxieme challenge du batch incorrect");
+
+    // Test of the errors
+    vm.expectRevert(IBitarenaChallengesData.InvalidId.selector);
+    challengesData.getChallengeAddress(0); // Invalid ID (too small)
+
+    vm.expectRevert(IBitarenaChallengesData.InvalidId.selector);
+    challengesData.getChallengeAddress(3); // Invalid ID (too big)
+
+    vm.expectRevert(IBitarenaChallengesData.InvalidBatch.selector);
+    challengesData.getChallengesBatch(0, 3); // Batch too big
+
+    vm.expectRevert(IBitarenaChallengesData.BatchTooLarge.selector);
+    challengesData.getChallengesBatch(0, 101); // Exceeds the batch size limit
+
+    // Log pour debug
+    console.log("Total des challenges:", challengesData.getTotalChallenges());
+    console.log("Adresse challenge 1:", address(challenge1));
+    console.log("Adresse challenge 2:", address(challenge2));
+    console.log("ID challenge 1:", challengesData.getChallengeId(address(challenge1)));
+    console.log("ID challenge 2:", challengesData.getChallengeId(address(challenge2)));
+}
 }
