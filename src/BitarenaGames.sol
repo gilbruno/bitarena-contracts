@@ -5,7 +5,7 @@ pragma solidity 0.8.26;
 import {AccessControl} from "openzeppelin-contracts/contracts/access/AccessControl.sol";
 import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
 import {GAMES_ADMIN_ROLE} from "./BitarenaChallengeConstants.sol";
-import {IBitarenaGames} from "./IBitarenaGames.sol";
+import {IBitarenaGames} from "./interfaces/IBitarenaGames.sol";
 
 
 contract BitarenaGames is Context, AccessControl, IBitarenaGames {

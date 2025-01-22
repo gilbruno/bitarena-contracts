@@ -19,13 +19,13 @@ import {BalanceChallengePlayerError, ChallengeCanceledError, ChallengeCancelAfte
     TeamDoesNotExistsError, TeamDidNotClaimVictoryError, TeamIsNotDisputerError, TeamOfSignerAlreadyParticipatesInDisputeError, TimeElapsedToClaimVictoryError, TimeElapsedToUnclaimVictoryError, TimeElapsedForDisputeParticipationError, 
     TimeElapsedToJoinTeamError, TimeTooSoonToClaimVictoryError, UnclaimVictoryNotAuthorized, WinnerNotRevealedYetError, WithdrawPoolNotAuthorized, WithdrawPoolByLooserTeamImpossibleError} from "./BitarenaChallengeErrors.sol";
 import {ParticipateToDispute, PlayerJoinsTeam, PoolChallengeWithdrawed, RevealWinner, TeamCreated, Debug, VictoryClaimed, VictoryUnclaimed} from "./BitarenaChallengeEvents.sol";
-import {ChallengeParams} from "./ChallengeParams.sol";
-import {IBitarenaChallengesData} from "./IBitarenaChallengesData.sol";
+import {ChallengeParams} from "./struct/ChallengeParams.sol";
+import {IBitarenaChallengesData} from "./interfaces/IBitarenaChallengesData.sol";
 import {CHALLENGE_ADMIN_ROLE, CHALLENGE_EMERGENCY_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_CREATOR_ROLE, DELAY_START_VICTORY_CLAIM_BY_DEFAULT, DELAY_END_VICTORY_CLAIM_BY_DEFAULT, 
     DELAY_START_DISPUTE_PARTICIPATION_BY_DEFAULT, DELAY_END_DISPUTE_PARTICIPATION_BY_DEFAULT,
     GAMER_ROLE, FEE_PERCENTAGE_AMOUNT_BY_DEFAULT, FEE_PERCENTAGE_DISPUTE_AMOUNT_BY_DEFAULT, PERCENTAGE_BASE} from "./BitarenaChallengeConstants.sol";
 
-contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, ReentrancyGuard, Pausable{
+contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, ReentrancyGuard, Pausable {
 
     IBitarenaChallengesData private immutable s_challengesData;
 
@@ -596,21 +596,21 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
     /**
      * @dev getter for state variable s_creator
      */
-    function getCreator() external view returns (address) {
+    function getCreator() public view returns (address) {
         return s_creator;
     }
 
     /**
      * @dev getter for state variable s_game
      */
-    function getGame() external view returns (string memory) {
+    function getGame() public view returns (string memory) {
         return s_game;
     }
 
     /**
      * @dev getter for state variable s_platform
      */
-    function getPlatform() external view returns (string memory) {
+    function getPlatform() public view returns (string memory) {
         return s_platform;
     }
     /**
@@ -759,14 +759,14 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
     /**
      * @dev getter for state variable s_admin
      */
-    function getChallengeAdmin() external view returns (address) {
+    function getChallengeAdmin() public view returns (address) {
         return s_admin;
     }
 
     /**
      * @dev getter for state variable s_disputeAdmin
      */
-    function getDisputeAdmin() external view returns (address) {
+    function getDisputeAdmin() public view returns (address) {
         return s_disputeAdmin;
     }
 

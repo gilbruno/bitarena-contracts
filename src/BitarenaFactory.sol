@@ -16,9 +16,9 @@ import {BalanceChallengeCreatorError, ChallengeAdminAddressZeroError,
     ChallengePlatformError, ChallengeStartDateError, GameDoesNotExistError, NbTeamsError, NbPlayersPerTeamsError, SendMoneyToChallengeError, PlatformDoesNotExistError} from "./BitarenaFactoryErrors.sol";
 import {IntentChallengeCreation, ChallengeDeployed } from "./BitarenaFactoryEvents.sol";
 import {Challenge} from "./ChallengeStruct.sol";
-import {ChallengeParams} from "./ChallengeParams.sol";
-import {IBitarenaGames} from "./IBitarenaGames.sol";
-import {IBitarenaChallengesData} from "./IBitarenaChallengesData.sol";
+import {ChallengeParams} from "./struct/ChallengeParams.sol";
+import {IBitarenaGames} from "./interfaces/IBitarenaGames.sol";
+import {IBitarenaChallengesData} from "./interfaces/IBitarenaChallengesData.sol";
 import {BitarenaChallengesData} from "./BitarenaChallengesData.sol";
 contract BitarenaFactory is Context, Ownable, AccessControl {
 

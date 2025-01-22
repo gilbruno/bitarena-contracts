@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.22;
 
-import {ChallengeParams} from "./ChallengeParams.sol";
-
+import {ChallengeParams} from "../struct/ChallengeParams.sol";
+import {Challenge} from "../struct/Challenge.sol";
 interface IBitarenaChallengesData {
     /**
      * @dev Événement émis lorsqu'un nouveau challenge est ajouté pour un joueur
@@ -14,12 +14,10 @@ interface IBitarenaChallengesData {
     event ChallengeContractAuthorized(address indexed challengeContract);
 
     // Event émis quand un nouveau challenge est enregistré
-    event ChallengeContractRegistered(address indexed challengeContract);
+    event ChallengeContractRegistered(address indexed challengeContract, Challenge indexed challengeParams);
 
     event ChallengeStarted(address indexed challengeContract);
     event ChallengeEnded(address indexed challengeContract);
-    event Debug(string message, uint256 value);
-    event Debug2(string message, address value);
 
     error InvalidChallengeAddress();
     error ChallengeAlreadyRegistered();

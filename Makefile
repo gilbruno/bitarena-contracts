@@ -231,3 +231,53 @@ getTeamsByTeamIndex:
 	sed 's/\[/\n=== Team Members ===\n/g' | \
 	sed 's/\]/\n==================/g' | \
 	sed 's/, /\n/g'
+
+######### CHALLENGES DATA #########
+
+getTotalChallenges:
+	@if [ -z "$(CHALLENGE_DATA_ADDRESS)" ]; then \
+		echo "Usage: make getTotalChallenges CHALLENGE_DATA_ADDRESS=<address>"; \
+		exit 1; \
+	fi
+	@echo "Getting total challenges from challenge data $(CHALLENGE_DATA_ADDRESS)..."
+	@cast call $(CHALLENGE_DATA_ADDRESS) "getTotalChallenges()(uint256)" --rpc-url $(RPC_URL) --legacy
+
+getChallengeId:
+	@if [ -z "$(CHALLENGE_DATA_ADDRESS)" ] || [ -z "$(CHALLENGE_ADDRESS)" ]; then \
+		echo "Usage: make getChallengeId CHALLENGE_DATA_ADDRESS=<address> CHALLENGE_ADDRESS=<address>"; \
+		exit 1; \
+	fi
+	@echo "Getting challenge id from challenge data $(CHALLENGE_DATA_ADDRESS) for challenge $(CHALLENGE_ADDRESS)..."
+	@cast call $(CHALLENGE_DATA_ADDRESS) "getChallengeId(address)(uint256)" $(CHALLENGE_ADDRESS) --rpc-url $(RPC_URL) --legacy
+
+getChallengeAddress:
+	@if [ -z "$(CHALLENGE_DATA_ADDRESS)" ] || [ -z "$(CHALLENGE_ID)" ]; then \
+		echo "Usage: make getChallengeAddress CHALLENGE_DATA_ADDRESS=<address> CHALLENGE_ID=<id>"; \
+		exit 1; \
+	fi
+	@echo "Getting challenge address from challenge data $(CHALLENGE_DATA_ADDRESS) for challenge id $(CHALLENGE_ID)..."
+	@cast call $(CHALLENGE_DATA_ADDRESS) "getChallengeAddress(uint256)(address)" $(CHALLENGE_ID) --rpc-url $(RPC_URL) --legacy	
+
+getChallengesBatch:
+	@if [ -z "$(CHALLENGE_DATA_ADDRESS)" ] || [ -z "$(START_INDEX)" ] || [ -z "$(SIZE)" ]; then \
+		echo "Usage: make getChallengesBatch CHALLENGE_DATA_ADDRESS=<address> START_INDEX=<index> SIZE=<size>"; \
+		exit 1; \
+	fi
+	@echo "Getting challenges batch from challenge data $(CHALLENGE_DATA_ADDRESS) starting at index $(START_INDEX) with size $(SIZE)..."
+	@cast call $(CHALLENGE_DATA_ADDRESS) "getChallengesBatch(uint256,uint256)(address[])" $(START_INDEX) $(SIZE) --rpc-url $(RPC_URL) --legacy
+
+getPlayerChallenges:
+	@if [ -z "$(CHALLENGE_DATA_ADDRESS)" ] || [ -z "$(PLAYER_ADDRESS)" ]; then \
+		echo "Usage: make getPlayerChallenges CHALLENGE_DATA_ADDRESS=<address> PLAYER_ADDRESS=<address>"; \
+		exit 1; \
+	fi
+	@echo "Getting challenges for player $(PLAYER_ADDRESS) from challenge data $(CHALLENGE_DATA_ADDRESS)..."
+	@cast call $(CHALLENGE_DATA_ADDRESS) "getPlayerChallenges(address)(address[])" $(PLAYER_ADDRESS) --rpc-url $(RPC_URL) --legacy
+
+getPlayerChallengesCount:
+	@if [ -z "$(CHALLENGE_DATA_ADDRESS)" ] || [ -z "$(PLAYER_ADDRESS)" ]; then \
+		echo "Usage: make getPlayerChallengesCount CHALLENGE_DATA_ADDRESS=<address> PLAYER_ADDRESS=<address>"; \
+		exit 1; \
+	fi
+	@echo "Getting challenges count for player $(PLAYER_ADDRESS) from challenge data $(CHALLENGE_DATA_ADDRESS)..."
+	@cast call $(CHALLENGE_DATA_ADDRESS) "getPlayerChallengesCount(address)(uint256)" $(PLAYER_ADDRESS) --rpc-url $(RPC_URL) --legacy

@@ -23,9 +23,9 @@ import {BalanceChallengePlayerError, ChallengeCancelAfterStartDateError, Challen
 import {ParticipateToDispute, PlayerJoinsTeam, PoolChallengeWithdrawed, RevealWinner, TeamCreated, Debug, VictoryClaimed, VictoryUnclaimed} from "../src/BitarenaChallengeEvents.sol";
 import {MockFailingReceiver} from "./MockContracts.sol";
 import {BitarenaChallengesData} from "../src/BitarenaChallengesData.sol";
-import {IBitarenaChallengesData} from "../src/IBitarenaChallengesData.sol";
+import {IBitarenaChallengesData} from "../src/interfaces/IBitarenaChallengesData.sol";
 import {ERC1967Proxy} from "openzeppelin-contracts/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import {ChallengeParams} from "../src/ChallengeParams.sol";
+import {ChallengeParams} from "../src/struct/ChallengeParams.sol";
 
 
 contract BitarenaTest is Test {
@@ -3523,6 +3523,8 @@ contract BitarenaTest is Test {
         console.log("Number of challenges of PLAYER2:", challengesData.getPlayerChallengesCount(PLAYER2_CHALLENGE1));
         console.log("Address of the first challenge:", address(bitarenaChallenge1));
         console.log("Address of the second challenge:", address(bitarenaChallenge2));
+
+        
     }
 
     function testChallengesDataStorage() public {

@@ -2,11 +2,13 @@
 
 pragma solidity ^0.8.22;
 
-import {ChallengeParams} from "./ChallengeParams.sol";
-import {IBitarenaChallengesData} from "./IBitarenaChallengesData.sol";
+import {ChallengeParams} from "./struct/ChallengeParams.sol";
+import {IBitarenaChallengesData} from "./interfaces/IBitarenaChallengesData.sol";
 import {AccessControl} from "openzeppelin-contracts/contracts/access/AccessControl.sol";
 import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
 import {AccessControlUpgradeable} from "openzeppelin-contracts-upgradeable/contracts/access/AccessControlUpgradeable.sol";
+import {BitarenaChallenge} from "./BitarenaChallenge.sol";
+import {Challenge} from "./struct/Challenge.sol";
 
 contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallengesData {
     /**
@@ -24,6 +26,11 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
      */
     mapping(address => ChallengeParams[]) private s_playerChallenges;
     
+    /**
+     * @dev Mapping of challenges
+     */
+    mapping(address => Challenge) private s_challenges;
+
     /**
      * @dev Mapping to track the challenges created by the factory
      */
@@ -96,6 +103,35 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
         _grantRole(CONTRACTS_REGISTERING_ROLE, _factoryAddress);
     }
 
+    function _buildChallenge(address payable deployedChallengeAddress) internal view returns (Challenge memory) {
+
+        address challengeCreator = BitarenaChallenge(deployedChallengeAddress).getCreator();
+        address challengeAdmin = BitarenaChallenge(deployedChallengeAddress).getChallengeAdmin();
+        address challengeDisputeAdmin = BitarenaChallenge(deployedChallengeAddress).getDisputeAdmin();
+        string memory game = BitarenaChallenge(deployedChallengeAddress).getGame();
+        string memory platform = BitarenaChallenge(deployedChallengeAddress).getPlatform();
+        uint16 nbTeams = BitarenaChallenge(deployedChallengeAddress).getTeamCounter();
+        uint16 nbTeamPlayers = BitarenaChallenge(deployedChallengeAddress).getNbTeamPlayers();
+        uint256 amountPerPlayer = BitarenaChallenge(deployedChallengeAddress).getAmountPerPlayer();
+        uint256 startAt = BitarenaChallenge(deployedChallengeAddress).getChallengeStartDate();
+        bool isPrivate = BitarenaChallenge(deployedChallengeAddress).getChallengeVisibility();
+
+        Challenge memory newChallenge = Challenge({
+            challengeAddress: deployedChallengeAddress,
+            challengeCreator: challengeCreator,
+            challengeAdmin: challengeAdmin,
+            challengeDisputeAdmin: challengeDisputeAdmin,
+            game: game,
+            platform: platform,
+            nbTeams: nbTeams,
+            nbTeamPlayers: nbTeamPlayers,
+            amountPerPlayer: amountPerPlayer,
+            startAt: startAt,
+            isPrivate: isPrivate
+        });
+        return newChallenge;
+    }
+
     /**
      * @dev Register a new challenge contract as official
      * @param _challengeContract Address of the challenge contract to register
@@ -114,7 +150,9 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
         s_challengeAddresses[challengeId] = _challengeContract;
         s_isOfficialChallenge[_challengeContract] = true;
         
-        emit ChallengeContractRegistered(_challengeContract);
+        Challenge memory challenge = _buildChallenge(payable(_challengeContract));
+        s_challenges[_challengeContract] = challenge;
+        emit ChallengeContractRegistered(_challengeContract, challenge);
     }
 
     /**
@@ -186,22 +224,15 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
         if(_player == address(0)) revert AddressZeroError();
         // Récupérer le tableau existant
         //ChallengeParams[] storage playerChallenges = s_playerChallenges[_player];
-        //emit Debug("Taille du tableau ", playerChallenges.length);
-
-        // Ajouter le nouveau challenge
-        //s_playerChallenges[_player].push(_challenge);
         
         // Mettre à jour le mapping avec le tableau modifié
         s_playerChallenges[_player].push(_challenge);
         
         emit ChallengeAddedToHistory(_player, _challenge);
         
-        // Debug log
-        emit Debug("Taille du tableau apres ajout", s_playerChallenges[_player].length);
-        emit Debug2("Address ChallengesData", address(this));
     }
 
-/**
+    /**
      * @dev Mark a challenge as started
      * @param _challengeContract Address of the challenge
      */
@@ -244,6 +275,15 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
      */
     function isChallengeEnded(address _challengeContract) external view returns (bool) {
         return s_isChallengeEnded[_challengeContract];
+    }
+
+    /**
+     * @dev Get the challenge parameters for a specific challenge address
+     * @param _challengeContract Address of the challenge contract
+     * @return ChallengeParams The challenge parameters
+     */
+    function getChallengeParams(address _challengeContract) external view returns (Challenge memory) {
+        return s_challenges[_challengeContract];
     }
 
     /**
