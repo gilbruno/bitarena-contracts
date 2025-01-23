@@ -603,7 +603,7 @@ contract BitarenaTest is Test {
 
         // Déploiement du challenge
         vm.startBroadcast(ADMIN_FACTORY);
-        BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(
+        bitarenaFactory.createChallenge(
             ADMIN_CHALLENGE1, 
             ADMIN_DISPUTE_CHALLENGE1, 
             1

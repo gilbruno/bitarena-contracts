@@ -7,10 +7,13 @@ import {IBitarenaChallengesData} from "./interfaces/IBitarenaChallengesData.sol"
 import {AccessControl} from "openzeppelin-contracts/contracts/access/AccessControl.sol";
 import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
 import {AccessControlUpgradeable} from "openzeppelin-contracts-upgradeable/contracts/access/AccessControlUpgradeable.sol";
+import {UUPSUpgradeable} from "openzeppelin-contracts-upgradeable/contracts/proxy/utils/UUPSUpgradeable.sol";
 import {BitarenaChallenge} from "./BitarenaChallenge.sol";
 import {Challenge} from "./struct/Challenge.sol";
+import {IBitarenaUpgrade} from "./interfaces/IBitarenaUpgrade.sol";
+import {ERC1967Utils} from "openzeppelin-contracts/contracts/proxy/ERC1967/ERC1967Utils.sol";
 
-contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallengesData {
+contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallengesData, IBitarenaUpgrade, UUPSUpgradeable {
     /**
      * @dev Role for the authorized BitarenaChallenge contracts
      */
@@ -20,6 +23,11 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
      * @dev Role for the official factory
      */
     bytes32 public constant CONTRACTS_REGISTERING_ROLE = keccak256("CONTRACTS_REGISTERING_ROLE");
+
+    /**
+     * @dev Role for the upgrade admin
+     */
+    bytes32 public constant UPGRADE_ADMIN_ROLE = keccak256("UPGRADE_ADMIN_ROLE");
 
     /**
      * @dev Mapping from a wallet to an array of ChallengeParams
@@ -303,4 +311,35 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
     function getPlayerChallengesCount(address _player) external view returns (uint256) {
         return s_playerChallenges[_player].length;
     }
+
+    /**
+     * @dev Authorize the upgrade of the contract
+     * @param newImplementation Address of the new implementation
+     */
+    function _authorizeUpgrade(address newImplementation) internal override view {
+        if (!hasRole(UPGRADE_ADMIN_ROLE, msg.sender)) {
+            revert UnauthorizedUpgrade(msg.sender);
+        }
+         if (newImplementation == address(0)) {
+            revert UnauthorizedNewImplementationWithNullAddress();
+        }
+    }
+
+    /**
+     * @dev Upgrade the contract to a new implementation
+     * @param newImplementation Address of the new implementation
+     * @param data Data to pass to the new implementation
+     */
+    function upgradeToAndCallSecure(address newImplementation, bytes memory data) external payable onlyRole(UPGRADE_ADMIN_ROLE) {
+        upgradeToAndCall(newImplementation, data);
+    }
+
+    function getImplementation() external view returns (address) {
+        return ERC1967Utils.getImplementation();
+    }
+
+    function proxiableUUID() external view override notDelegated returns (bytes32) {
+        return ERC1967Utils.IMPLEMENTATION_SLOT;
+    }
+
 }
