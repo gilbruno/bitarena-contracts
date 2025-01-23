@@ -16,6 +16,16 @@
         "name": "_challengeDisputeAdmin",
         "type": "address",
         "internalType": "address"
+      },
+      {
+        "name": "_challengeEmergencyAdmin",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "_challengeData",
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "stateMutability": "nonpayable"
@@ -156,12 +166,22 @@
             "internalType": "address"
           },
           {
+            "name": "challengesData",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
             "name": "challengeAdmin",
             "type": "address",
             "internalType": "address"
           },
           {
             "name": "challengeDisputeAdmin",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "challengeEmergencyAdmin",
             "type": "address",
             "internalType": "address"
           },
@@ -735,6 +755,11 @@
   },
   {
     "type": "error",
+    "name": "ChallengeEmergencyAdminAddressZeroError",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "ChallengeGameError",
     "inputs": []
   },
@@ -746,6 +771,11 @@
   {
     "type": "error",
     "name": "ChallengeStartDateError",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ChallengesDataAddressZeroError",
     "inputs": []
   },
   {
