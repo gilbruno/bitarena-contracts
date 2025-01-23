@@ -156,14 +156,15 @@ To decode it, you can run the command to decode hex value
 catapulta script script/catapulta/Deploy.s.sol:DeployScript --network amoy --legacy --sender 0xdB70Ce51809af94EC2d4CC2dc2fD1f099A7cDE0C
 ```
 
-## Last deployment on Ploygon Amoy 
+## Last deployment on Sepolia (without upgrade commits)
 
 ```sh
-BitarenaGames deployed to 0x872D4f42bED23132D38D6547945E7Aa0928C37CC
-BitarenaChallengesData implementation deployed to 0x67a55985a80efD9db8e8B1f12F1593a87D145Cd1
-BitarenaChallengesData proxy deployed to 0x440ee662a347FCd0c5384B7E301E46c9B38b349A
-BitarenaFactory implementation deployed to 0xD5A33101090344B808d028d41324F2787992d6E4
-https://catapulta.sh/project/678f558bf2e1970d286019ed/op/e5540c36-4bb3-46a5-b60f-f75cb12cfef5
+BitarenaGames deployed to 0x063f6596CD36194201FDD0CcC054d521843D6aB9
+BitarenaChallengesData implementation deployed to 0x85257b3408a15311BAc200C2C1c43397017843Cd
+BitarenaChallengesData proxy deployed to 0xeE0d60D42d551e2c56D8857F50c5C22b15eC311F
+BitarenaFactory implementation deployed to 0xeD3d8403403a1D8964033C20A51368EA43530492
+
+https://catapulta.sh/project/678f558bf2e1970d286019ed/op/49e5072a-d58c-48a6-be0c-928bf3606696
 ```
 
 ## Foundry
