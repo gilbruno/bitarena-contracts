@@ -1,0 +1,59 @@
+{
+    "detectors_to_run": [
+      
+      "reentrancy-eth",
+      "reentrancy-no-eth",
+      "reentrancy-unlimited-gas",
+      "arbitrary-send",
+      "controlled-delegatecall",
+      "delegatecall-loop",
+      
+      
+      "unprotected-upgrade",
+      "arbitrary-send-erc20",
+      "controlled-array-length",
+      "public-mappings-nested",
+      
+      
+      "uninitialized-state",
+      "uninitialized-storage",
+      "uninitialized-local",
+      "state-visibility",
+      
+      
+      "incorrect-equality",
+      "locked-ether",
+      "divide-before-multiply",
+      "missing-zero-check",
+      "weak-prng",
+      
+      
+      "erc20-interface",
+      "erc721-interface",
+      "erc1967-slots",
+      
+      
+      "costly-loop",
+      "gas-griefing",
+      "calls-loop",
+      
+      
+      "shadowing-state",
+      "shadowing-local",
+      "timestamp",
+      "assembly",
+      "pragma",
+      "solc-version",
+      "naming-convention",
+      "events-access",
+      "events-maths",
+      "boolean-equal",
+      "tautology",
+      "redundant-statements"
+    ],
+    "filter_paths": "(node_modules/|lib/)",
+    "solc_remaps": [
+      "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+      "@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/"
+    ]
+  }

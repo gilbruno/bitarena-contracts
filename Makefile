@@ -1,3 +1,5 @@
+-include audit/audit.mk
+
 .PHONY: deploy
 
 # Charger les variables d'environnement à partir du fichier .env
