@@ -26,19 +26,48 @@ generateChallengesDataAbi:
 	@echo "Generate ChallengesData ABI"
 	forge build --silent && jq '.abi' ./out/BitarenaChallengesData.sol/BitarenaChallengesData.json > ./abi/BitarenaChallengesData.json
 	
+generateBitarenaGamesAbi:
+	@echo "Generate BitarenaGames ABI"
+	forge build --silent && jq '.abi' ./out/BitarenaGames.sol/BitarenaGames.json > ./abi/BitarenaGames.json
+
 setGame:
 	@if [ -z "$(GAME_NAME)" ]; then \
-        echo "Usage: make setGame ARG=<value>"; \
+        echo "Usage: make setGame GAME_NAME=<value>"; \
         exit 1; \
     fi
-	cast send $(ADDRESS_LAST_DEPLOYED_GAMES) "setGame(string)" "$(GAME_NAME)" --rpc-url $(RPC_URL) --private-key $(PRIVATE_KEY_ADMIN_GAMES) --legacy
+	cast send $(ADDRESS_LAST_DEPLOYED_GAMES) "setGame(string)" "$(GAME_NAME)" --rpc-url $(RPC_URL) --private-key $(PRIVATE_KEY_ADMIN_GAMES) --gas-price 50000000000 --legacy
 
 setPlatform:
 	@if [ -z "$(PLATFORM_NAME)" ]; then \
-        echo "Usage: make setPlatform ARG=<value>"; \
+        echo "Usage: make setPlatform PLATFORM_NAME=<value>"; \
         exit 1; \
     fi
 	cast send $(ADDRESS_LAST_DEPLOYED_GAMES) "setPlatform(string)" "$(PLATFORM_NAME)" --rpc-url $(RPC_URL) --private-key $(PRIVATE_KEY_ADMIN_GAMES) --legacy
+
+estimateGasCost:
+	@if [ -z "$(GAME_NAME)" ]; then \
+		echo "Usage: make estimateGasCost GAME_NAME=<value>"; \
+		exit 1; \
+	fi
+	@echo "Estimating total cost for setGame with game name: $(GAME_NAME)"
+	@echo "Gas Price: 50 gwei"
+	@GAS=$$(cast estimate $(ADDRESS_LAST_DEPLOYED_GAMES) \
+		"setGame(string)" \
+		"$(GAME_NAME)" \
+		--from $(PUBLIC_KEY_ADMIN_GAMES) \
+		--rpc-url $(RPC_URL)) && \
+	TOTAL_WEI=$$(($$GAS * 50000000000)) && \
+	echo "Estimated gas units: $$GAS" && \
+	echo "Total cost in wei: $$TOTAL_WEI" && \
+	cast --to-unit $$TOTAL_WEI
+
+checkBalance:
+	@if [ -z "$(PUBLIC_KEY)" ]; then \
+		echo "Usage: make checkBalance PUBLIC_KEY=<address>"; \
+		exit 1; \
+	fi
+	@echo "Checking balance for address $(PUBLIC_KEY)..."
+	cast balance $(PUBLIC_KEY) --rpc-url "https://rpc.sepolia.org"
 
 getGame:
 	@if [ -z "$(GAME_INDEX)" ]; then \
