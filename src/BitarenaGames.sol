@@ -74,10 +74,12 @@ contract BitarenaGames is Context, AccessControl, IBitarenaGames {
 
     function setGame(string memory _game) public onlyRole(GAMES_ADMIN_ROLE) gameNotExists(_game) { 
         s_games.push(_game);
+        emit GameAdded(_game);
     }
 
     function setPlatform(string memory _platform) public onlyRole(GAMES_ADMIN_ROLE) platformNotExists(_platform) {
         s_platforms.push(_platform);
+        emit PlatformAdded(_platform);
     }
 
     function getGames() public view returns (string[] memory) { 

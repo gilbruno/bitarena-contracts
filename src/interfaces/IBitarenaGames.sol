@@ -2,6 +2,10 @@
 pragma solidity 0.8.26;
 
 interface IBitarenaGames {
+
+    event GameAdded(string game);
+    event PlatformAdded(string platform);
+
     function getGames() external view returns (string[] memory);
     function getPlatforms() external view returns (string[] memory);
     function grantNewAdmin(address _newAdmin) external;
