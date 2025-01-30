@@ -1,5 +1,5 @@
 -include audit/audit.mk
--include script/makefile/challangedata.mk
+-include script/makefile/challengeData.mk
 
 .PHONY: deploy
 

@@ -19,7 +19,9 @@ debugAuthorizeContractRegisteringWithForge:
 		-vvvv
 
 authorize-contract:
-	forge script script/contracts/AuthorizeContract.s.sol:AuthorizeContract \
+	forge script script/contracts/challengeData/AuthorizeContract.s.sol:AuthorizeContract \
 		--rpc-url $(RPC_URL) \
 		--broadcast \
 		--legacy
+		--gas-price 100000000000 \
+		--priority-gas-price 3000000000
