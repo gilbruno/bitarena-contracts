@@ -1,4 +1,5 @@
 -include audit/audit.mk
+-include script/makefile/challangedata.mk
 
 .PHONY: deploy
 
@@ -35,7 +36,7 @@ setGame:
         echo "Usage: make setGame GAME_NAME=<value>"; \
         exit 1; \
     fi
-	cast send $(ADDRESS_LAST_DEPLOYED_GAMES) "setGame(string)" "$(GAME_NAME)" --rpc-url $(RPC_URL) --private-key $(PRIVATE_KEY_ADMIN_GAMES) --gas-price 50000000000 --legacy
+	cast send $(ADDRESS_LAST_DEPLOYED_GAMES) "setGame(string)" "$(GAME_NAME)" --rpc-url $(RPC_URL) --private-key $(PRIVATE_KEY_ADMIN_GAMES) --legacy
 
 setPlatform:
 	@if [ -z "$(PLATFORM_NAME)" ]; then \
@@ -114,6 +115,43 @@ deployChallenge:
 	fi
 	@echo "Challenge Deployment of challenge with index ...."
 	cast send $(ADDRESS_LAST_DEPLOYED_FACTORY) "createChallenge(address,address,uint256)" $(PUBLIC_KEY_ADMIN_CHALLENGE) $(PUBLIC_KEY_ADMIN_DISPUTE_CHALLENGE) $(CHALLENGE_INDEX) --rpc-url $(RPC_URL) --private-key $(PRIVATE_KEY_ADMIN_FACTORY) --legacy --json
+
+hasSuperAdminRole:
+	@echo "Checking DEFAULT_ADMIN_ROLE holder..."
+	cast call $(ADDRESS_LAST_DEPLOYED_CHALLENGES_DATA) \
+		"hasRole(bytes32,address)" \
+		"0x0000000000000000000000000000000000000000000000000000000000000000" \
+		$(PUBLIC_KEY_ADMIN_CHALLENGES_DATA) \
+		--rpc-url $(RPC_URL)
+
+authorizeContractRegistering:
+	@if [ -z "$(CONTRACT_ADDRESS)" ]; then \
+		echo "Usage: make authorizeContractRegistering CONTRACT_ADDRESS=<address>"; \
+		exit 1; \
+	fi
+	@echo "Authorizing contract $(CONTRACT_ADDRESS) to register challenges..."
+	cast send $(ADDRESS_LAST_DEPLOYED_CHALLENGES_DATA) \
+		"authorizeContractsRegistering(address)" \
+		$(CONTRACT_ADDRESS) \
+		--rpc-url $(RPC_URL) \
+		--private-key $(PRIVATE_KEY_ADMIN_CHALLENGES_DATA) \
+		--gas-limit 100000 \
+		--gas-price 50000000000 \
+		--legacy
+
+debugAuthorizeContractRegistering:
+	@if [ -z "$(CONTRACT_ADDRESS)" ]; then \
+		echo "Usage: make authorizeContractRegistering CONTRACT_ADDRESS=<address>"; \
+		exit 1; \
+	fi
+	@echo "Authorizing contract $(CONTRACT_ADDRESS) to register challenges..."
+	cast call $(ADDRESS_LAST_DEPLOYED_CHALLENGES_DATA) \
+		"authorizeContractsRegistering(address)" \
+		$(CONTRACT_ADDRESS) \
+		--rpc-url $(RPC_URL) \
+		--from $(PUBLIC_KEY_ADMIN_CHALLENGES_DATA) \
+		--legacy \
+		--trace
 
 intentChallengeDeployment:
 	@if [ -z "$(FACTORY_ADDRESS)" ] || [ -z "$(GAME)" ] || [ -z "$(PLATFORM)" ] || [ -z "$(NB_TEAMS)" ] || [ -z "$(NB_PLAYERS)" ] || [ -z "$(AMOUNT)" ] || [ -z "$(START_TIME)" ] || [ -z "$(IS_PRIVATE)" ]; then \
