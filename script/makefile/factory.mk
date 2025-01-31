@@ -22,3 +22,4 @@ intentChallengeDeploymentWithForge:
 		--broadcast \
 		--legacy \
 		--gas-price 100000000000
+		--value $$AMOUNT_WEI

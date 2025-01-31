@@ -17,7 +17,7 @@ contract IntentChallengeDeployment is Script {
         
         vm.startBroadcast(creatorPrivateKey);
         
-        BitarenaFactory(FACTORY_ADDRESS).intentChallengeDeployment(
+        BitarenaFactory(FACTORY_ADDRESS).intentChallengeDeployment{value: amount}(
             game,
             platform,
             nbTeams,
