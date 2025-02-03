@@ -14,7 +14,7 @@ interface IBitarenaChallengesData {
     event ChallengeContractAuthorized(address indexed challengeContract);
 
     // Event émis quand un nouveau challenge est enregistré
-    event ChallengeContractRegistered(address indexed challengeContract, Challenge indexed challengeParams);
+    event ChallengeContractRegistered(address indexed challengeContract, Challenge challengeParams);
 
     event ChallengeStarted(address indexed challengeContract);
     event ChallengeEnded(address indexed challengeContract);
