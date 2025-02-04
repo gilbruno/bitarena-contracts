@@ -8,10 +8,10 @@ contract AuthorizeContract is Script {
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY_ADMIN_CHALLENGES_DATA");
         address PROXY_ADDRESS = vm.envAddress("ADDRESS_LAST_DEPLOYED_CHALLENGES_DATA");
-        address TARGET_CONTRACT = vm.envAddress("ADDRESS_LAST_DEPLOYED_FACTORY");
+        address FACTORY_CONTRACT = vm.envAddress("ADDRESS_LAST_DEPLOYED_FACTORY");
 
         vm.startBroadcast(deployerPrivateKey);
-        IBitarenaChallengesData(PROXY_ADDRESS).authorizeConractsRegistering(TARGET_CONTRACT);
+        IBitarenaChallengesData(PROXY_ADDRESS).authorizeConractsRegistering(FACTORY_CONTRACT);
         vm.stopBroadcast();
     }
 }

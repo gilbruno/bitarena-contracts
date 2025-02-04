@@ -23,5 +23,3 @@ authorize-contract:
 		--rpc-url $(RPC_URL) \
 		--broadcast \
 		--legacy
-		--gas-price 100000000000 \
-		--priority-gas-price 3000000000

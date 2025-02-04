@@ -126,35 +126,6 @@ hasSuperAdminRole:
 		$(PUBLIC_KEY_ADMIN_CHALLENGES_DATA) \
 		--rpc-url $(RPC_URL)
 
-authorizeContractRegistering:
-	@if [ -z "$(CONTRACT_ADDRESS)" ]; then \
-		echo "Usage: make authorizeContractRegistering CONTRACT_ADDRESS=<address>"; \
-		exit 1; \
-	fi
-	@echo "Authorizing contract $(CONTRACT_ADDRESS) to register challenges..."
-	cast send $(ADDRESS_LAST_DEPLOYED_CHALLENGES_DATA) \
-		"authorizeContractsRegistering(address)" \
-		$(CONTRACT_ADDRESS) \
-		--rpc-url $(RPC_URL) \
-		--private-key $(PRIVATE_KEY_ADMIN_CHALLENGES_DATA) \
-		--gas-limit 100000 \
-		--gas-price 50000000000 \
-		--legacy
-
-debugAuthorizeContractRegistering:
-	@if [ -z "$(CONTRACT_ADDRESS)" ]; then \
-		echo "Usage: make authorizeContractRegistering CONTRACT_ADDRESS=<address>"; \
-		exit 1; \
-	fi
-	@echo "Authorizing contract $(CONTRACT_ADDRESS) to register challenges..."
-	cast call $(ADDRESS_LAST_DEPLOYED_CHALLENGES_DATA) \
-		"authorizeContractsRegistering(address)" \
-		$(CONTRACT_ADDRESS) \
-		--rpc-url $(RPC_URL) \
-		--from $(PUBLIC_KEY_ADMIN_CHALLENGES_DATA) \
-		--legacy \
-		--trace
-
 intentChallengeDeployment:
 	@if [ -z "$(FACTORY_ADDRESS)" ] || [ -z "$(GAME)" ] || [ -z "$(PLATFORM)" ] || [ -z "$(NB_TEAMS)" ] || [ -z "$(NB_PLAYERS)" ] || [ -z "$(AMOUNT)" ] || [ -z "$(START_TIME)" ] || [ -z "$(IS_PRIVATE)" ]; then \
 		echo "Usage: make intentChallengeDeployment FACTORY_ADDRESS=<address> GAME=<game> PLATFORM=<platform> NB_TEAMS=<teams> NB_PLAYERS=<players> AMOUNT=<amount> START_TIME=<time> IS_PRIVATE=<bool>"; \
