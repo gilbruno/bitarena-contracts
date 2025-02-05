@@ -8,7 +8,7 @@ interface IBitarenaChallengesData {
     /**
      * @dev Événement émis lorsqu'un nouveau challenge est ajouté pour un joueur
      */
-    event ChallengeAddedToHistory(address indexed player, ChallengeParams challenge);
+    event ChallengeAddedToHistory(address indexed player, address challengeAddress);
 
     // Événement émis lorsqu'un nouveau contrat Challenge est autorisé
     event ChallengeContractAuthorized(address indexed challengeContract);
@@ -35,9 +35,10 @@ interface IBitarenaChallengesData {
     /**
      * @dev Ajoute un challenge à l'historique d'un joueur
      * @param _player L'adresse du joueur
+     * @param _challengeAddress L'adresse du challenge
      * @param _challenge Les paramètres du challenge
      */
-    function addChallengeToPlayerHistory(address _player, ChallengeParams memory _challenge) external;
+    function addChallengeToPlayerHistory(address _player, address _challengeAddress, ChallengeParams memory _challenge) external;
 
     function registerChallengeContract(address _challengeContract) external;
     /**

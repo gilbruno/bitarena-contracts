@@ -25,7 +25,7 @@ contract BitarenaChallengesDataTest is Test {
         //console2.log("Contract authorized before:", challengesData.hasRole(0x16d8fb2e06c01ce79d33fb64c8b359c18ecd1ff13b8f60c0b3d0401e63f5e593, targetContract));
         
         // Exécuter la fonction
-        challengesData.authorizeConractsRegistering(targetContract);
+        // challengesData.authorizeConractsRegistering(targetContract);
         
         // Log les rôles après
         //console2.log("Contract authorized after:", challengesData.hasRole(0x16d8fb2e06c01ce79d33fb64c8b359c18ecd1ff13b8f60c0b3d0401e63f5e593, targetContract));

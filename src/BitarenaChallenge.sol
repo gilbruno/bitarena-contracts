@@ -277,7 +277,7 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
             startAt: s_startAt,
             isPrivate: s_isPrivate
         });
-        s_challengesData.addChallengeToPlayerHistory(_player, _challengeParams);
+        s_challengesData.addChallengeToPlayerHistory(_player, address(this), _challengeParams);
     }
 
     
