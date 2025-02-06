@@ -65,4 +65,10 @@ make getDelayEndVictoryClaim CHALLENGE_ADDRESS=0xDb650ba03DA8E982d25FBEfc973277c
 
 Elles doivent vous renvoyer les delais configurés non nulls.
 
+## Retrait du pool
+
+```shell
+make withdrawChallengePool CHALLENGE_ADDRESS=0xDb650ba03DA8E982d25FBEfc973277c758bf38D6
+```
+
 

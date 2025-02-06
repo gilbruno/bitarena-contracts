@@ -56,3 +56,27 @@ setDelayVictoryClaim:
 		--rpc-url $(RPC_URL) \
 		--broadcast \
 		--legacy
+
+withdrawChallengePool:
+	@if [ -z "$(CHALLENGE_ADDRESS)" ]; then \
+		echo "Usage: make withdrawChallengePool CHALLENGE_ADDRESS=<address>"; \
+		exit 1; \
+	fi
+	@echo "Retrait du pool pour le challenge $(CHALLENGE_ADDRESS)"; \
+	forge script script/contracts/challenge/WithdrawChallengePool.s.sol:WithdrawChallengePool \
+		--sig "run(address)" \
+		$(CHALLENGE_ADDRESS) \
+		--rpc-url $(RPC_URL) \
+		--broadcast \
+		--legacy
+
+getWithdrawDate:
+	@if [ -z "$(CHALLENGE_ADDRESS)" ]; then \
+		echo "Usage: make getWithdrawDate CHALLENGE_ADDRESS=<address>"; \
+		exit 1; \
+	fi
+	@echo "Calcul de la date possible de withdraw pour le challenge $(CHALLENGE_ADDRESS)"; \
+	forge script script/contracts/challenge/GetWithdrawDate.s.sol:GetWithdrawDate \
+		--sig "run(address)" \
+		$(CHALLENGE_ADDRESS) \
+		--rpc-url $(RPC_URL)
