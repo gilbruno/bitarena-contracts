@@ -35,7 +35,7 @@ A la suite de cette commande, le challenge est créé, une team a été créé e
 Si TEAM_INDEX vaut 0, alors c'est une nouvelle équipe qui est créée.
 
 ```shell
-make createOrJoinTeam CHALLENGE_ADDRESS=0xFF96A28e8906cE4d672d745aD608Ff33878aFbd1 TEAM_INDEX=0 AMOUNT=0.01
+make createOrJoinTeamWithForge CHALLENGE_ADDRESS=0xaB809Fc8011bAc3062699E0586F0F623D848bc2B TEAM_INDEX=0 AMOUNT=0.01
 ```
 
 
