@@ -94,3 +94,46 @@ setDelayDisputeParticipation:
 		--rpc-url $(RPC_URL) \
 		--broadcast \
 		--legacy
+
+getChallengePool:
+	@if [ -z "$(CHALLENGE_ADDRESS)" ]; then \
+		echo "Usage: make getChallengePool CHALLENGE_ADDRESS=<address>"; \
+		exit 1; \
+	fi
+	@echo "Récupération du montant du pool pour le challenge $(CHALLENGE_ADDRESS)"; \
+	cast call $(CHALLENGE_ADDRESS) "getChallengePool()(uint256)" \
+		--rpc-url $(RPC_URL)
+
+getPoolAmountForWinner:
+	@if [ -z "$(CHALLENGE_ADDRESS)" ]; then \
+		echo "Usage: make getPoolAmountForWinner CHALLENGE_ADDRESS=<address>"; \
+		exit 1; \
+	fi
+	@echo "Récupération du montant à distribuer à l'équipe gagnante pour le challenge $(CHALLENGE_ADDRESS)"; \
+	cast call $(CHALLENGE_ADDRESS) "calculatePoolAmountToSendBackForWinnerTeam()(uint256)" \
+		--rpc-url $(RPC_URL)
+
+calculateAmountPerPlayer:
+	@if [ -z "$(CHALLENGE_ADDRESS)" ]; then \
+		echo "Usage: make calculateAmountPerPlayer CHALLENGE_ADDRESS=<address>"; \
+		exit 1; \
+	fi
+	@echo "Calcul du montant par joueur pour le challenge $(CHALLENGE_ADDRESS)"; \
+	forge script script/contracts/challenge/CalculateAmountPerPlayer.s.sol:CalculateAmountPerPlayer \
+		--sig "run(address)" \
+		$(CHALLENGE_ADDRESS) \
+		--rpc-url $(RPC_URL)
+
+calculateRemainingAmounts:
+	@if [ -z "$(CHALLENGE_ADDRESS)" ]; then \
+		echo "Usage: make calculateRemainingAmounts CHALLENGE_ADDRESS=<address>"; \
+		exit 1; \
+	fi
+	@echo "Calcul des montants restants pour l'admin..."
+	@echo "1. Pool amount remaining for admin:"
+	@echo "s_challengePool = $$(cast call $(CHALLENGE_ADDRESS) "getChallengePool()(uint256)" --rpc-url $(RPC_URL))"
+	@echo "totalPoolAmountForWinner = $$(cast call $(CHALLENGE_ADDRESS) "calculatePoolAmountToSendBackForWinnerTeam()(uint256)" --rpc-url $(RPC_URL))"
+	@echo ""
+	@echo "2. Dispute pool amount remaining for admin:"
+	@echo "s_disputePool = $$(cast call $(CHALLENGE_ADDRESS) "getDisputePool()(uint256)" --rpc-url $(RPC_URL))"
+	@echo "amountDispute = $$(cast call $(CHALLENGE_ADDRESS) "getDisputeAmountParticipation()(uint256)" --rpc-url $(RPC_URL))"		
