@@ -557,30 +557,34 @@ contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, Reentranc
 
         uint256 totalPoolAmountForWinner = calculatePoolAmountToSendBackForWinnerTeam();        
         
-        //STEP 1: Send dispute amount back to the winner
+        //STEP 1: Send dispute amount back to the winner only if there was a dispute
         address disputeParticipant = s_disputeParticipants[s_winnerTeam];
-        uint256 amountDispute = getDisputeAmountParticipation();
-        (bool success, ) = disputeParticipant.call{value: amountDispute}("");
-        if (!success) revert SendDisputeAmountBackToWinnerError();
+        uint256 amountDispute = 0;
+        if (disputeParticipant != address(0)) {
+            amountDispute = getDisputeAmountParticipation();
+            (bool success1, ) = disputeParticipant.call{value: amountDispute}("");
+            if (!success1) revert SendDisputeAmountBackToWinnerError();
+        }    
         
-
-
         //STEP 2 : Send challenge pool to players of winner team
         uint256 amountPerPlayer = totalPoolAmountForWinner / playerWinnersCount;
 
         for (uint256 i = 0; i < playerWinnersCount; i++) {
-            (success, ) = winningTeam[i].call{value: amountPerPlayer}("");
-            if (!success) revert SendMoneyBackToPlayersError();
+            (bool success2, ) = winningTeam[i].call{value: amountPerPlayer}("");
+            if (!success2) revert SendMoneyBackToPlayersError();
         }     
 
-        //Decrements the different pool amount
+        //STEP 3 : Decrements the different pool amount
         uint256 poolAmountRemainingforAdmin = s_challengePool - totalPoolAmountForWinner;
-        uint256 disputePoolAmountRemainingForAdmin = s_disputePool - amountDispute;
+        uint256 disputePoolAmountRemainingForAdmin = 0;
+        if (disputeParticipant != address(0)) {
+            disputePoolAmountRemainingForAdmin = s_disputePool - amountDispute;
+        }
 
-        //STEP 3 : Send back dispute fee and pool fee to the admin challenge
+        //STEP 4 : Send back dispute fee and pool fee to the admin challenge
         uint256 amountToSendToAdmin = poolAmountRemainingforAdmin + disputePoolAmountRemainingForAdmin;
-        (success, ) = s_admin.call{value: amountToSendToAdmin}("");
-        if (!success) revert SendMoneyBackToAdminError();
+        (bool success3, ) = s_admin.call{value: amountToSendToAdmin}("");
+        if (!success3) revert SendMoneyBackToAdminError();
          
         s_challengesData.setChallengeAsEnded(address(this)); 
         emit PoolChallengeWithdrawed(s_winnerTeam, _msgSender());

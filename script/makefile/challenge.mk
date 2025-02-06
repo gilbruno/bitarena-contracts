@@ -136,4 +136,12 @@ calculateRemainingAmounts:
 	@echo ""
 	@echo "2. Dispute pool amount remaining for admin:"
 	@echo "s_disputePool = $$(cast call $(CHALLENGE_ADDRESS) "getDisputePool()(uint256)" --rpc-url $(RPC_URL))"
-	@echo "amountDispute = $$(cast call $(CHALLENGE_ADDRESS) "getDisputeAmountParticipation()(uint256)" --rpc-url $(RPC_URL))"		
+	@echo "amountDispute = $$(cast call $(CHALLENGE_ADDRESS) "getDisputeAmountParticipation()(uint256)" --rpc-url $(RPC_URL))"
+	@echo ""
+	@echo "Résultats des soustractions :"
+	@s_challengePool=$$(cast call $(CHALLENGE_ADDRESS) "getChallengePool()(uint256)" --rpc-url $(RPC_URL)); \
+	totalPoolAmountForWinner=$$(cast call $(CHALLENGE_ADDRESS) "calculatePoolAmountToSendBackForWinnerTeam()(uint256)" --rpc-url $(RPC_URL)); \
+	s_disputePool=$$(cast call $(CHALLENGE_ADDRESS) "getDisputePool()(uint256)" --rpc-url $(RPC_URL)); \
+	amountDispute=$$(cast call $(CHALLENGE_ADDRESS) "getDisputeAmountParticipation()(uint256)" --rpc-url $(RPC_URL)); \
+	echo "poolAmountRemainingforAdmin = $$((s_challengePool - totalPoolAmountForWinner))"; \
+	echo "disputePoolAmountRemainingForAdmin = $$((s_disputePool - amountDispute))"

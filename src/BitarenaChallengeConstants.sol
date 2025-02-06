@@ -12,7 +12,7 @@ bytes32 constant GAMES_ADMIN_ROLE = keccak256("GAMES_ADMIN_ROLE");
 uint8 constant FEE_PERCENTAGE_AMOUNT_BY_DEFAULT = 15;
 uint8 constant FEE_PERCENTAGE_DISPUTE_AMOUNT_BY_DEFAULT = 10;
 
-uint256 constant DELAY_START_VICTORY_CLAIM_BY_DEFAULT = 1 minutes; //After startAt
+uint256 constant DELAY_START_VICTORY_CLAIM_BY_DEFAULT = 0 minutes; //After startAt
 uint256 constant DELAY_END_VICTORY_CLAIM_BY_DEFAULT = 1 hours; //After startVictoryclaim
 
 uint256 constant DELAY_START_DISPUTE_PARTICIPATION_BY_DEFAULT = 0; //After endVictoryclaim
