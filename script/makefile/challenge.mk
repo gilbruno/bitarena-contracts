@@ -80,3 +80,17 @@ getWithdrawDate:
 		--sig "run(address)" \
 		$(CHALLENGE_ADDRESS) \
 		--rpc-url $(RPC_URL)
+
+setDelayDisputeParticipation:
+	@if [ -z "$(CHALLENGE_ADDRESS)" ] || [ -z "$(DELAY)" ] || [ -z "$(IS_START_DELAY)" ]; then \
+		echo "Usage: make setDelayDisputeParticipation CHALLENGE_ADDRESS=<address> DELAY=<delay> IS_START_DELAY=<true/false>"; \
+		echo "Note: IS_START_DELAY=true pour le délai de début, false pour le délai de fin"; \
+		exit 1; \
+	fi
+	@echo "Configuration du délai de $(shell if [ "$(IS_START_DELAY)" = "true" ]; then echo "début"; else echo "fin"; fi) de participation à la dispute pour le challenge $(CHALLENGE_ADDRESS)"; \
+	forge script script/contracts/challenge/SetDelayDisputeParticipation.s.sol:SetDelayDisputeParticipation \
+		--sig "run(address,bool,uint256)" \
+		$(CHALLENGE_ADDRESS) $(IS_START_DELAY) $(DELAY) \
+		--rpc-url $(RPC_URL) \
+		--broadcast \
+		--legacy

@@ -70,5 +70,20 @@ Elles doivent vous renvoyer les delais configurés non nulls.
 ```shell
 make withdrawChallengePool CHALLENGE_ADDRESS=0xDb650ba03DA8E982d25FBEfc973277c758bf38D6
 ```
+Si l'erreur "MustWaitForEndDisputePeriodError" est lancée, c'est que l'application n'a pas attendu la fin de la période de participation à la dispute. L'application doit attendre la fin de la période de participation à la dispute avant de pouvoir retirer le pool. 
+Meme s'il n'y a pas de dispute, l'application doit attendre la fin de la période de participation à la dispute avant de pouvoir retirer le pool.
+
+Pour vérifier la date possible de retirer le pool, vous pouvez utiliser la commande suivante.
+
+```shell
+make getWithdrawDate CHALLENGE_ADDRESS=0xDb650ba03DA8E982d25FBEfc973277c758bf38D6
+```
+
+Pour configurer le délai de participation à la dispute, vous pouvez utiliser les commandes suivantes.
+
+```shell
+make setDelayDisputeParticipation CHALLENGE_ADDRESS=0xDb650ba03DA8E982d25FBEfc973277c758bf38D6 IS_START_DELAY=false DELAY=1 hours
+```
+
 
 
