@@ -16,7 +16,7 @@ make setPlatform PLATFORM_NAME="Platform Name"
 make setGame GAME_NAME="Game Name"
 ```
 
-## Autorisation de la factory à ineteragir avec le smart contract _BitarenaChallengeData_
+## Autorisation de la factory à interagir avec le smart contract _BitarenaChallengeData_
 
 
 ```shell
@@ -26,7 +26,7 @@ make authorize-contract
 ## Création d'un challenge
 
 ```shell
-make intentChallengeDeploymentWithForge GAME="FarCry" PLATFORM="Steam" NB_TEAMS=2 NB_PLAYERS=1 AMOUNT=0.01 START_DATE="2025-02-04 15:30:00" IS_PRIVATE=true
+make intentChallengeDeploymentWithForge GAME="Farcry" PLATFORM="Steam" NB_TEAMS=2 NB_PLAYERS=1 AMOUNT=0.01 START_DATE="2025-02-04 15:30:00" IS_PRIVATE=true
 ```
 
 A la suite de cette commande, le challenge est créé, une team a été créé et le createur du challenge fait partie de la team 1.
