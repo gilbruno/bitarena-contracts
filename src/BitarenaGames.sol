@@ -16,6 +16,15 @@ contract BitarenaGames is Context, AccessControl, IBitarenaGames {
 
     string[] private s_platforms;
 
+    string[] private s_modes;
+
+    struct GameSupport {
+        string[] platforms;
+        string[] modes;
+    }
+
+    mapping(string => GameSupport) private s_gameSupport;
+
     constructor(address _adminGames) {
         _grantRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _grantRole(GAMES_ADMIN_ROLE, _adminGames);
@@ -36,6 +45,15 @@ contract BitarenaGames is Context, AccessControl, IBitarenaGames {
         for(uint i = 0; i < s_platforms.length; i++) {
             if(keccak256(bytes(s_platforms[i])) == keccak256(bytes(_platform))) {
                 revert PlatformAlreadyExists(_platform);
+            }
+        }
+        _;
+    }
+
+    modifier modeNotExists(string memory _mode) {
+        for(uint i = 0; i < s_modes.length; i++) {
+            if(keccak256(bytes(s_modes[i])) == keccak256(bytes(_mode))) {
+                revert ModeAlreadyExists(_mode);
             }
         }
         _;
@@ -82,6 +100,74 @@ contract BitarenaGames is Context, AccessControl, IBitarenaGames {
         emit PlatformAdded(_platform);
     }
 
+        /**
+     * @notice Ajoute ou met à jour les plateformes et modes supportés pour un jeu
+     * @param _game Le nom du jeu
+     * @param _platforms Les plateformes supportées
+     * @param _modes Les modes de jeu supportés
+     */
+    function setGameSupport(
+        string memory _game,
+        string[] memory _platforms,
+        string[] memory _modes
+    ) public onlyRole(GAMES_ADMIN_ROLE) {
+        // Vérifier que le jeu existe
+        bool gameExists = false;
+        for(uint i = 0; i < s_games.length; i++) {
+            if(keccak256(bytes(s_games[i])) == keccak256(bytes(_game))) {
+                gameExists = true;
+                break;
+            }
+        }
+        if(!gameExists) revert GameNotFound(_game);
+
+        // Vérifier que toutes les plateformes existent
+        for(uint i = 0; i < _platforms.length; i++) {
+            bool platformExists = false;
+            for(uint j = 0; j < s_platforms.length; j++) {
+                if(keccak256(bytes(s_platforms[j])) == keccak256(bytes(_platforms[i]))) {
+                    platformExists = true;
+                    break;
+                }
+            }
+            if(!platformExists) revert PlatformNotFound(_platforms[i]);
+        }
+
+        // Vérifier que tous les modes existent
+        for(uint i = 0; i < _modes.length; i++) {
+            bool modeExists = false;
+            for(uint j = 0; j < s_modes.length; j++) {
+                if(keccak256(bytes(s_modes[j])) == keccak256(bytes(_modes[i]))) {
+                    modeExists = true;
+                    break;
+                }
+            }
+            if(!modeExists) revert ModeNotFound(_modes[i]);
+        }
+
+        // Mettre à jour le support
+        s_gameSupport[_game] = GameSupport({
+            platforms: _platforms,
+            modes: _modes
+        });
+
+        emit GameSupportUpdated(_game, _platforms, _modes);
+    }
+
+    /**
+     * @notice Récupère les plateformes et modes supportés pour un jeu
+     * @param _game Le nom du jeu
+     * @return platforms Les plateformes supportées
+     * @return modes Les modes de jeu supportés
+     */
+    function getGameSupport(string memory _game) public view returns (
+        string[] memory platforms,
+        string[] memory modes
+    ) {
+        GameSupport memory support = s_gameSupport[_game];
+        return (support.platforms, support.modes);
+    }
+
     function getGames() public view returns (string[] memory) { 
         return s_games;
     }
@@ -95,6 +181,19 @@ contract BitarenaGames is Context, AccessControl, IBitarenaGames {
 
     function getPlatformByIndex(uint256 _platformIndex) public view returns (string memory){
         return s_platforms[_platformIndex];
+    }
+
+    function setMode(string memory _mode) public onlyRole(GAMES_ADMIN_ROLE) modeNotExists(_mode) {
+        s_modes.push(_mode);
+        emit ModeAdded(_mode);
+    }
+
+    function getModes() public view returns (string[] memory) {
+        return s_modes;
+    }
+
+    function getModeByIndex(uint256 _modeIndex) public view returns (string memory) {
+        return s_modes[_modeIndex];
     }
 
 }

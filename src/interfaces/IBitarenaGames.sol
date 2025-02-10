@@ -5,6 +5,12 @@ interface IBitarenaGames {
 
     event GameAdded(string game);
     event PlatformAdded(string platform);
+    event ModeAdded(string mode);
+    event GameSupportUpdated(
+        string game,
+        string[] platforms,
+        string[] modes
+    );
 
     function getGames() external view returns (string[] memory);
     function getPlatforms() external view returns (string[] memory);
@@ -13,14 +19,26 @@ interface IBitarenaGames {
     function setPlatform(string memory _platform) external;
     function getGameByIndex(uint256 _gameIndex) external view returns (string memory);
     function getPlatformByIndex(uint256 _platformIndex) external view returns (string memory);
+    function setMode(string memory _mode) external;
+    function getModes() external view returns (string[] memory);
+    function getModeByIndex(uint256 _modeIndex) external view returns (string memory);
+    function setGameSupport(
+        string memory _game,
+        string[] memory _platforms,
+        string[] memory _modes
+    ) external;
 
-    /*
-    * @dev an unexpected zero address was transmitted. (eg. `address(0)`)
-    */
+    function getGameSupport(string memory _game) external view returns (
+        string[] memory platforms,
+        string[] memory modes
+    );
+
     error AddressZeroError();
-
     error GameAlreadyExists(string game);
-
     error PlatformAlreadyExists(string platform);
+    error ModeAlreadyExists(string mode);
+    error GameNotFound(string game);
+    error PlatformNotFound(string platform);
+    error ModeNotFound(string mode);
 
 }
