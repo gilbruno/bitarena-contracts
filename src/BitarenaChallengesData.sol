@@ -123,6 +123,11 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
         uint256 amountPerPlayer = BitarenaChallenge(deployedChallengeAddress).getAmountPerPlayer();
         uint256 startAt = BitarenaChallenge(deployedChallengeAddress).getChallengeStartDate();
         bool isPrivate = BitarenaChallenge(deployedChallengeAddress).getChallengeVisibility();
+        uint256 delayStartVictoryClaim = BitarenaChallenge(deployedChallengeAddress).getDelayStartVictoryClaim();
+        uint256 delayEndVictoryClaim = BitarenaChallenge(deployedChallengeAddress).getDelayEndVictoryClaim();
+        uint256 delayStartDisputeParticipation = BitarenaChallenge(deployedChallengeAddress).getDelayStartDisputeParticipation();
+        uint256 delayEndDisputeParticipation = BitarenaChallenge(deployedChallengeAddress).getDelayEndDisputeParticipation();
+        uint256 feePercentageDispute = BitarenaChallenge(deployedChallengeAddress).getFeePercentageDispute();
 
         Challenge memory newChallenge = Challenge({
             challengeAddress: deployedChallengeAddress,
@@ -135,7 +140,15 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
             nbTeamPlayers: nbTeamPlayers,
             amountPerPlayer: amountPerPlayer,
             startAt: startAt,
-            isPrivate: isPrivate
+            isPrivate: isPrivate,
+            pool: 0,                      
+            winnerTeam: 0,
+            winnersClaimedCount: 0,
+            delayStartVictoryClaim: delayStartVictoryClaim,
+            delayEndVictoryClaim: delayEndVictoryClaim,
+            delayStartDisputeParticipation: delayStartDisputeParticipation,
+            delayEndDisputeParticipation: delayEndDisputeParticipation,
+            feePercentageDispute: feePercentageDispute
         });
         return newChallenge;
     }

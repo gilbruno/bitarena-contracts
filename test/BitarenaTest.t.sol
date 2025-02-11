@@ -13,19 +13,12 @@ import {BalanceChallengeCreatorError, ChallengeAdminAddressZeroError,
     SendMoneyToChallengeError} from '../src/BitarenaFactoryErrors.sol';
 import {Challenge} from '../src/ChallengeStruct.sol';
 import {BitarenaChallenge} from '../src/BitarenaChallenge.sol';
-import {BalanceChallengePlayerError, ChallengeCancelAfterStartDateError, ChallengeCanceledError, ChallengePoolAlreadyWithdrawed, ClaimVictoryNotAuthorized, 
-    DelayClaimVictoryNotSet, DelayUnclaimVictoryNotSet, DelayStartGreaterThanDelayEnd, 
-    DisputeExistsError, DisputeParticipationNotAuthorizedError, FeeDisputeNotSetError, NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, 
-    NotSufficientAmountForDisputeError, NotTimeYetToParticipateToDisputeError, NoDisputeError, NoDisputeParticipantsError, NotTeamMemberError, RefundImpossibleDueToTooManyDisputeParticipantsError, 
-    RevealWinnerImpossibleDueToTooFewDisputersError, TeamAlreadyClaimedVictoryError, TeamDoesNotExistsError, TeamDidNotClaimVictoryError, TeamIsNotDisputerError, TeamOfSignerAlreadyParticipatesInDisputeError, TimeElapsedToJoinTeamError, 
-    TimeElapsedForDisputeParticipationError, TimeElapsedToClaimVictoryError, TimeElapsedToUnclaimVictoryError, TimeTooSoonToClaimVictoryError, UnclaimVictoryNotAuthorized, WinnerNotRevealedYetError, 
-    WithdrawPoolByLooserTeamImpossibleError, WithdrawPoolNotAuthorized} from "../src/BitarenaChallengeErrors.sol";
-import {ParticipateToDispute, PlayerJoinsTeam, PoolChallengeWithdrawed, RevealWinner, TeamCreated, Debug, VictoryClaimed, VictoryUnclaimed} from "../src/BitarenaChallengeEvents.sol";
 import {MockFailingReceiver} from "./MockContracts.sol";
 import {BitarenaChallengesData} from "../src/BitarenaChallengesData.sol";
 import {IBitarenaChallengesData} from "../src/interfaces/IBitarenaChallengesData.sol";
 import {ERC1967Proxy} from "openzeppelin-contracts/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {ChallengeParams} from "../src/struct/ChallengeParams.sol";
+import {IBitarenaChallenge} from "../src/interfaces/IBitarenaChallenge.sol";
 
 
 contract BitarenaTest is Test {
@@ -905,7 +898,7 @@ contract BitarenaTest is Test {
         bitarenaChallenge.setDelayEndForVictoryClaim(5 hours);
         vm.stopBroadcast();
 
-        vm.expectRevert(DelayStartGreaterThanDelayEnd.selector);
+        vm.expectRevert(IBitarenaChallenge.DelayStartGreaterThanDelayEnd.selector);
         vm.startBroadcast(ADMIN_CHALLENGE1);
         bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
         vm.stopBroadcast();
@@ -929,7 +922,7 @@ contract BitarenaTest is Test {
         bitarenaChallenge.setDelayStartDisputeParticipation(10 hours);
         vm.stopBroadcast();
 
-        vm.expectRevert(DelayStartGreaterThanDelayEnd.selector);
+        vm.expectRevert(IBitarenaChallenge.DelayStartGreaterThanDelayEnd.selector);
         vm.startBroadcast(ADMIN_DISPUTE_CHALLENGE1);
         bitarenaChallenge.setDelayEndDisputeParticipation(5 hours);
         vm.stopBroadcast();
@@ -1176,7 +1169,7 @@ contract BitarenaTest is Test {
         BitarenaChallenge bitarenaChallenge = bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, 1);
         vm.stopBroadcast();       
 
-        vm.expectRevert(NbPlayersPerTeamsLimitReachedError.selector);
+        vm.expectRevert(IBitarenaChallenge.NbPlayersPerTeamsLimitReachedError.selector);
         vm.startBroadcast(PLAYER1_CHALLENGE1);
         bitarenaChallenge.createOrJoinTeam{value: AMOUNT_PER_PLAYER}(1);
         vm.stopBroadcast();               
@@ -1262,7 +1255,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();               
 
         //The PLAYER_WITH_BALANCE_ZERO wants to join the team2
-        vm.expectRevert(BalanceChallengePlayerError.selector);
+        vm.expectRevert(IBitarenaChallenge.BalanceChallengePlayerError.selector);
         vm.startBroadcast(PLAYER_WITH_NOT_SUFFICIENT_BALANCE);
         bitarenaChallenge.createOrJoinTeam{value: 0}(2);
         vm.stopBroadcast();               
@@ -1305,7 +1298,7 @@ contract BitarenaTest is Test {
         BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
 
         //The PLAYER2 creates a new team : team with index 2 is created
-        vm.expectRevert(BalanceChallengePlayerError.selector);
+        vm.expectRevert(IBitarenaChallenge.BalanceChallengePlayerError.selector);
         vm.startBroadcast(PLAYER2_CHALLENGE1);
         bitarenaChallenge.createOrJoinTeam{value: 0}(0);
         vm.stopBroadcast();               
@@ -1345,7 +1338,7 @@ contract BitarenaTest is Test {
         //The PLAYER3 joins the team2 2 days leter (we define the startAt 1 day in the future)
         uint256 TwoDaysInTheFuture = block.timestamp + 2 days;
         vm.warp(TwoDaysInTheFuture);
-        vm.expectRevert(TimeElapsedToJoinTeamError.selector);
+        vm.expectRevert(IBitarenaChallenge.TimeElapsedToJoinTeamError.selector);
         vm.startBroadcast(PLAYER3_CHALLENGE1);
         bitarenaChallenge.createOrJoinTeam{value: AMOUNT_PER_PLAYER}(2);
         vm.stopBroadcast();               
@@ -1370,7 +1363,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();               
 
         //The PLAYER3 joins the team3 (with index 3) that does not exist
-        vm.expectRevert(TeamDoesNotExistsError.selector);
+        vm.expectRevert(IBitarenaChallenge.TeamDoesNotExistsError.selector);
         vm.startBroadcast(PLAYER3_CHALLENGE1);
         bitarenaChallenge.createOrJoinTeam{value: AMOUNT_PER_PLAYER}(3);
         vm.stopBroadcast();               
@@ -1439,7 +1432,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();
 
         //A second player joins the team 1
-        vm.expectRevert(ChallengeCanceledError.selector);
+        vm.expectRevert(IBitarenaChallenge.ChallengeCanceledError.selector);
         vm.startBroadcast(PLAYER1_CHALLENGE1);
         bitarenaChallenge.createOrJoinTeam{value: AMOUNT_PER_PLAYER}(1);
         vm.stopBroadcast();               
@@ -1453,7 +1446,7 @@ contract BitarenaTest is Test {
 
         //The creator cancels the challenge in 2 days so after the start date of the challenge
         vm.warp(block.timestamp + 2 days);
-        vm.expectRevert(ChallengeCancelAfterStartDateError.selector);
+        vm.expectRevert(IBitarenaChallenge.ChallengeCancelAfterStartDateError.selector);
         vm.startBroadcast(CREATOR_CHALLENGE1);
         bitarenaChallenge.cancelChallenge();
         vm.stopBroadcast();
@@ -1539,7 +1532,7 @@ contract BitarenaTest is Test {
         //As the challenge must start 1 day after its creation, we try to claim 3 days after the start date
         uint256 _3DaysInTheFuture = block.timestamp + 3 days;
         vm.warp(_3DaysInTheFuture);
-        vm.expectRevert(TimeElapsedToClaimVictoryError.selector);
+        vm.expectRevert(IBitarenaChallenge.TimeElapsedToClaimVictoryError.selector);
         vm.startBroadcast(PLAYER3_CHALLENGE1);
         bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
@@ -1561,7 +1554,7 @@ contract BitarenaTest is Test {
         //As the challenge must start 1 day after its creation, we try to claim 3 days after the start date
         uint256 _3DaysInTheFuture = block.timestamp + 3 days;
         vm.warp(_3DaysInTheFuture);
-        vm.expectRevert(DelayClaimVictoryNotSet.selector);
+        vm.expectRevert(IBitarenaChallenge.DelayClaimVictoryNotSet.selector);
         vm.startBroadcast(PLAYER3_CHALLENGE1);
         bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
@@ -1584,7 +1577,7 @@ contract BitarenaTest is Test {
         //As the challenge must start 1 day after its creation, we try to claim 15 hours after the start date
         uint256 _3DaysInTheFuture = block.timestamp + 3 days;
         vm.warp(_3DaysInTheFuture);
-        vm.expectRevert(DelayClaimVictoryNotSet.selector);
+        vm.expectRevert(IBitarenaChallenge.DelayClaimVictoryNotSet.selector);
         vm.startBroadcast(PLAYER3_CHALLENGE1);
         bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
@@ -1612,7 +1605,7 @@ contract BitarenaTest is Test {
         //As the challenge must start 1 day after its creation, we try to claim 2 days after the start date
         uint256 _3DaysInTheFuture = block.timestamp + 2 days;
         vm.warp(_3DaysInTheFuture);
-        vm.expectRevert(ChallengeCanceledError.selector);
+        vm.expectRevert(IBitarenaChallenge.ChallengeCanceledError.selector);
         vm.startBroadcast(PLAYER3_CHALLENGE1);
         bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
@@ -1636,7 +1629,7 @@ contract BitarenaTest is Test {
         // the PLAYER4 tries to claim the victory but he's not authorized as he has not the GAMER_ROLE
         uint256 _3DaysInTheFuture = block.timestamp + 2 days;
         vm.warp(_3DaysInTheFuture);
-        vm.expectRevert(ClaimVictoryNotAuthorized.selector);
+        vm.expectRevert(IBitarenaChallenge.ClaimVictoryNotAuthorized.selector);
         vm.startBroadcast(PLAYER4_CHALLENGE1);
         bitarenaChallenge.claimVictory();
         vm.stopBroadcast();         
@@ -1689,7 +1682,7 @@ contract BitarenaTest is Test {
         vm.warp(timeJustAfterStart);
 
         // La tentative de réclamer la victoire doit échouer car trop tôt
-        vm.expectRevert(TimeTooSoonToClaimVictoryError.selector);
+        vm.expectRevert(IBitarenaChallenge.TimeTooSoonToClaimVictoryError.selector);
         vm.startBroadcast(PLAYER1_CHALLENGE1);
         bitarenaChallenge.claimVictory();
         vm.stopBroadcast();
@@ -1718,13 +1711,13 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
 
         // Deuxième claim de victoire par le même joueur (devrait échouer)
-        vm.expectRevert(TeamAlreadyClaimedVictoryError.selector);
+        vm.expectRevert(IBitarenaChallenge.TeamAlreadyClaimedVictoryError.selector);
         vm.startBroadcast(PLAYER1_CHALLENGE1);
         bitarenaChallenge.claimVictory();
         vm.stopBroadcast();
 
         // Deuxième claim de victoire par un autre joueur de la même équipe (devrait échouer aussi)
-        vm.expectRevert(TeamAlreadyClaimedVictoryError.selector);
+        vm.expectRevert(IBitarenaChallenge.TeamAlreadyClaimedVictoryError.selector);
         vm.startBroadcast(CREATOR_CHALLENGE1); // Le créateur est dans la même équipe que PLAYER1
         bitarenaChallenge.claimVictory();
         vm.stopBroadcast();
@@ -2116,7 +2109,7 @@ contract BitarenaTest is Test {
 
         //There is no dispute so anyone can participate to a dispute
         //PLAYER1 wants to participete to a dispute 
-        vm.expectRevert(NoDisputeError.selector);
+        vm.expectRevert(IBitarenaChallenge.NoDisputeError.selector);
         vm.startBroadcast(PLAYER1_CHALLENGE1);
         bitarenaChallenge.participateToDispute{value: 1 ether}();
         vm.stopBroadcast();         
@@ -2197,7 +2190,7 @@ contract BitarenaTest is Test {
 
         //There is a dispute so anyone can participate to a dispute
         //PLAYER1 wants to participate to a dispute         
-        vm.expectRevert(FeeDisputeNotSetError.selector);
+        vm.expectRevert(IBitarenaChallenge.FeeDisputeNotSetError.selector);
         vm.startBroadcast(PLAYER1_CHALLENGE1);
         bitarenaChallenge.participateToDispute{value: 1 ether}();
         vm.stopBroadcast();         
@@ -2241,7 +2234,7 @@ contract BitarenaTest is Test {
 
         //There is a dispute so anyone can participate to a dispute
         //PLAYER1 wants to participate to a dispute         
-        vm.expectRevert(FeeDisputeNotSetError.selector);
+        vm.expectRevert(IBitarenaChallenge.FeeDisputeNotSetError.selector);
         vm.startBroadcast(PLAYER1_CHALLENGE1);
         bitarenaChallenge.participateToDispute{value: 1 ether}();
         vm.stopBroadcast();         
@@ -2282,7 +2275,7 @@ contract BitarenaTest is Test {
         //There is a dispute so anyone who is granted can participate to a dispute
         //PLAYER4 wants to participate to a dispute but he did not participate to the challenge
         vm.deal(PLAYER4_CHALLENGE1, 1 ether);
-        vm.expectRevert(DisputeParticipationNotAuthorizedError.selector);
+        vm.expectRevert(IBitarenaChallenge.DisputeParticipationNotAuthorizedError.selector);
         vm.startBroadcast(PLAYER4_CHALLENGE1);
         bitarenaChallenge.participateToDispute{value: 1 ether}();
         vm.stopBroadcast();         
@@ -2322,7 +2315,7 @@ contract BitarenaTest is Test {
 
         //There is a dispute so anyone who is granted can participate to a dispute
         //PLAYER3 wants to participate to a dispute but he provides a not sufficient amount 
-        vm.expectRevert(NotSufficientAmountForDisputeError.selector);
+        vm.expectRevert(IBitarenaChallenge.NotSufficientAmountForDisputeError.selector);
         vm.startBroadcast(PLAYER3_CHALLENGE1);
         //uint256 amountDispute = bitarenaChallenge.getDisputeAmountParticipation() - 1000;
         bitarenaChallenge.participateToDispute{value: 1000}();
@@ -2388,7 +2381,7 @@ contract BitarenaTest is Test {
 
         //PLAYER2 (=team2) wants to participate to a dispute but PLAYER3 from the same team did it
         //So it must revert with error 'TeamOfSignerAlreadyParticipatesInDisputeError'
-        vm.expectRevert(TeamOfSignerAlreadyParticipatesInDisputeError.selector);
+        vm.expectRevert(IBitarenaChallenge.TeamOfSignerAlreadyParticipatesInDisputeError.selector);
         vm.startBroadcast(PLAYER2_CHALLENGE1);
         bitarenaChallenge.participateToDispute{value: amountDispute}();
         vm.stopBroadcast();         
@@ -2446,7 +2439,7 @@ contract BitarenaTest is Test {
 
         //PLAYER2 (=team2) wants to participate to a dispute but PLAYER3 from the same team did it
         //So it must revert with error 'TeamOfSignerAlreadyParticipatesInDisputeError'
-        vm.expectRevert(TeamOfSignerAlreadyParticipatesInDisputeError.selector);
+        vm.expectRevert(IBitarenaChallenge.TeamOfSignerAlreadyParticipatesInDisputeError.selector);
         vm.startBroadcast(PLAYER2_CHALLENGE1);
         bitarenaChallenge.participateToDispute{value: amountDispute}();
         vm.stopBroadcast();         
@@ -2486,7 +2479,7 @@ contract BitarenaTest is Test {
         uint256 amountDispute = bitarenaChallenge.getDisputeAmountParticipation();
 
         vm.warp(block.timestamp + 5 days);
-        vm.expectRevert(TimeElapsedForDisputeParticipationError.selector);
+        vm.expectRevert(IBitarenaChallenge.TimeElapsedForDisputeParticipationError.selector);
         vm.startBroadcast(PLAYER1_CHALLENGE1);
         bitarenaChallenge.participateToDispute{value: amountDispute}();
         vm.stopBroadcast();         
@@ -2613,7 +2606,7 @@ contract BitarenaTest is Test {
         //PLAYER4 of team3 wants to participate to a dispute but did not claim its victory
         uint256 amountDispute = bitarenaChallenge.getDisputeAmountParticipation();
         vm.warp(bitarenaChallenge.getChallengeStartDate() + bitarenaChallenge.getDelayStartVictoryClaim() + bitarenaChallenge.getDelayEndVictoryClaim() + 2 hours);
-        vm.expectRevert(TeamDidNotClaimVictoryError.selector);
+        vm.expectRevert(IBitarenaChallenge.TeamDidNotClaimVictoryError.selector);
         vm.startBroadcast(PLAYER4_CHALLENGE1);
         bitarenaChallenge.participateToDispute{value: amountDispute}();
         vm.stopBroadcast();         
@@ -2653,7 +2646,7 @@ contract BitarenaTest is Test {
 
         //PLAYER1 wants to withdrathe pool 
         vm.warp(block.timestamp + 1 weeks);
-        vm.expectRevert(WinnerNotRevealedYetError.selector);
+        vm.expectRevert(IBitarenaChallenge.WinnerNotRevealedYetError.selector);
         vm.startBroadcast(PLAYER1_CHALLENGE1);
         bitarenaChallenge.withdrawChallengePool();
         vm.stopBroadcast();         
@@ -2687,7 +2680,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
 
         //PLAYER4 wants to withdraw the pool as he did not participate to the challenge
-        vm.expectRevert(WithdrawPoolNotAuthorized.selector);
+        vm.expectRevert(IBitarenaChallenge.WithdrawPoolNotAuthorized.selector);
         vm.startBroadcast(PLAYER4_CHALLENGE1);
         bitarenaChallenge.withdrawChallengePool();
         vm.stopBroadcast();         
@@ -2787,7 +2780,7 @@ contract BitarenaTest is Test {
 
         //If the member of the winner team triesto withdraw the pool twice ==> it reverts with error
         vm.warp(block.timestamp + 1 weeks);
-        vm.expectRevert(ChallengePoolAlreadyWithdrawed.selector);
+        vm.expectRevert(IBitarenaChallenge.ChallengePoolAlreadyWithdrawed.selector);
         vm.startBroadcast(PLAYER2_CHALLENGE1);
         bitarenaChallenge.withdrawChallengePool();
         vm.stopBroadcast();         
@@ -2829,7 +2822,7 @@ contract BitarenaTest is Test {
         bitarenaChallenge.participateToDispute{value: amountDispute}();
         vm.stopBroadcast();         
 
-        vm.expectRevert(WithdrawPoolByLooserTeamImpossibleError.selector);
+        vm.expectRevert(IBitarenaChallenge.WithdrawPoolByLooserTeamImpossibleError.selector);
         vm.warp(block.timestamp + 1 weeks);
         vm.startBroadcast(PLAYER1_CHALLENGE1);
         bitarenaChallenge.withdrawChallengePool();
@@ -2880,7 +2873,7 @@ contract BitarenaTest is Test {
         bitarenaChallenge.participateToDispute{value: amountDispute}();
         vm.stopBroadcast();         
 
-        vm.expectRevert(WinnerNotRevealedYetError.selector);
+        vm.expectRevert(IBitarenaChallenge.WinnerNotRevealedYetError.selector);
         vm.warp(block.timestamp + 1 weeks);
         vm.startBroadcast(PLAYER1_CHALLENGE1);
         bitarenaChallenge.withdrawChallengePool();
@@ -3170,7 +3163,7 @@ contract BitarenaTest is Test {
         joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
 
         //The PLAYER4 wants to creates a new team : it reverts due to max nb team limit reached
-        vm.expectRevert(NbTeamsLimitReachedError.selector);
+        vm.expectRevert(IBitarenaChallenge.NbTeamsLimitReachedError.selector);
         vm.startBroadcast(PLAYER4_CHALLENGE1);
         bitarenaChallenge.createOrJoinTeam{value: AMOUNT_PER_PLAYER}(0);
         vm.stopBroadcast();               
@@ -3218,7 +3211,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
 
         //The tx fails as it's useless to reveal the winner because ther is only 1 disputer
-        vm.expectRevert(RevealWinnerImpossibleDueToTooFewDisputersError.selector);
+        vm.expectRevert(IBitarenaChallenge.RevealWinnerImpossibleDueToTooFewDisputersError.selector);
         vm.startBroadcast(ADMIN_DISPUTE_CHALLENGE1);
         bitarenaChallenge.revealWinnerAfterDispute(1);
         vm.stopBroadcast();         
@@ -3230,7 +3223,7 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
 
         //The tx fails because the dispute admin tries to reveal a winner team that does not exists
-        vm.expectRevert(TeamDoesNotExistsError.selector);
+        vm.expectRevert(IBitarenaChallenge.TeamDoesNotExistsError.selector);
         vm.startBroadcast(ADMIN_DISPUTE_CHALLENGE1);
         bitarenaChallenge.revealWinnerAfterDispute(4);
         vm.stopBroadcast();         
@@ -3238,7 +3231,7 @@ contract BitarenaTest is Test {
         //The Dispute Admin wants to reveal a winner team that does not participate to a dispute.
         // So The tx fails with error 'TeamIsNotDisputerError'
         vm.startBroadcast(ADMIN_DISPUTE_CHALLENGE1);
-        vm.expectRevert(TeamIsNotDisputerError.selector);
+        vm.expectRevert(IBitarenaChallenge.TeamIsNotDisputerError.selector);
         bitarenaChallenge.revealWinnerAfterDispute(3);
         vm.stopBroadcast();         
 
@@ -3253,7 +3246,7 @@ contract BitarenaTest is Test {
         //After revealing the winner = team2
         // A player of team1 wants to withdraw the challenge pool but the winner is team2, so the tx fails 
         //with error "WithdrawPoolByLooserTeamImpossibleError"
-        vm.expectRevert(WithdrawPoolByLooserTeamImpossibleError.selector);
+        vm.expectRevert(IBitarenaChallenge.WithdrawPoolByLooserTeamImpossibleError.selector);
         vm.warp(block.timestamp + 1 weeks);
         vm.startBroadcast(PLAYER1_CHALLENGE1);
         bitarenaChallenge.withdrawChallengePool();
@@ -3278,7 +3271,7 @@ contract BitarenaTest is Test {
         //The PLAYER2 creates a new team : team with index 2 is created
         //Test that an event TeamCreated with team index = 2 is emitted
         vm.expectEmit(true, false, false, false);
-        emit TeamCreated(2);
+        emit IBitarenaChallenge.TeamCreated(2);
         vm.startBroadcast(PLAYER2_CHALLENGE1);
         bitarenaChallenge.createOrJoinTeam{value: AMOUNT_PER_PLAYER}(0);
         vm.stopBroadcast();               
@@ -3286,7 +3279,7 @@ contract BitarenaTest is Test {
         //The PLAYER3 joins the team2 (with index 2) 
         vm.expectEmit(true, true, false, false);
         //Test that an event PlayerJoinsTeam with team index = 2 and signer = PLAYER3_CHALLENGE1 is emitted
-        emit PlayerJoinsTeam(2, PLAYER3_CHALLENGE1);
+        emit IBitarenaChallenge.PlayerJoinsTeam(2, PLAYER3_CHALLENGE1);
         vm.startBroadcast(PLAYER3_CHALLENGE1);
         bitarenaChallenge.createOrJoinTeam{value: AMOUNT_PER_PLAYER}(2);
         vm.stopBroadcast();         

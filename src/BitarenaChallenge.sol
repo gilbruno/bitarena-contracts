@@ -12,20 +12,16 @@ import {AccessControlDefaultAdminRules} from "openzeppelin-contracts/contracts/a
 import {ReentrancyGuard} from "openzeppelin-contracts/contracts/utils/ReentrancyGuard.sol";
 import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
 import {Pausable} from "openzeppelin-contracts/contracts/utils/Pausable.sol";
-import {BalanceChallengePlayerError, ChallengeCanceledError, ChallengeCancelAfterStartDateError, ChallengePoolAlreadyWithdrawed, ClaimVictoryNotAuthorized, 
-    DelayClaimVictoryNotSet, DelayUnclaimVictoryNotSet, DelayStartGreaterThanDelayEnd, DelayStartClaimVictoryGreaterThanDelayEndClaimVictoryError, DisputeExistsError, DisputeParticipationNotAuthorizedError, FeeDisputeNotSetError, MustWaitForEndDisputePeriodError, 
-    NbTeamsLimitReachedError, NbPlayersPerTeamsLimitReachedError, NoDisputeError, NotSufficientAmountForDisputeError, NotTeamMemberError, NotTimeYetToParticipateToDisputeError, NoDisputeParticipantsError, RefundImpossibleDueToTooManyDisputeParticipantsError, RevealWinnerImpossibleDueToTooFewDisputersError,
-    SendMoneyBackToPlayersError, SendDisputeAmountBackToWinnerError, SendMoneyBackToAdminError, TeamAlreadyClaimedVictoryError,
-    TeamDoesNotExistsError, TeamDidNotClaimVictoryError, TeamIsNotDisputerError, TeamOfSignerAlreadyParticipatesInDisputeError, TimeElapsedToClaimVictoryError, TimeElapsedToUnclaimVictoryError, TimeElapsedForDisputeParticipationError, 
-    TimeElapsedToJoinTeamError, TimeTooSoonToClaimVictoryError, UnclaimVictoryNotAuthorized, WinnerNotRevealedYetError, WithdrawPoolNotAuthorized, WithdrawPoolByLooserTeamImpossibleError} from "./BitarenaChallengeErrors.sol";
-import {ParticipateToDispute, PlayerJoinsTeam, PoolChallengeWithdrawed, RevealWinner, TeamCreated, Debug, VictoryClaimed, VictoryUnclaimed} from "./BitarenaChallengeEvents.sol";
 import {ChallengeParams} from "./struct/ChallengeParams.sol";
 import {IBitarenaChallengesData} from "./interfaces/IBitarenaChallengesData.sol";
+import {IBitarenaChallenge} from "./interfaces/IBitarenaChallenge.sol";
 import {CHALLENGE_ADMIN_ROLE, CHALLENGE_EMERGENCY_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_CREATOR_ROLE, DELAY_START_VICTORY_CLAIM_BY_DEFAULT, DELAY_END_VICTORY_CLAIM_BY_DEFAULT, 
     DELAY_START_DISPUTE_PARTICIPATION_BY_DEFAULT, DELAY_END_DISPUTE_PARTICIPATION_BY_DEFAULT,
     GAMER_ROLE, FEE_PERCENTAGE_AMOUNT_BY_DEFAULT, FEE_PERCENTAGE_DISPUTE_AMOUNT_BY_DEFAULT, PERCENTAGE_BASE} from "./BitarenaChallengeConstants.sol";
 
-contract BitarenaChallenge is Context, AccessControlDefaultAdminRules, ReentrancyGuard, Pausable {
+contract BitarenaChallenge is 
+    Context, AccessControlDefaultAdminRules, ReentrancyGuard, Pausable, 
+    IBitarenaChallenge {
 
     IBitarenaChallengesData private immutable s_challengesData;
 

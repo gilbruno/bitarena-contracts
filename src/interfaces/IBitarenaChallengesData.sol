@@ -18,6 +18,7 @@ interface IBitarenaChallengesData {
 
     event ChallengeStarted(address indexed challengeContract);
     event ChallengeEnded(address indexed challengeContract);
+    event ChallengeVictoryClaimed();
 
     error InvalidChallengeAddress();
     error ChallengeAlreadyRegistered();

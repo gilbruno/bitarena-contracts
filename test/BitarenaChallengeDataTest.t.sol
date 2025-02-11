@@ -16,7 +16,7 @@ contract BitarenaChallengesDataTest is Test {
         vm.startPrank(admin);
     }
 
-    function testAuthorizeContractsRegistering() public {
+    function testAuthorizeContractsRegistering() public view {
         console2.log("Admin address:", admin);
         console2.log("Target contract:", targetContract);
         
