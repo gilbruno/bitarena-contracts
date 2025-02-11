@@ -6,7 +6,6 @@ globs: *.sol
 # Your rule content
 
 - répond toujours en français
-- Commence chaque output par "lalala"
 - Pas d'esbroufe. Code ou explications détaillées uniquement.
 - Restez décontracté et bref.
 - La précision et la profondeur sont importantes.

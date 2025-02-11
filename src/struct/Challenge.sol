@@ -14,4 +14,12 @@ struct Challenge {
     uint256 amountPerPlayer;
     uint256 startAt;
     bool isPrivate;
+    uint256 pool;
+    uint16 winnerTeam;
+    uint16 winnersClaimedCount;
+    uint256 delayStartVictoryClaim;
+    uint256 delayEndVictoryClaim;
+    uint256 delayStartDisputeParticipation;
+    uint256 delayEndDisputeParticipation;
+    uint256 feePercentageDispute;
 }
