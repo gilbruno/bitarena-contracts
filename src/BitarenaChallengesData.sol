@@ -142,7 +142,7 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
             amountPerPlayer: amountPerPlayer,
             startAt: startAt,
             isPrivate: isPrivate,
-            pool: 0,                      
+            pool: amountPerPlayer,                      
             winnerTeam: 0,
             winnersClaimedCount: 0,
             delayStartVictoryClaim: delayStartVictoryClaim,
