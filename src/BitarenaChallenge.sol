@@ -215,6 +215,7 @@ contract BitarenaChallenge is
         else {
             joinTeam(_teamIndex);
         }
+        s_challengesData.updateChallengePool(address(this), s_challengePool);
     }
 
     /**

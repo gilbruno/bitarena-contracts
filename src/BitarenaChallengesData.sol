@@ -142,7 +142,7 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
             amountPerPlayer: amountPerPlayer,
             startAt: startAt,
             isPrivate: isPrivate,
-            pool: amountPerPlayer,                      
+            pool: 0,                      
             winnerTeam: 0,
             winnersClaimedCount: 0,
             delayStartVictoryClaim: delayStartVictoryClaim,
@@ -239,6 +239,19 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
             challenge.winnersClaimedCount++;
         }
         emit WinnersClaimedCountUpdated(_challengeContract, challenge.winnersClaimedCount);
+    }
+
+    function updateChallengePool(address _challengeContract, uint256 _amountToAdd) external onlyOfficialChallenge {
+        if(_challengeContract == address(0)) revert InvalidChallengeAddress();
+        
+        Challenge storage challenge = s_challenges[_challengeContract];
+        uint256 newPoolAmount;
+        unchecked {
+            newPoolAmount = challenge.pool + _amountToAdd;
+        }
+        challenge.pool = newPoolAmount;
+        
+        emit ChallengePoolUpdated(_challengeContract, newPoolAmount);
     }
 
     /**
