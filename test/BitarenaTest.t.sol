@@ -7,10 +7,6 @@ import {Pausable} from "openzeppelin-contracts/contracts/utils/Pausable.sol";
 import {BitarenaFactory} from "../src/BitarenaFactory.sol";
 import {BitarenaGames} from "../src/BitarenaGames.sol";
 import {CHALLENGE_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_EMERGENCY_ADMIN_ROLE, CHALLENGE_CREATOR_ROLE, DELAY_START_VICTORY_CLAIM_BY_DEFAULT, GAMES_ADMIN_ROLE, GAMER_ROLE, FEE_PERCENTAGE_AMOUNT_BY_DEFAULT} from "../src/BitarenaChallengeConstants.sol";
-import {BalanceChallengeCreatorError, ChallengeAdminAddressZeroError,
-    ChallengeCounterError, ChallengeCreatorAddressZeroError, ChallengeDisputeAdminAddressZeroError, ChallengeGameError, 
-    ChallengePlatformError, ChallengeStartDateError, NbTeamsError, NbPlayersPerTeamsError, 
-    SendMoneyToChallengeError} from '../src/BitarenaFactoryErrors.sol';
 import {Challenge} from '../src/ChallengeStruct.sol';
 import {BitarenaChallenge} from '../src/BitarenaChallenge.sol';
 import {MockFailingReceiver} from "./MockContracts.sol";
@@ -19,7 +15,7 @@ import {IBitarenaChallengesData} from "../src/interfaces/IBitarenaChallengesData
 import {ERC1967Proxy} from "openzeppelin-contracts/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {ChallengeParams} from "../src/struct/ChallengeParams.sol";
 import {IBitarenaChallenge} from "../src/interfaces/IBitarenaChallenge.sol";
-
+import {IBitarenaFactory} from "../src/interfaces/IBitarenaFactory.sol";
 
 contract BitarenaTest is Test {
     BitarenaFactory public bitarenaFactory;
@@ -319,7 +315,7 @@ contract BitarenaTest is Test {
      */
     function testIntentChallengeCreationError2() public {
         deployFactory();
-        vm.expectRevert(ChallengeGameError.selector);
+        vm.expectRevert(IBitarenaFactory.ChallengeGameError.selector);
         vm.startBroadcast(CREATOR_CHALLENGE1);
         bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
             '',
@@ -338,7 +334,7 @@ contract BitarenaTest is Test {
      */
     function testIntentChallengeCreationError3() public {
         deployFactory();
-        vm.expectRevert(ChallengePlatformError.selector);
+        vm.expectRevert(IBitarenaFactory.ChallengePlatformError.selector);
         vm.startBroadcast(CREATOR_CHALLENGE1);
         bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
             GAME1,
@@ -357,7 +353,7 @@ contract BitarenaTest is Test {
      */
     function testIntentChallengeCreationError4() public {
         deployFactory();
-        vm.expectRevert(NbTeamsError.selector);
+        vm.expectRevert(IBitarenaFactory.NbTeamsError.selector);
         vm.startBroadcast(CREATOR_CHALLENGE1);
         bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
             GAME1,
@@ -376,7 +372,7 @@ contract BitarenaTest is Test {
      */
     function testIntentChallengeCreationError5() public {
         deployFactory();
-        vm.expectRevert(NbPlayersPerTeamsError.selector);
+        vm.expectRevert(IBitarenaFactory.NbPlayersPerTeamsError.selector);
         vm.startBroadcast(CREATOR_CHALLENGE1);
         bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
             GAME1,
@@ -395,7 +391,7 @@ contract BitarenaTest is Test {
      */
     function testIntentChallengeCreationError6() public {
         deployFactory();
-        vm.expectRevert(ChallengeStartDateError.selector);
+        vm.expectRevert(IBitarenaFactory.ChallengeStartDateError.selector);
         vm.startBroadcast(CREATOR_CHALLENGE1);
         bitarenaFactory.intentChallengeCreation{value: AMOUNT_PER_PLAYER}(
             GAME1,
@@ -414,7 +410,7 @@ contract BitarenaTest is Test {
      */
     function testIntentChallengeCreationError7() public {
         deployFactory();
-        vm.expectRevert(BalanceChallengeCreatorError.selector);
+        vm.expectRevert(IBitarenaFactory.BalanceChallengeCreatorError.selector);
         vm.startBroadcast(CREATOR_CHALLENGE1);
         bitarenaFactory.intentChallengeCreation{value: 1000 gwei}(
             GAME1,
@@ -1067,7 +1063,7 @@ contract BitarenaTest is Test {
      */
     function testChallengeCreationRevertIfBadCounterIsProvided() public {
         intentChallengeCreationWith2TeamsAnd1Player();
-        vm.expectRevert(ChallengeCounterError.selector);
+        vm.expectRevert(IBitarenaFactory.ChallengeCounterError.selector);
         vm.startBroadcast(ADMIN_FACTORY);
         bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, 2);
         vm.stopBroadcast();       
@@ -1078,7 +1074,7 @@ contract BitarenaTest is Test {
      */
     function testChallengeCreationRevertIfBadCounterIsProvided2() public {
         intentChallengeCreationWith2TeamsAnd1Player();
-        vm.expectRevert(ChallengeCounterError.selector);
+        vm.expectRevert(IBitarenaFactory.ChallengeCounterError.selector);
         vm.startBroadcast(ADMIN_FACTORY);
         bitarenaFactory.createChallenge(ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, 0);
         vm.stopBroadcast();       

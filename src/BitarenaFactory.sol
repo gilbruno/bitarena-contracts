@@ -11,16 +11,14 @@ import {Context} from "https://raw.githubusercontent.com/OpenZeppelin/openzeppel
 import {Ownable} from "openzeppelin-contracts/contracts/access/Ownable.sol";
 import {AccessControl} from "openzeppelin-contracts/contracts/access/AccessControl.sol";
 import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
-import {BalanceChallengeCreatorError, ChallengeAdminAddressZeroError, 
-    ChallengeCounterError, ChallengeDeployedError, ChallengeCreatorAddressZeroError, ChallengesDataAddressZeroError, ChallengeDisputeAdminAddressZeroError, ChallengeEmergencyAdminAddressZeroError, ChallengeGameError, 
-    ChallengePlatformError, ChallengeStartDateError, GameDoesNotExistError, NbTeamsError, NbPlayersPerTeamsError, SendMoneyToChallengeError, PlatformDoesNotExistError} from "./BitarenaFactoryErrors.sol";
-import {IntentChallengeCreation, ChallengeDeployed } from "./BitarenaFactoryEvents.sol";
 import {Challenge} from "./ChallengeStruct.sol";
 import {ChallengeParams} from "./struct/ChallengeParams.sol";
 import {IBitarenaGames} from "./interfaces/IBitarenaGames.sol";
 import {IBitarenaChallengesData} from "./interfaces/IBitarenaChallengesData.sol";
 import {BitarenaChallengesData} from "./BitarenaChallengesData.sol";
-contract BitarenaFactory is Context, Ownable, AccessControl {
+import {IBitarenaFactory} from "./interfaces/IBitarenaFactory.sol";
+
+contract BitarenaFactory is Context, Ownable, AccessControl, IBitarenaFactory {
 
     uint256 private s_challengeCounter;
 
