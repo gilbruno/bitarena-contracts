@@ -482,6 +482,10 @@ contract BitarenaChallenge is
      */
     function returnMoneyBackDueToChallengeCancel() internal nonReentrant {
         uint16 teamCount = s_teamCounter;
+
+        //Reset the challenge pool
+        s_challengePool = 0;
+
         for (uint16 i = 1; i <= teamCount;) {
             address[] memory teamPlayers = s_teams[i];
             uint256 playersLength = teamPlayers.length;
@@ -493,8 +497,6 @@ contract BitarenaChallenge is
             }
             unchecked { ++i; }
         }
-        //Reset the challenge pool
-        s_challengePool = 0;
     }
 
     /**
