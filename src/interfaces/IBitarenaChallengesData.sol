@@ -8,7 +8,7 @@ interface IBitarenaChallengesData {
     /**
      * @dev Événement émis lorsqu'un nouveau challenge est ajouté pour un joueur
      */
-    event ChallengeAddedToHistory(address indexed player, address challengeAddress);
+    event ChallengeAddedToPlayerHistory(address indexed player, address challengeAddress);
 
     // Événement émis lorsqu'un nouveau contrat Challenge est autorisé
     event ChallengeContractAuthorized(address indexed challengeContract);

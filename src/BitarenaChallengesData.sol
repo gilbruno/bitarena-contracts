@@ -264,7 +264,7 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
         // Mettre à jour le mapping avec le tableau modifié
         s_playerChallenges[_player].push(_challenge);
         
-        emit ChallengeAddedToHistory(_player, _challengeAddress);  
+        emit ChallengeAddedToPlayerHistory(_player, _challengeAddress);  
         
     }
 
