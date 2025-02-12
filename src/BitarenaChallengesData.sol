@@ -100,6 +100,7 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
     function initialize(address _superAdmin) initializer public {
         if(_superAdmin == address(0)) revert AddressZeroError();
         __AccessControl_init();
+        __UUPSUpgradeable_init();
         _grantRole(DEFAULT_ADMIN_ROLE, _superAdmin);
     }
 
@@ -226,6 +227,19 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
         return s_isOfficialChallenge[_challengeContract];
     }
 
+    /**
+     * @dev Update the winners claimed count for a challenge
+     * @param _challengeContract Address of the challenge contract
+     */
+    function updateWinnersClaimedCount(address _challengeContract) external onlyOfficialChallenge {
+        if(_challengeContract == address(0)) revert InvalidChallengeAddress();
+        
+        Challenge storage challenge = s_challenges[_challengeContract];
+        unchecked {
+            challenge.winnersClaimedCount++;
+        }
+        emit WinnersClaimedCountUpdated(_challengeContract, challenge.winnersClaimedCount);
+    }
 
     /**
      * @dev Authorize a new BitarenaChallenge contract

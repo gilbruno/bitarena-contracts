@@ -292,6 +292,7 @@ contract BitarenaChallenge is
         else {
             s_winnerTeam = 0;
         }
+        s_challengesData.updateWinnersClaimedCount(address(this));
         emit VictoryClaimed(teamIndex, sender);   
     }
 
