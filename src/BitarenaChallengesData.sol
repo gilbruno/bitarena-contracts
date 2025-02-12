@@ -255,6 +255,27 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
     }
 
     /**
+     * @dev Update the winner team for a challenge. If a winner was already set, reset it to 0 (dispute case)
+     * @param _challengeContract Address of the challenge contract
+     * @param _teamIndex Index of the winning team
+     */
+    function updateWinnerTeam(address _challengeContract, uint16 _teamIndex) external onlyOfficialChallenge {
+        if(_challengeContract == address(0)) revert InvalidChallengeAddress();
+        
+        Challenge storage challenge = s_challenges[_challengeContract];
+        
+        if (challenge.winnerTeam != 0) {
+            // A team has already claimed the victory, we reset it to 0 (dispute case)
+            challenge.winnerTeam = 0;
+        } else {
+            // First team to claim the victory
+            challenge.winnerTeam = _teamIndex;
+        }
+        
+        emit WinnerTeamUpdated(_challengeContract, challenge.winnerTeam);
+    }    
+
+    /**
      * @dev Authorize a new BitarenaChallenge contract
      * @param _challengeDataAdmin Address to authorize
      */
@@ -271,10 +292,10 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
      */
     function addChallengeToPlayerHistory(address _player, address _challengeAddress, ChallengeParams memory _challenge) public onlyOfficialChallenge() {
         if(_player == address(0)) revert AddressZeroError();
-        // Récupérer le tableau existant
+        // Get the existing array
         //ChallengeParams[] storage playerChallenges = s_playerChallenges[_player];
         
-        // Mettre à jour le mapping avec le tableau modifié
+        // Update the mapping with the modified array
         s_playerChallenges[_player].push(_challenge);
         
         emit ChallengeAddedToPlayerHistory(_player, _challengeAddress);  

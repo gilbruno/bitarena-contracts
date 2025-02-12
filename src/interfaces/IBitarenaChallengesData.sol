@@ -21,7 +21,7 @@ interface IBitarenaChallengesData {
     event ChallengeVictoryClaimed();
     event WinnersClaimedCountUpdated(address indexed challengeContract, uint256 newWinnersCount);
     event ChallengePoolUpdated(address challengeAddress, uint256 newPoolAmount);
-
+    event WinnerTeamUpdated(address challengeAddress, uint16 winnerTeamIndex);
 
     error InvalidChallengeAddress();
     error ChallengeAlreadyRegistered();
@@ -49,6 +49,9 @@ interface IBitarenaChallengesData {
     function updateWinnersClaimedCount(address _challengeContract) external;
     
     function updateChallengePool(address _challengeContract, uint256 _amountToAdd) external;
+    
+    function updateWinnerTeam(address _challengeContract, uint16 _teamIndex) external;
+    
     /**
      * @dev Récupère tous les challenges d'un joueur
      * @param _player L'adresse du joueur

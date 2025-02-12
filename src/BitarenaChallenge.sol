@@ -294,6 +294,7 @@ contract BitarenaChallenge is
             s_winnerTeam = 0;
         }
         s_challengesData.updateWinnersClaimedCount(address(this));
+        s_challengesData.updateWinnerTeam(address(this), teamIndex);
         emit VictoryClaimed(teamIndex, sender);   
     }
 
@@ -341,6 +342,7 @@ contract BitarenaChallenge is
      */
     function revealWinnerAfterDispute(uint16 _teamIndex) public onlyRole(CHALLENGE_DISPUTE_ADMIN_ROLE) checkRevealWinnerAfterDispute(_teamIndex) {
         s_winnerTeam = _teamIndex;
+        s_challengesData.updateWinnerTeam(address(this), _teamIndex);
         emit RevealWinner(_teamIndex, _msgSender());
     }    
 
