@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.26;
 
-struct Challenge {
+struct ChallengeData {
     address challengeAddress;
     address challengeCreator;
     address challengeAdmin;

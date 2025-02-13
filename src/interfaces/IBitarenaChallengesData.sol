@@ -3,7 +3,7 @@
 pragma solidity ^0.8.22;
 
 import {ChallengeParams} from "../struct/ChallengeParams.sol";
-import {Challenge} from "../struct/Challenge.sol";
+import {ChallengeData} from "../struct/ChallengeData.sol";
 interface IBitarenaChallengesData {
     /**
      * @dev Événement émis lorsqu'un nouveau challenge est ajouté pour un joueur
@@ -14,7 +14,7 @@ interface IBitarenaChallengesData {
     event ChallengeContractAuthorized(address indexed challengeContract);
 
     // Event émis quand un nouveau challenge est enregistré
-    event ChallengeContractRegistered(address indexed challengeContract, Challenge challengeParams);
+    event ChallengeContractRegistered(address indexed challengeContract, ChallengeData challengeData);
 
     event ChallengeStarted(address indexed challengeContract);
     event ChallengeEnded(address indexed challengeContract);
@@ -59,6 +59,7 @@ interface IBitarenaChallengesData {
      */
     function getPlayerChallenges(address _player) external view returns (ChallengeParams[] memory);
 
+    function getChallengeData(address _challengeContract) external view returns (ChallengeData memory);
     /**
      * @dev Récupère le nombre de challenges d'un joueur
      * @param _player L'adresse du joueur

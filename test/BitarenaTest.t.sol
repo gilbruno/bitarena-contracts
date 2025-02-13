@@ -7,7 +7,8 @@ import {Pausable} from "openzeppelin-contracts/contracts/utils/Pausable.sol";
 import {BitarenaFactory} from "../src/BitarenaFactory.sol";
 import {BitarenaGames} from "../src/BitarenaGames.sol";
 import {CHALLENGE_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_EMERGENCY_ADMIN_ROLE, CHALLENGE_CREATOR_ROLE, DELAY_START_VICTORY_CLAIM_BY_DEFAULT, GAMES_ADMIN_ROLE, GAMER_ROLE, FEE_PERCENTAGE_AMOUNT_BY_DEFAULT} from "../src/BitarenaChallengeConstants.sol";
-import {Challenge} from '../src/ChallengeStruct.sol';
+import {Challenge} from '../src/struct/ChallengeStruct.sol';
+import {ChallengeData} from '../src/struct/ChallengeData.sol';
 import {BitarenaChallenge} from '../src/BitarenaChallenge.sol';
 import {MockFailingReceiver} from "./MockContracts.sol";
 import {BitarenaChallengesData} from "../src/BitarenaChallengesData.sol";
@@ -1655,9 +1656,56 @@ contract BitarenaTest is Test {
 
         uint16 teamIndex = bitarenaChallenge.getTeamOfPlayer(PLAYER3_CHALLENGE1);
         assertEq(bitarenaChallenge.getWinnerClaimed(teamIndex), true);
-        assertEq(bitarenaChallenge.getWinnersClaimedCount(), 1);
+        
         //The winner team is automatically the team of Player3 so team2
         assertEq(bitarenaChallenge.getWinnerTeam(), 2);
+    }   
+
+    /** 
+     * @dev Test state vars for claim victory
+     */
+    function testClaimVictory8_1() public {
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
+
+        //The admin of the challenge set delay for victory claim
+        //With that example, the victory claim is possible between 10 hours after the start date and 20 hours after the start date 
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.setDelayEndForVictoryClaim(20 hours);
+        bitarenaChallenge.setDelayStartForVictoryClaim(10 hours);
+        vm.stopBroadcast();         
+
+        //As the challenge must start 1 day after its creation, 
+        // the PLAYER3 tries to claim the victory for the team1 that is not his team (=team2)
+        uint256 _3DaysInTheFuture = block.timestamp + 2 days;
+        vm.warp(_3DaysInTheFuture);
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.claimVictory();
+        vm.stopBroadcast();         
+
+        //The winner team is now 2 as only the team #2 of Player3 claimed the victory.
+        // So if any others teams claim the victory, team #2 is the winner
+        assertEq(bitarenaChallenge.getWinnerTeam(), 2);
+
+        uint16 teamIndex = bitarenaChallenge.getTeamOfPlayer(PLAYER3_CHALLENGE1);
+        assertEq(bitarenaChallenge.getWinnerClaimed(teamIndex), true);
+        
+        // Vérifie que le compteur de winners dans BitarenaChallengesData est à 1
+        IBitarenaChallengesData bitarenaChallengesData = IBitarenaChallengesData(address(proxyChallengesData));
+        ChallengeData memory challengeData = bitarenaChallengesData.getChallengeData(address(bitarenaChallenge));
+        assertEq(challengeData.winnersClaimedCount, 1);
+        
+        // Make claim the victory by another player
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.claimVictory();
+        vm.stopBroadcast();
+        
+        // Check that the counter is now 2
+        challengeData = bitarenaChallengesData.getChallengeData(address(bitarenaChallenge));
+        assertEq(challengeData.winnersClaimedCount, 2);
+        
+        //The winner team is now 0 as 2 teams claimed the victory
+        assertEq(bitarenaChallenge.getWinnerTeam(), 0);
     }   
 
     /**

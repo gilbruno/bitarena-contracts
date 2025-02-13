@@ -11,7 +11,7 @@ import {Context} from "https://raw.githubusercontent.com/OpenZeppelin/openzeppel
 import {Ownable} from "openzeppelin-contracts/contracts/access/Ownable.sol";
 import {AccessControl} from "openzeppelin-contracts/contracts/access/AccessControl.sol";
 import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
-import {Challenge} from "./ChallengeStruct.sol";
+import {Challenge} from "./struct/ChallengeStruct.sol";
 import {ChallengeParams} from "./struct/ChallengeParams.sol";
 import {IBitarenaGames} from "./interfaces/IBitarenaGames.sol";
 import {IBitarenaChallengesData} from "./interfaces/IBitarenaChallengesData.sol";

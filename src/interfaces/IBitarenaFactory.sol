@@ -2,7 +2,7 @@
 pragma solidity 0.8.26;
 
 import {BitarenaChallenge} from '../BitarenaChallenge.sol';
-import {Challenge} from '../ChallengeStruct.sol';
+import {Challenge} from '../struct/ChallengeStruct.sol';
 import {ChallengeParams} from '../struct/ChallengeParams.sol';
 interface IBitarenaFactory {
     // Errors

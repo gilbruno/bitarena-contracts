@@ -9,7 +9,7 @@ import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
 import {AccessControlUpgradeable} from "openzeppelin-contracts-upgradeable/contracts/access/AccessControlUpgradeable.sol";
 import {UUPSUpgradeable} from "openzeppelin-contracts-upgradeable/contracts/proxy/utils/UUPSUpgradeable.sol";
 import {BitarenaChallenge} from "./BitarenaChallenge.sol";
-import {Challenge} from "./struct/Challenge.sol";
+import {ChallengeData} from "./struct/ChallengeData.sol";
 import {IBitarenaUpgrade} from "./interfaces/IBitarenaUpgrade.sol";
 import {ERC1967Utils} from "openzeppelin-contracts/contracts/proxy/ERC1967/ERC1967Utils.sol";
 
@@ -37,7 +37,7 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
     /**
      * @dev Mapping of challenges
      */
-    mapping(address => Challenge) private s_challenges;
+    mapping(address => ChallengeData) private s_challenges;
 
     /**
      * @dev Mapping to track the challenges created by the factory
@@ -112,7 +112,7 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
         _grantRole(CONTRACTS_REGISTERING_ROLE, _factoryAddress);
     }
 
-    function _buildChallenge(address payable deployedChallengeAddress) internal view returns (Challenge memory) {
+    function _buildChallenge(address payable deployedChallengeAddress) internal view returns (ChallengeData memory) {
 
         address challengeCreator = BitarenaChallenge(deployedChallengeAddress).getCreator();
         address challengeAdmin = BitarenaChallenge(deployedChallengeAddress).getChallengeAdmin();
@@ -130,7 +130,7 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
         uint256 delayEndDisputeParticipation = BitarenaChallenge(deployedChallengeAddress).getDelayEndDisputeParticipation();
         uint256 feePercentageDispute = BitarenaChallenge(deployedChallengeAddress).getFeePercentageDispute();
 
-        Challenge memory newChallenge = Challenge({
+        ChallengeData memory newChallenge = ChallengeData({
             challengeAddress: deployedChallengeAddress,
             challengeCreator: challengeCreator,
             challengeAdmin: challengeAdmin,
@@ -172,7 +172,7 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
         s_challengeAddresses[challengeId] = _challengeContract;
         s_isOfficialChallenge[_challengeContract] = true;
         
-        Challenge memory challenge = _buildChallenge(payable(_challengeContract));
+        ChallengeData memory challenge = _buildChallenge(payable(_challengeContract));
         s_challenges[_challengeContract] = challenge;
         emit ChallengeContractRegistered(_challengeContract, challenge);
     }
@@ -234,7 +234,7 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
     function updateWinnersClaimedCount(address _challengeContract) external onlyOfficialChallenge {
         if(_challengeContract == address(0)) revert InvalidChallengeAddress();
         
-        Challenge storage challenge = s_challenges[_challengeContract];
+        ChallengeData storage challenge = s_challenges[_challengeContract];
         unchecked {
             challenge.winnersClaimedCount++;
         }
@@ -244,7 +244,7 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
     function updateChallengePool(address _challengeContract, uint256 _amountToAdd) external onlyOfficialChallenge {
         if(_challengeContract == address(0)) revert InvalidChallengeAddress();
         
-        Challenge storage challenge = s_challenges[_challengeContract];
+        ChallengeData storage challenge = s_challenges[_challengeContract];
         uint256 newPoolAmount;
         unchecked {
             newPoolAmount = challenge.pool + _amountToAdd;
@@ -262,7 +262,7 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
     function updateWinnerTeam(address _challengeContract, uint16 _teamIndex) external onlyOfficialChallenge {
         if(_challengeContract == address(0)) revert InvalidChallengeAddress();
         
-        Challenge storage challenge = s_challenges[_challengeContract];
+        ChallengeData storage challenge = s_challenges[_challengeContract];
         
         if (challenge.winnerTeam != 0) {
             // A team has already claimed the victory, we reset it to 0 (dispute case)
@@ -352,7 +352,7 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
      * @param _challengeContract Address of the challenge contract
      * @return ChallengeParams The challenge parameters
      */
-    function getChallengeParams(address _challengeContract) external view returns (Challenge memory) {
+    function getChallengeData(address _challengeContract) external view returns (ChallengeData memory) {
         return s_challenges[_challengeContract];
     }
 
