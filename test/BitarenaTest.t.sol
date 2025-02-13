@@ -2984,9 +2984,14 @@ contract BitarenaTest is Test {
         vm.stopBroadcast();         
 
         vm.warp(block.timestamp + 1 weeks);
+        uint16 TEAM_WINNER = 1;
         vm.startBroadcast(ADMIN_DISPUTE_CHALLENGE1);
-        bitarenaChallenge.revealWinnerAfterDispute(1);
+        bitarenaChallenge.revealWinnerAfterDispute(TEAM_WINNER);
         vm.stopBroadcast();         
+
+        // Vérifie que le winnerTeam dans ChallengeData correspond
+        ChallengeData memory challengeData = IBitarenaChallengesData(address(proxyChallengesData)).getChallengeData(address(bitarenaChallenge));
+        assertEq(challengeData.winnerTeam, TEAM_WINNER);
 
         // The pool amount to the winner team must be calculated after after the winner has been revealed by the dispute admin 
         // because it the teamIndex of the winner is not set befaore the revealing and this fn uses this data
