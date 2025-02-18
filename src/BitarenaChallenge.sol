@@ -274,7 +274,7 @@ contract BitarenaChallenge is
             startAt: s_startAt,
             isPrivate: s_isPrivate
         });
-        s_challengesData.addChallengeToPlayerHistory(_player, address(this), _challengeParams);
+        s_challengesData.addChallengeToPlayerHistory(_player, address(this), _challengeParams, _teamIndex);
     }
 
     

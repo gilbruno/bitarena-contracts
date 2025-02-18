@@ -290,7 +290,7 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
      * @param _challengeAddress Address of the challenge
      * @param _challenge The challenge parameters
      */
-    function addChallengeToPlayerHistory(address _player, address _challengeAddress, ChallengeParams memory _challenge) public onlyOfficialChallenge() {
+    function addChallengeToPlayerHistory(address _player, address _challengeAddress, ChallengeParams memory _challenge, uint16 _teamIndex) public onlyOfficialChallenge() {
         if(_player == address(0)) revert AddressZeroError();
         // Get the existing array
         //ChallengeParams[] storage playerChallenges = s_playerChallenges[_player];
@@ -298,7 +298,7 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
         // Update the mapping with the modified array
         s_playerChallenges[_player].push(_challenge);
         
-        emit ChallengeAddedToPlayerHistory(_player, _challengeAddress);  
+        emit ChallengeAddedToPlayerHistory(_player, _challengeAddress, _teamIndex);  
         
     }
 
