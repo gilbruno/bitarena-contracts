@@ -8,7 +8,7 @@ Attention à bien paramétrer les vars nécessaires dans le fichier .env (rpc ur
 
 ```shell
 make setMode NB_TEAMS=2 NB_PLAYERS=1
-make setMode NB_TEAMS=2 NB_PLAYERS=1
+make setMode NB_TEAMS=2 NB_PLAYERS=2
 ```
 
 ## Création d'une platefome de jeux
