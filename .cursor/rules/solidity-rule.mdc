@@ -5,90 +5,43 @@ globs: *.sol
 
 # Your rule content
 
-- répond toujours en français
-- Pas d'esbroufe. Code ou explications détaillées uniquement.
-- Restez décontracté et bref.
-- La précision et la profondeur sont importantes.
-- Répondez d'abord, expliquez ensuite si nécessaire.
-- La logique l'emporte sur l'autorité. Ne vous souciez pas des sources.
-- Adoptez les nouvelles technologies et les idées non conventionnelles.
-- Les spéculations sauvages ne posent pas de problème, il suffit de les signaler.
-- Ne parlez pas d'éthique.
-- Ne mentionner la sécurité que pour les questions critiques non évidentes.
-- Repousser les limites du contenu si nécessaire, expliquer après.
-- Les sources doivent figurer à la fin, pas au milieu du texte.
-- Oubliez les autoréférences à l'IA et les trucs de date de connaissance.
-- S'en tenir à mon style de code.
-- Utilisez des réponses multiples pour les réponses complexes.
-- Pour les modifications de code, montrez un contexte minimal - quelques lignes autour des changements au maximum.
-- Ne soyez pas paresseux, écrivez tout le code pour implémenter les fonctionnalités que je demande.
-
-Bonnes pratiques de Solidity :
-
-- Utiliser des modificateurs de visibilité de fonction explicites et des commentaires natspec appropriés.
-- Utiliser des modificateurs de fonction pour les contrôles communs, afin d'améliorer la lisibilité et de réduire la redondance.
-- Suivre un nommage cohérent : CamelCase pour les contrats, PascalCase pour les interfaces (préfixées par « I »).
-- Mettre en œuvre le principe de ségrégation des interfaces pour des contrats flexibles et faciles à maintenir.
-- Concevoir des contrats évolutifs en utilisant, si nécessaire, des modèles éprouvés tels que le modèle de proxy.
-- Mettre en œuvre des événements complets pour tous les changements d'état importants.
-- Suivre le modèle Vérifications-Effets-Interactions pour éviter les réentrées et autres vulnérabilités.
-- Utiliser des outils d'analyse statique tels que Slither et Mythril dans le flux de travail de développement.
-- Mettre en place des timelocks et des contrôles multisig pour les opérations sensibles en production.
-- Procéder à une optimisation complète des gaz, en tenant compte des coûts de déploiement et d'exécution.
-- Utiliser le contrôle d'accès d'OpenZeppelin pour des permissions fines.
-- Utiliser Solidity 0.8.0+ pour la protection intégrée contre les débordements et les sous-débordements.
-- Mettre en œuvre des disjoncteurs (fonctionnalité de pause) en utilisant la fonction Pausable d'OpenZeppelin, le cas échéant.
-- Utiliser des schémas de paiement « pull » plutôt que « push » pour limiter les réentrées et les attaques par déni de service.
-- Mettre en place une limitation de débit pour les fonctions sensibles afin d'éviter les abus.
-- Utiliser SafeERC20 d'OpenZeppelin pour interagir avec les jetons ERC20.
-- Mettre en œuvre un caractère aléatoire approprié en utilisant Chainlink VRF ou des solutions d'oracle similaires.
-- Utiliser l'assemblage pour les opérations à forte consommation de gaz, mais documenter abondamment et utiliser avec prudence.
-- Mettre en œuvre des modèles de machines à états efficaces pour la logique des contrats complexes.
-- Utiliser ReentrancyGuard d'OpenZeppelin comme couche supplémentaire de protection contre la réentrance.
-- Mettre en œuvre un contrôle d'accès approprié pour les initialisateurs dans les contrats évolutifs.
-- Utiliser ERC20Snapshot d'OpenZeppelin pour les soldes de jetons nécessitant des recherches historiques.
-- Mettre en place des timelocks pour les opérations sensibles à l'aide du TimelockController d'OpenZeppelin.
-- Utiliser l'ERC20Permit d'OpenZeppelin pour les approbations sans gaz dans les contrats de jetons.
-- Mettre en œuvre une protection adéquate contre les dérapages pour les fonctionnalités de type DEX.
-- Utiliser l'ERC20Votes d'OpenZeppelin pour les implémentations de jetons de gouvernance.
-- Mettre en œuvre des modèles de stockage efficaces afin d'optimiser les coûts de gaz (par exemple, les variables d'emballage).
-- Utiliser des bibliothèques pour les opérations complexes afin de réduire la taille des contrats et d'améliorer leur réutilisation.
-- Mettre en œuvre un contrôle d'accès approprié pour la fonctionnalité d'autodestruction, si elle est utilisée.
-- Utiliser la bibliothèque Address d'OpenZeppelin pour des interactions sûres avec des contrats externes.
-- Utiliser des erreurs personnalisées au lieu de chaînes de réversion pour améliorer l'efficacité du gaz et la gestion des erreurs.
-- Implémenter les commentaires NatSpec pour toutes les fonctions publiques et externes.
-- Utiliser des variables immuables pour les valeurs définies une seule fois au moment de la construction.
-- Mettre en œuvre des modèles d'héritage appropriés, en favorisant la composition plutôt que des chaînes d'héritage profondes.
-- Utiliser les événements pour la journalisation hors chaîne et l'indexation des changements d'état importants.
-- Mettre en œuvre des fonctions de repli et de réception avec prudence, en documentant clairement leur objectif.
-- Utiliser les modificateurs de vue et de fonction pure de manière appropriée pour signaler les schémas d'accès à l'état.
-- Mettre en œuvre une gestion appropriée des décimales pour les calculs financiers, en utilisant des bibliothèques d'arithmétique en virgule fixe si nécessaire.
-- Utiliser l'assemblage avec parcimonie et uniquement lorsque cela est nécessaire pour les optimisations, en s'appuyant sur une documentation complète.
-- Mettre en œuvre des modèles efficaces de propagation des erreurs dans les fonctions internes.
-
-Tests et assurance qualité
-
-- Mettre en œuvre une stratégie de test complète comprenant des tests unitaires, d'intégration et de bout en bout.
-- Utiliser des tests basés sur les propriétés pour découvrir les cas limites.
-- Mettre en œuvre l'intégration continue avec des tests automatisés et une analyse statique.
-- Réaliser régulièrement des audits de sécurité et des bogues pour les contrats de niveau de production.
-- Utiliser des outils de couverture de test et viser une couverture de test élevée, en particulier pour les chemins critiques.
-
-Optimisation des performances
-
-- Optimiser les contrats pour l'efficacité du gaz, en tenant compte de la disposition du stockage et de l'optimisation des fonctions.
-- Mettre en œuvre des stratégies d'indexation et d'interrogation efficaces pour les données hors chaîne.
-
-Workflow de développement
-
-- Utiliser les fonctionnalités de test et de débogage de Foundry.
-- Mettre en œuvre un pipeline CI/CD robuste pour les déploiements de contrats intelligents.
-- Utiliser des outils de vérification statique de type et de linting dans les hooks de pré-commission.
-
-Documentation
-
-- Documenter le code de manière exhaustive, en se concentrant sur le pourquoi plutôt que sur le quoi.
-- Maintenir à jour la documentation de l'API pour les contrats intelligents.
-- Créer et maintenir une documentation de projet complète, y compris des diagrammes d'architecture et des journaux de décision.
-
-
+- Use explicit function visibility modifiers and appropriate natspec comments.
+- Utilize function modifiers for common checks, enhancing readability and reducing redundancy.
+- Follow consistent naming: CamelCase for contracts, PascalCase for interfaces (prefixed with "I").
+- Implement the Interface Segregation Principle for flexible and maintainable contracts.
+- Design upgradeable contracts using proven patterns like the proxy pattern when necessary.
+- Implement comprehensive events for all significant state changes.
+- Follow the Checks-Effects-Interactions pattern to prevent reentrancy and other vulnerabilities.
+- Use static analysis tools like Slither and Mythril in the development workflow.
+- Implement timelocks and multisig controls for sensitive operations in production.
+- Conduct thorough gas optimization, considering both deployment and runtime costs.
+- Use OpenZeppelin's AccessControl for fine-grained permissions.
+- Use Solidity 0.8.0+ for built-in overflow/underflow protection.
+- Implement circuit breakers (pause functionality) using OpenZeppelin's Pausable when appropriate.
+- Use pull over push payment patterns to mitigate reentrancy and denial of service attacks.
+- Implement rate limiting for sensitive functions to prevent abuse.
+- Use OpenZeppelin's SafeERC20 for interacting with ERC20 tokens.
+- Implement proper randomness using Chainlink VRF or similar oracle solutions.
+- Use assembly for gas-intensive operations, but document extensively and use with caution.
+- Implement effective state machine patterns for complex contract logic.
+- Use OpenZeppelin's ReentrancyGuard as an additional layer of protection against reentrancy.
+- Implement proper access control for initializers in upgradeable contracts.
+- Use OpenZeppelin's ERC20Snapshot for token balances requiring historical lookups.
+- Implement timelocks for sensitive operations using OpenZeppelin's TimelockController.
+- Use OpenZeppelin's ERC20Permit for gasless approvals in token contracts.
+- Implement proper slippage protection for DEX-like functionalities.
+- Use OpenZeppelin's ERC20Votes for governance token implementations.
+- Implement effective storage patterns to optimize gas costs (e.g., packing variables).
+- Use libraries for complex operations to reduce contract size and improve reusability.
+- Implement proper access control for self-destruct functionality, if used.
+- Use OpenZeppelin's Address library for safe interactions with external contracts.
+- Use custom errors instead of revert strings for gas efficiency and better error handling.
+- Implement NatSpec comments for all public and external functions.
+- Use immutable variables for values set once at construction time.
+- Implement proper inheritance patterns, favoring composition over deep inheritance chains.
+- Use events for off-chain logging and indexing of important state changes.
+- Implement fallback and receive functions with caution, clearly documenting their purpose.
+- Use view and pure function modifiers appropriately to signal state access patterns.
+- Implement proper decimal handling for financial calculations, using fixed-point arithmetic libraries when necessary.
+- Use assembly sparingly and only when necessary for optimizations, with thorough documentation.
+- Implement effective error propagation patterns in internal functions.

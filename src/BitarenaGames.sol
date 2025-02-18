@@ -154,6 +154,48 @@ contract BitarenaGames is Context, AccessControl, IBitarenaGames {
         emit GameSupportUpdated(_game, _platforms, _modes);
     }
 
+    function getMode(uint16 _nbTeams, uint16 _nbPlayerPerTeam) public pure returns (string memory) {
+        // Calculer d'abord la longueur nécessaire
+        uint256 numLength = bytes(_toString(_nbPlayerPerTeam)).length;
+        uint256 totalLength = (numLength * _nbTeams) + (_nbTeams - 1); // longueur totale = (taille du nombre * nb équipes) + (nb tirets)
+        
+        bytes memory result = new bytes(totalLength);
+        uint256 pos = 0;
+        
+        for (uint16 i = 0; i < _nbTeams; i++) {
+            bytes memory num = bytes(_toString(_nbPlayerPerTeam));
+            for (uint256 j = 0; j < num.length; j++) {
+                result[pos++] = num[j];
+            }
+            
+            if (i < _nbTeams - 1) {
+                result[pos++] = "-";
+            }
+        }
+        return string(result);
+    }
+
+    function _toString(uint16 value) internal pure returns (string memory) {
+        if (value == 0) return "0";
+        
+        uint16 temp = value;
+        uint256 digits;
+        while (temp != 0) {
+            digits++;
+            temp /= 10;
+        }
+        
+        bytes memory buffer = new bytes(digits);
+        while (value != 0) {
+            digits -= 1;
+            buffer[digits] = bytes1(uint8(48 + uint16(value % 10)));
+            value /= 10;
+        }
+        
+        return string(buffer);
+    }
+
+
     /**
      * @notice Récupère les plateformes et modes supportés pour un jeu
      * @param _game Le nom du jeu
@@ -183,9 +225,9 @@ contract BitarenaGames is Context, AccessControl, IBitarenaGames {
         return s_platforms[_platformIndex];
     }
 
-    function setMode(string memory _mode) public onlyRole(GAMES_ADMIN_ROLE) modeNotExists(_mode) {
-        s_modes.push(_mode);
-        emit ModeAdded(_mode);
+    function setMode(uint16 _nbTeams, uint16 _nbPlayerPerTeam) public onlyRole(GAMES_ADMIN_ROLE) modeNotExists(getMode(_nbTeams, _nbPlayerPerTeam)) {
+        s_modes.push(getMode(_nbTeams, _nbPlayerPerTeam));
+        emit ModeAdded(getMode(_nbTeams, _nbPlayerPerTeam));
     }
 
     function getModes() public view returns (string[] memory) {

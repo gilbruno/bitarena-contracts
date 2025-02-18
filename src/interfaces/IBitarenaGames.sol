@@ -19,9 +19,11 @@ interface IBitarenaGames {
     function setPlatform(string memory _platform) external;
     function getGameByIndex(uint256 _gameIndex) external view returns (string memory);
     function getPlatformByIndex(uint256 _platformIndex) external view returns (string memory);
-    function setMode(string memory _mode) external;
+    function setMode(uint16 _nbTeams, uint16 _nbPlayerPerTeam) external;
     function getModes() external view returns (string[] memory);
     function getModeByIndex(uint256 _modeIndex) external view returns (string memory);
+    function getMode(uint16 _nbTeams, uint16 _nbPlayerPerTeam) external pure returns (string memory);
+
     function setGameSupport(
         string memory _game,
         string[] memory _platforms,

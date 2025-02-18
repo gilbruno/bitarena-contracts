@@ -4,7 +4,7 @@ pragma solidity 0.8.26;
 import {Test, console} from "forge-std/Test.sol";
 import {BitarenaGames} from "../src/BitarenaGames.sol";
 import {GAMES_ADMIN_ROLE} from "../src/BitarenaChallengeConstants.sol";
-
+import {IBitarenaGames} from "../src/interfaces/IBitarenaGames.sol";
 contract BitarenaGamesTest is Test {
     BitarenaGames public bitarenaGames;
     address public admin;
@@ -21,12 +21,19 @@ contract BitarenaGamesTest is Test {
         assertEq(bitarenaGames.getAdmins()[0], admin);
     }
 
+    function test_GetMode() public view {
+        assertEq(bitarenaGames.getMode(2, 2), "2-2");
+        assertEq(bitarenaGames.getMode(4, 1), "1-1-1-1");
+        assertEq(bitarenaGames.getMode(3, 2), "2-2-2");
+        assertEq(bitarenaGames.getMode(2, 10), "10-10");
+    }
+
     function test_SetMode() public {
         vm.startPrank(admin);
         
-        bitarenaGames.setMode("1-1");
-        bitarenaGames.setMode("2-2");
-        bitarenaGames.setMode("3-3");
+        bitarenaGames.setMode(2, 1);
+        bitarenaGames.setMode(2, 2);
+        bitarenaGames.setMode(2, 3);
         
         string[] memory modes = bitarenaGames.getModes();
         assertEq(modes.length, 3);
@@ -72,8 +79,8 @@ contract BitarenaGamesTest is Test {
         bitarenaGames.setGame("fortnite");
         bitarenaGames.setPlatform("steam");
         bitarenaGames.setPlatform("ps5");
-        bitarenaGames.setMode("1-1");
-        bitarenaGames.setMode("2-2");
+        bitarenaGames.setMode(2, 1);
+        bitarenaGames.setMode(2, 2);
         
         // Create arrays for platforms and modes
         string[] memory platforms = new string[](2);
@@ -143,6 +150,7 @@ contract BitarenaGamesTest is Test {
         string[] memory modes = new string[](1);
         modes[0] = "nonexistent";
         
+        vm.expectRevert(IBitarenaGames.ModeNotFound.selector);
         bitarenaGames.setGameSupport("fortnite", platforms, modes);
         
         vm.stopPrank();

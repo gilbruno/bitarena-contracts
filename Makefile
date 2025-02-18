@@ -33,6 +33,13 @@ generateBitarenaGamesAbi:
 	@echo "Generate BitarenaGames ABI"
 	forge build --silent && jq '.abi' ./out/BitarenaGames.sol/BitarenaGames.json > ./abi/BitarenaGames.json
 
+setMode:
+	@if [ -z "$(NB_TEAMS)" ] || [ -z "$(NB_PLAYERS)" ]; then \
+		echo "Usage: make setMode NB_TEAMS=<value> NB_PLAYERS=<value>"; \
+		exit 1; \
+	fi
+	cast send $(ADDRESS_LAST_DEPLOYED_GAMES) "setMode(uint16,uint16)" $(NB_TEAMS) $(NB_PLAYERS) --rpc-url $(RPC_URL) --private-key $(PRIVATE_KEY_ADMIN_GAMES) --legacy
+
 setGame:
 	@if [ -z "$(GAME_NAME)" ]; then \
         echo "Usage: make setGame GAME_NAME=<value>"; \
