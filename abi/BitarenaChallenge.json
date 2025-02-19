@@ -972,6 +972,19 @@
   },
   {
     "type": "event",
+    "name": "Debug",
+    "inputs": [
+      {
+        "name": "signer",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "DefaultAdminDelayChangeCanceled",
     "inputs": [],
     "anonymous": false
@@ -1016,6 +1029,19 @@
         "type": "uint48",
         "indexed": false,
         "internalType": "uint48"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "DisputeAccepted",
+    "inputs": [
+      {
+        "name": "player",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
       }
     ],
     "anonymous": false
@@ -1224,6 +1250,25 @@
     "anonymous": false
   },
   {
+    "type": "event",
+    "name": "VictoryUnclaimed",
+    "inputs": [
+      {
+        "name": "teamNumber",
+        "type": "uint16",
+        "indexed": false,
+        "internalType": "uint16"
+      },
+      {
+        "name": "claimer",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
     "type": "error",
     "name": "AccessControlBadConfirmation",
     "inputs": []
@@ -1303,7 +1348,22 @@
   },
   {
     "type": "error",
+    "name": "DelayStartClaimVictoryGreaterThanDelayEndClaimVictoryError",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "DelayStartGreaterThanDelayEnd",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "DelayUnclaimVictoryNotSet",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "DisputeExistsError",
     "inputs": []
   },
   {
@@ -1348,12 +1408,32 @@
   },
   {
     "type": "error",
+    "name": "NoDisputeParticipantsError",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "NotSufficientAmountForDisputeError",
     "inputs": []
   },
   {
     "type": "error",
+    "name": "NotTeamMemberError",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotTimeYetToParticipateToDisputeError",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "ReentrancyGuardReentrantCall",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "RefundImpossibleDueToTooManyDisputeParticipantsError",
     "inputs": []
   },
   {
@@ -1434,7 +1514,17 @@
   },
   {
     "type": "error",
+    "name": "TimeElapsedToUnclaimVictoryError",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "TimeTooSoonToClaimVictoryError",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "UnclaimVictoryNotAuthorized",
     "inputs": []
   },
   {

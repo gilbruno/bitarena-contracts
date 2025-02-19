@@ -57,7 +57,87 @@
   },
   {
     "type": "function",
+    "name": "getGameSupport",
+    "inputs": [
+      {
+        "name": "_game",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "platforms",
+        "type": "string[]",
+        "internalType": "string[]"
+      },
+      {
+        "name": "modes",
+        "type": "string[]",
+        "internalType": "string[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "getGames",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "string[]",
+        "internalType": "string[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getMode",
+    "inputs": [
+      {
+        "name": "_nbTeams",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "_nbPlayerPerTeam",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "getModeByIndex",
+    "inputs": [
+      {
+        "name": "_modeIndex",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getModes",
     "inputs": [],
     "outputs": [
       {
@@ -238,6 +318,47 @@
   },
   {
     "type": "function",
+    "name": "setGameSupport",
+    "inputs": [
+      {
+        "name": "_game",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "_platforms",
+        "type": "string[]",
+        "internalType": "string[]"
+      },
+      {
+        "name": "_modes",
+        "type": "string[]",
+        "internalType": "string[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setMode",
+    "inputs": [
+      {
+        "name": "_nbTeams",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "_nbPlayerPerTeam",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "setPlatform",
     "inputs": [
       {
@@ -274,6 +395,44 @@
     "inputs": [
       {
         "name": "game",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "GameSupportUpdated",
+    "inputs": [
+      {
+        "name": "game",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "name": "platforms",
+        "type": "string[]",
+        "indexed": false,
+        "internalType": "string[]"
+      },
+      {
+        "name": "modes",
+        "type": "string[]",
+        "indexed": false,
+        "internalType": "string[]"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ModeAdded",
+    "inputs": [
+      {
+        "name": "mode",
         "type": "string",
         "indexed": false,
         "internalType": "string"
@@ -408,7 +567,51 @@
   },
   {
     "type": "error",
+    "name": "GameNotFound",
+    "inputs": [
+      {
+        "name": "game",
+        "type": "string",
+        "internalType": "string"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "ModeAlreadyExists",
+    "inputs": [
+      {
+        "name": "mode",
+        "type": "string",
+        "internalType": "string"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "ModeNotFound",
+    "inputs": [
+      {
+        "name": "mode",
+        "type": "string",
+        "internalType": "string"
+      }
+    ]
+  },
+  {
+    "type": "error",
     "name": "PlatformAlreadyExists",
+    "inputs": [
+      {
+        "name": "platform",
+        "type": "string",
+        "internalType": "string"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "PlatformNotFound",
     "inputs": [
       {
         "name": "platform",
