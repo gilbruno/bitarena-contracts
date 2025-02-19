@@ -119,7 +119,7 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
         address challengeDisputeAdmin = BitarenaChallenge(deployedChallengeAddress).getDisputeAdmin();
         string memory game = BitarenaChallenge(deployedChallengeAddress).getGame();
         string memory platform = BitarenaChallenge(deployedChallengeAddress).getPlatform();
-        uint16 nbTeams = BitarenaChallenge(deployedChallengeAddress).getTeamCounter();
+        uint16 nbTeams = BitarenaChallenge(deployedChallengeAddress).getNbTeams();
         uint16 nbTeamPlayers = BitarenaChallenge(deployedChallengeAddress).getNbTeamPlayers();
         uint256 amountPerPlayer = BitarenaChallenge(deployedChallengeAddress).getAmountPerPlayer();
         uint256 startAt = BitarenaChallenge(deployedChallengeAddress).getChallengeStartDate();
