@@ -8,6 +8,8 @@ import {BitarenaGames} from "../../src/BitarenaGames.sol";
 import {BitarenaFactory} from "../../src/BitarenaFactory.sol";
 import {BitarenaChallengesData} from "../../src/BitarenaChallengesData.sol";
 import {ERC1967Proxy} from "openzeppelin-contracts/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import {BitarenaChallenge} from "../../src/BitarenaChallenge.sol";
+import {ChallengeParams} from "../../src/struct/ChallengeParams.sol";
 /**
  * @title Deploy All contracts
  * @author 
@@ -56,6 +58,28 @@ contract DeployScript is Script {
     //   2-1. Deploy implementation
     BitarenaFactory bitarenaFactory = new BitarenaFactory(address(bitarenaGames), challengeAdmin, challengeDisputeAdmin, challengeEmergencyAdmin, address(proxyChallengesData));
     console.log("BitarenaFactory implementation deployed to %s", address(bitarenaFactory));
+
+    //***********************************************************************************************/
+    //********* 4 - Deploy Challenge (in order to others future challanges to be readable and verified)
+    //***********************************************************************************************/
+    ChallengeParams memory challengeParams = ChallengeParams({
+            factory: address(bitarenaFactory),
+            challengesData: address(proxyChallengesData),
+            challengeAdmin: challengeAdmin,
+            challengeDisputeAdmin: challengeDisputeAdmin,
+            challengeEmergencyAdmin: challengeEmergencyAdmin,
+            challengeCreator: challengeAdmin,
+            game: "game",
+            platform: "platform",
+            nbTeams: 1,
+            nbTeamPlayers: 1,
+            amountPerPlayer: 1 ether,
+            startAt: block.timestamp + 1 days,
+            isPrivate: false
+            });
+
+    BitarenaChallenge challenge = new BitarenaChallenge(challengeParams);    
+    console.log("Challenge deployed to %s", address(challenge));
 
 
     vm.stopBroadcast();

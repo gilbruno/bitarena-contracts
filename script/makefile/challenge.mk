@@ -145,3 +145,12 @@ calculateRemainingAmounts:
 	amountDispute=$$(cast call $(CHALLENGE_ADDRESS) "getDisputeAmountParticipation()(uint256)" --rpc-url $(RPC_URL)); \
 	echo "poolAmountRemainingforAdmin = $$((s_challengePool - totalPoolAmountForWinner))"; \
 	echo "disputePoolAmountRemainingForAdmin = $$((s_disputePool - amountDispute))"
+
+getTeamCounter:
+	@if [ -z "$(CHALLENGE_ADDRESS)" ]; then \
+		echo "Usage: make getTeamCounter CHALLENGE_ADDRESS=<address>"; \
+		exit 1; \
+	fi
+	@echo "Récupération du nombre d'équipes pour le challenge $(CHALLENGE_ADDRESS)"; \
+	cast call $(CHALLENGE_ADDRESS) "getTeamCounter()(uint256)" \
+		--rpc-url $(RPC_URL)

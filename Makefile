@@ -172,6 +172,32 @@ debugIntentChallengeDeployment:
 	--legacy \
 	--trace
 	
+debugCreateOrJoinTeam:
+	@if [ -z "$(CHALLENGE_ADDRESS)" ] || [ -z "$(TEAM_INDEX)" ]; then \
+		echo "Usage: make debugCreateOrJoinTeam CHALLENGE_ADDRESS=<address> TEAM_INDEX=<index>"; \
+		echo "Note: TEAM_INDEX=0 pour créer une nouvelle équipe, >0 pour rejoindre une équipe existante"; \
+		exit 1; \
+	fi
+	@echo "Simulation d'appel à createOrJoinTeam pour le challenge $(CHALLENGE_ADDRESS) avec l'équipe $(TEAM_INDEX)..."
+	@if [ -z "$(AMOUNT)" ]; then \
+		cast call $(CHALLENGE_ADDRESS) \
+		"createOrJoinTeam(uint16)" \
+		$(TEAM_INDEX) \
+		--rpc-url $(RPC_URL) \
+		--from $(PUBLIC_KEY_CREATOR_CHALLENGE) \
+		--legacy \
+		--trace; \
+	else \
+		cast call $(CHALLENGE_ADDRESS) \
+		"createOrJoinTeam(uint16)" \
+		$(TEAM_INDEX) \
+		--value $$(cast --to-wei $(AMOUNT) eth) \
+		--rpc-url $(RPC_URL) \
+		--from $(PUBLIC_KEY_CREATOR_CHALLENGE) \
+		--legacy \
+		--trace; \
+	fi
+
 # Ajouter cette nouvelle commande dans votre Makefile
 debug-intent:
 	@echo "Simulation de intentChallengeCreation pour debug..."
@@ -192,8 +218,8 @@ getFactoryChallengeCounter:
 	cast call $(ADDRESS_LAST_DEPLOYED_FACTORY) "getChallengeCounter()" --rpc-url $(RPC_URL) --legacy	
 
 # Add X minutes to claim victory
-# To call it: make setDelayStartForVictoryClaim CHALLENGE_ADDRESS=0x2eb1.... MINUTES=20 
-# to add only20minutes instead of 1 hour
+# To call it: make setDelayStartForVictoryClaim CHALLENGE_ADDRESS=0x2eb1.... MINUTES=20 
+# to add only20minutes instead of 1 hour
 setDelayStartForVictoryClaim:
 	@if [ -z "$(CHALLENGE_ADDRESS)" ] || [ -z "$(MINUTES)" ]; then \
 		echo "Usage: make setDelayStartForVictoryClaim CHALLENGE_ADDRESS=<challenge_address> MINUTES=<number_of_minutes>"; \
@@ -334,3 +360,4 @@ getPlayerChallengesCount:
 	fi
 	@echo "Getting challenges count for player $(PLAYER_ADDRESS) from challenge data $(CHALLENGE_DATA_ADDRESS)..."
 	@cast call $(CHALLENGE_DATA_ADDRESS) "getPlayerChallengesCount(address)(uint256)" $(PLAYER_ADDRESS) --rpc-url $(RPC_URL) --legacy
+
