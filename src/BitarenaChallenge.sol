@@ -48,9 +48,9 @@ contract BitarenaChallenge is
     uint256 private s_challengePool;
     uint256 private s_disputePool;
 
-    address private s_admin;
-    address private s_disputeAdmin;
-    address private s_emergencyAdmin;
+    address private immutable s_admin;
+    address private immutable s_disputeAdmin;
+    address private immutable s_emergencyAdmin;
     address private immutable s_creator;
     address private immutable s_factory;
 
@@ -208,7 +208,7 @@ contract BitarenaChallenge is
     /**
      * @dev Entry point for front application to create or join a team 
      */
-    function createOrJoinTeam(uint16 _teamIndex) public payable {
+    function createOrJoinTeam(uint16 _teamIndex) external payable {
         if (_teamIndex == 0) {
             createTeam();
         }
@@ -282,7 +282,7 @@ contract BitarenaChallenge is
      * @dev It can be done only between (s_startAt + s_delayStartVictoryClaim) and (s_startAt + s_delayStartVictoryClaim + s_delayEndVictoryClaim)
      * 
      */
-    function claimVictory() public checkClaimVictory() whenNotPaused {
+    function claimVictory() external checkClaimVictory() whenNotPaused {
         address sender = _msgSender();
         uint16 teamIndex = getTeamOfPlayer(sender); 
         s_winners[teamIndex] = true;
@@ -340,7 +340,7 @@ contract BitarenaChallenge is
     /**
      * @dev After many teams participate to a dispute, the challenge ADMIN reveal which team is the winner by indicating which team is the winner
      */
-    function revealWinnerAfterDispute(uint16 _teamIndex) public onlyRole(CHALLENGE_DISPUTE_ADMIN_ROLE) checkRevealWinnerAfterDispute(_teamIndex) {
+    function revealWinnerAfterDispute(uint16 _teamIndex) external onlyRole(CHALLENGE_DISPUTE_ADMIN_ROLE) checkRevealWinnerAfterDispute(_teamIndex) {
         s_winnerTeam = _teamIndex;
         s_challengesData.updateWinnerTeam(address(this), _teamIndex);
         emit RevealWinner(_teamIndex, _msgSender());
@@ -358,21 +358,23 @@ contract BitarenaChallenge is
     /**
      * @dev
      */
-    function setFeePercentageDispute(uint16 _percentage) public onlyRole(CHALLENGE_ADMIN_ROLE) {
+    function setFeePercentageDispute(uint16 _percentage) external onlyRole(CHALLENGE_ADMIN_ROLE) {
         s_feePercentageDispute = _percentage;
+        emit FeePercentageDisputeUpdated(_percentage);
     }
 
     /**
      * @dev
      */
-    function setFeePercentage(uint16 _percentage) public onlyRole(CHALLENGE_ADMIN_ROLE) {
+    function setFeePercentage(uint16 _percentage) external onlyRole(CHALLENGE_ADMIN_ROLE) {
         s_feePercentage = _percentage;
+        emit FeePercentageUpdated(_percentage);
     }
 
     /** 
      *  @dev : Only one player create a dispute for his team.
      */
-    function participateToDispute() public payable checkDisputeParticipation() whenNotPaused {
+    function participateToDispute() external payable checkDisputeParticipation() whenNotPaused {
         address sender = _msgSender();
         uint16 teamSigner = getTeamOfPlayer(sender);
         s_disputeParticipants[teamSigner] = sender; 
@@ -413,9 +415,10 @@ contract BitarenaChallenge is
      * 
      * @dev
      */
-    function setDelayStartForVictoryClaim(uint256 _delayStartVictoryClaim) public onlyRole(CHALLENGE_ADMIN_ROLE) {
+    function setDelayStartForVictoryClaim(uint256 _delayStartVictoryClaim) external onlyRole(CHALLENGE_ADMIN_ROLE) {
         if (s_delayEndVictoryClaim > 0 && _delayStartVictoryClaim > s_delayEndVictoryClaim) revert DelayStartGreaterThanDelayEnd();
         s_delayStartVictoryClaim = _delayStartVictoryClaim;
+        emit DelayStartForVictoryClaimUpdated(_delayStartVictoryClaim);
     }
 
     /**
@@ -424,9 +427,10 @@ contract BitarenaChallenge is
      * 
      * @dev
      */
-    function setDelayEndForVictoryClaim(uint256 _delayEndVictoryClaim) public onlyRole(CHALLENGE_ADMIN_ROLE) {
+    function setDelayEndForVictoryClaim(uint256 _delayEndVictoryClaim) external onlyRole(CHALLENGE_ADMIN_ROLE) {
         if (s_delayStartVictoryClaim > 0 && s_delayStartVictoryClaim > _delayEndVictoryClaim) revert DelayStartGreaterThanDelayEnd();
         s_delayEndVictoryClaim = _delayEndVictoryClaim;
+        emit DelayEndForVictoryClaimUpdated(_delayEndVictoryClaim);
     }
 
     /**
@@ -435,9 +439,10 @@ contract BitarenaChallenge is
      * 
      * @dev
      */
-    function setDelayStartDisputeParticipation(uint256 _delayStartDisputeParticipation) public onlyRole(CHALLENGE_DISPUTE_ADMIN_ROLE) {
+    function setDelayStartDisputeParticipation(uint256 _delayStartDisputeParticipation) external onlyRole(CHALLENGE_DISPUTE_ADMIN_ROLE) {
         if (s_delayEndDisputeParticipation > 0 && _delayStartDisputeParticipation > s_delayEndDisputeParticipation) revert DelayStartGreaterThanDelayEnd();
         s_delayStartDisputeParticipation = _delayStartDisputeParticipation;
+        emit DelayStartDisputeParticipationUpdated(_delayStartDisputeParticipation);
     }
 
     /**
@@ -446,9 +451,10 @@ contract BitarenaChallenge is
      * 
      * @dev
      */
-    function setDelayEndDisputeParticipation(uint256 _delayEndDisputeParticipation) public onlyRole(CHALLENGE_DISPUTE_ADMIN_ROLE) {
+    function setDelayEndDisputeParticipation(uint256 _delayEndDisputeParticipation) external onlyRole(CHALLENGE_DISPUTE_ADMIN_ROLE) {
         if (s_delayStartDisputeParticipation > 0 && s_delayStartDisputeParticipation > _delayEndDisputeParticipation) revert DelayStartGreaterThanDelayEnd();
         s_delayEndDisputeParticipation = _delayEndDisputeParticipation;
+        emit DelayEndDisputeParticipationUpdated(_delayEndDisputeParticipation);
     }
 
     /**
@@ -474,10 +480,11 @@ contract BitarenaChallenge is
     /**
      * @dev Only the challengecreator can cancel  a challenge only before _startDate
      */
-    function cancelChallenge() public onlyRole(CHALLENGE_CREATOR_ROLE) {
+    function cancelChallenge() external onlyRole(CHALLENGE_CREATOR_ROLE) {
         if (block.timestamp > s_startAt) revert ChallengeCancelAfterStartDateError();
         setIsCanceled(true);
         returnMoneyBackDueToChallengeCancel();
+        emit ChallengeCanceled(address(this));
     }
 
     /**
@@ -514,14 +521,14 @@ contract BitarenaChallenge is
     /**
      * @dev Returns true if at least 2 teams participate to a dispute
      */
-    function atLeast2TeamsParticipateToDispute() public view returns (bool) {
+    function atLeast2TeamsParticipateToDispute() external view returns (bool) {
         return (getDisputeParticipantsCount() > 1);
     }
 
     /**
      * @dev Returns true if at least 1 team participate to a dispute
      */
-    function atLeast1TeamParticipateToDispute() public view returns (bool) {
+    function atLeast1TeamParticipateToDispute() external view returns (bool) {
         return (getDisputeParticipantsCount() >= 1);
     }
 
@@ -551,7 +558,7 @@ contract BitarenaChallenge is
      * @dev 
      * Rules : Only the winner can withdraw the pool
      */
-    function withdrawChallengePool() public checkWithdrawPool() nonReentrant whenNotPaused {
+    function withdrawChallengePool() external nonReentrant whenNotPaused checkWithdrawPool()  {
         s_isPoolWithdrawed = true;
 
         address[] memory winningTeam = s_teams[s_winnerTeam];
@@ -602,21 +609,21 @@ contract BitarenaChallenge is
     /**
      * @dev getter for state variable s_creator
      */
-    function getCreator() public view returns (address) {
+    function getCreator() external view returns (address) {
         return s_creator;
     }
 
     /**
      * @dev getter for state variable s_game
      */
-    function getGame() public view returns (string memory) {
+    function getGame() external view returns (string memory) {
         return s_game;
     }
 
     /**
      * @dev getter for state variable s_platform
      */
-    function getPlatform() public view returns (string memory) {
+    function getPlatform() external view returns (string memory) {
         return s_platform;
     }
     /**
@@ -650,7 +657,7 @@ contract BitarenaChallenge is
     /**
      * @dev getter for state variable s_isCanceled
      */
-    function getIsCanceled() public view returns (bool) {
+    function getIsCanceled() external view returns (bool) {
         return s_isCanceled;
     }
 
@@ -765,14 +772,14 @@ contract BitarenaChallenge is
     /**
      * @dev getter for state variable s_admin
      */
-    function getChallengeAdmin() public view returns (address) {
+    function getChallengeAdmin() external view returns (address) {
         return s_admin;
     }
 
     /**
      * @dev getter for state variable s_disputeAdmin
      */
-    function getDisputeAdmin() public view returns (address) {
+    function getDisputeAdmin() external view returns (address) {
         return s_disputeAdmin;
     }
 
@@ -786,28 +793,28 @@ contract BitarenaChallenge is
     /**
      * @dev getter for state variable s_disputeParticipants
      */
-    function getDisputeParticipants(uint16 _teamIndex) public view returns (address) {
+    function getDisputeParticipants(uint16 _teamIndex) external view returns (address) {
         return s_disputeParticipants[_teamIndex];
     }
 
     /**
      * @dev get the state var "s_winners"
      */
-    function getWinnerClaimed(uint16 _teamIndex) public view returns (bool) {
+    function getWinnerClaimed(uint16 _teamIndex) external view returns (bool) {
         return s_winners[_teamIndex];
     }
 
     /**
      * @dev get the number of team that claimed victory
      */
-    function getWinnersClaimedCount() public view returns (uint256) {
+    function getWinnersClaimedCount() external view returns (uint256) {
         return s_claimVictoryTeams.length;
     }
 
     /**
      * @dev get the state var "s_winnerTeam"
      */
-    function getWinnerTeam() public view returns (uint16) {
+    function getWinnerTeam() external view returns (uint16) {
         return s_winnerTeam;
     }
 

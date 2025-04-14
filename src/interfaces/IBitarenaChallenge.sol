@@ -67,7 +67,14 @@ interface IBitarenaChallenge {
     event ParticipateToDispute(address indexed player);
     event PoolChallengeWithdrawed(uint16 indexed teamIndex, address indexed signer);
     event RevealWinner(uint16 indexed winnerTeam, address indexed signer);
-
+    event DelayStartForVictoryClaimUpdated(uint256 delayStart);
+    event DelayEndForVictoryClaimUpdated(uint256 delayEnd);
+    event DelayStartDisputeParticipationUpdated(uint256 delayStart);
+    event DelayEndDisputeParticipationUpdated(uint256 delayEnd);
+    event ChallengeCanceled(address indexed challenge);
+    event FeePercentageDisputeUpdated(uint16 percentage);
+    event FeePercentageUpdated(uint16 percentage);
+    
     // Errors
     error BalanceChallengePlayerError();
     error ChallengeCanceledError();

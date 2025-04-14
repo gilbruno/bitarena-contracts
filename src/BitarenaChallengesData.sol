@@ -245,13 +245,7 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
         if(_challengeContract == address(0)) revert InvalidChallengeAddress();
         
         ChallengeData storage challenge = s_challenges[_challengeContract];
-        uint256 newPoolAmount;
-        unchecked {
-            newPoolAmount = challenge.pool + _amountToAdd;
-        }
-        challenge.pool = newPoolAmount;
-        
-        emit ChallengePoolUpdated(_challengeContract, newPoolAmount);
+        emit ChallengePoolUpdated(_challengeContract, challenge.pool);
     }
 
     /**

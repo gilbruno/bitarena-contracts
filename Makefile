@@ -106,6 +106,10 @@ getPlatform:
     fi
 	cast call $(ADDRESS_LAST_DEPLOYED_GAMES) "getPlatformByIndex(uint256)" $(PLATFORM_INDEX) --rpc-url $(RPC_URL) --legacy	
 
+getPlatforms:
+	@echo "Récupération de toutes les plateformes disponibles..."
+	cast call $(ADDRESS_LAST_DEPLOYED_GAMES) "getPlatforms()(string[])" --rpc-url $(RPC_URL) --legacy
+
 decode:
 	@if [ -z "$(HEX_VALUE)" ]; then \
 		echo "Usage: make decode HEX_VALUE=<hex_value>"; \
