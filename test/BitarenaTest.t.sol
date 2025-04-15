@@ -3621,4 +3621,76 @@ contract BitarenaTest is Test {
     console.log("ID challenge 1:", challengesData.getChallengeId(address(challenge1)));
     console.log("ID challenge 2:", challengesData.getChallengeId(address(challenge2)));
 }
+
+    function testChallengePoolAfterIntentChallengeDeployment() public {
+        deployFactory();
+        
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        BitarenaChallenge bitarenaChallenge = BitarenaChallenge(
+            payable(
+                bitarenaFactory.intentChallengeDeployment{value: AMOUNT_PER_PLAYER}(
+                    GAME1,
+                    PLATFORM1,
+                    TWO_TEAMS,
+                    TWO_PLAYERS,
+                    AMOUNT_PER_PLAYER,
+                    block.timestamp + 1 days,
+                    false
+                )
+            )
+        );
+        vm.stopBroadcast();
+
+        // Vérifie que le pool du challenge est égal au montant misé par le créateur
+        assertEq(bitarenaChallenge.getChallengePool(), AMOUNT_PER_PLAYER);
+        // Vérifie que le pool est égal à la balance du contrat
+        assertEq(bitarenaChallenge.getChallengePool(), address(bitarenaChallenge).balance);
+        // Vérifie que le pool dans BitarenaChallengesData est correctement mis à jour
+        ChallengeData memory challengeData = IBitarenaChallengesData(address(proxyChallengesData)).getChallengeData(address(bitarenaChallenge));
+        assertEq(challengeData.pool, AMOUNT_PER_PLAYER);
+
+        // PLAYER1 rejoint la première équipe
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.createOrJoinTeam{value: AMOUNT_PER_PLAYER}(1);
+        vm.stopBroadcast();
+
+        // Vérifie que le pool est mis à jour après que PLAYER1 a rejoint
+        assertEq(bitarenaChallenge.getChallengePool(), 2 * AMOUNT_PER_PLAYER);
+        assertEq(bitarenaChallenge.getChallengePool(), address(bitarenaChallenge).balance);
+        challengeData = IBitarenaChallengesData(address(proxyChallengesData)).getChallengeData(address(bitarenaChallenge));
+        assertEq(challengeData.pool, 2 * AMOUNT_PER_PLAYER);
+
+        // PLAYER2 crée une nouvelle équipe
+        vm.startBroadcast(PLAYER2_CHALLENGE1);
+        bitarenaChallenge.createOrJoinTeam{value: AMOUNT_PER_PLAYER}(0);
+        vm.stopBroadcast();
+
+        // Vérifie que le pool est mis à jour après que PLAYER2 a créé une équipe
+        assertEq(bitarenaChallenge.getChallengePool(), 3 * AMOUNT_PER_PLAYER);
+        assertEq(bitarenaChallenge.getChallengePool(), address(bitarenaChallenge).balance);
+        challengeData = IBitarenaChallengesData(address(proxyChallengesData)).getChallengeData(address(bitarenaChallenge));
+        assertEq(challengeData.pool, 3 * AMOUNT_PER_PLAYER);
+
+        // PLAYER3 rejoint l'équipe de PLAYER2
+        vm.startBroadcast(PLAYER3_CHALLENGE1);
+        bitarenaChallenge.createOrJoinTeam{value: AMOUNT_PER_PLAYER}(2);
+        vm.stopBroadcast();
+
+        // Vérifie que le pool est mis à jour après que PLAYER3 a rejoint
+        assertEq(bitarenaChallenge.getChallengePool(), 4 * AMOUNT_PER_PLAYER);
+        assertEq(bitarenaChallenge.getChallengePool(), address(bitarenaChallenge).balance);
+        challengeData = IBitarenaChallengesData(address(proxyChallengesData)).getChallengeData(address(bitarenaChallenge));
+        assertEq(challengeData.pool, 4 * AMOUNT_PER_PLAYER);
+
+        // Vérifie la composition finale des équipes
+        assertEq(bitarenaChallenge.getTeamCounter(), 2, "There should be 2 teams");
+        assertEq(bitarenaChallenge.getTeamsByTeamIndex(1).length, 2, "The team 1 should have 2 players");
+        assertEq(bitarenaChallenge.getTeamsByTeamIndex(2).length, 2, "The team 2 should have 2 players");
+        
+        // Vérifie que les joueurs sont dans les bonnes équipes
+        assertEq(bitarenaChallenge.getTeamsByTeamIndex(1)[0], CREATOR_CHALLENGE1, "CREATOR should be in the team 1");
+        assertEq(bitarenaChallenge.getTeamsByTeamIndex(1)[1], PLAYER1_CHALLENGE1, "PLAYER1 should be in the team 1");
+        assertEq(bitarenaChallenge.getTeamsByTeamIndex(2)[0], PLAYER2_CHALLENGE1, "PLAYER2 should be in the team 2");
+        assertEq(bitarenaChallenge.getTeamsByTeamIndex(2)[1], PLAYER3_CHALLENGE1, "PLAYER3 should be in the team 2");
+    }
 }

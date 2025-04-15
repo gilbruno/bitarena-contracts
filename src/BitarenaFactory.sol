@@ -220,9 +220,6 @@ contract BitarenaFactory is Context, Ownable, AccessControl, IBitarenaFactory {
             isPrivate: challenge.isPrivate
             }));
 
-        // Enregistrement du challenge dans BitarenaChallengesData
-        s_challengesData.registerChallengeContract(address(deployedChallengeAddress));
-
         BitarenaChallenge bitarenaChallenge = BitarenaChallenge(payable(deployedChallengeAddress));
 
         //Hydrate challenges array
@@ -230,12 +227,15 @@ contract BitarenaFactory is Context, Ownable, AccessControl, IBitarenaFactory {
         challenge.challengeAddress = deployedChallengeAddress;
         s_challenges.push(challenge);
 
-        //Create the firstTeam and add the creator of the challenge in this first team
-        bitarenaChallenge.createOrJoinTeam(0);
-
-        //Send amountPerPlayer from creator to challenge smart contract
+        //Send amountPerPlayer from creator to challenge smart contract first
         (bool sent, ) = address(bitarenaChallenge).call{value: challenge.amountPerPlayer}("");
         if (!sent) revert SendMoneyToChallengeError();
+
+        // Enregistrement du challenge dans BitarenaChallengesData avant de créer la première équipe
+        s_challengesData.registerChallengeContract(address(deployedChallengeAddress));
+
+        //Create the firstTeam and add the creator of the challenge in this first team after funds are sent
+        bitarenaChallenge.createOrJoinTeam(0);
 
         emit ChallengeDeployed(_challengeCounter, address(bitarenaChallenge), address(this));
 
@@ -279,23 +279,22 @@ contract BitarenaFactory is Context, Ownable, AccessControl, IBitarenaFactory {
             isPrivate: challenge.isPrivate
             }));
 
-        // Enregistrement du challenge dans BitarenaChallengesData
-        s_challengesData.registerChallengeContract(address(deployedChallengeAddress));
-
         BitarenaChallenge bitarenaChallenge = BitarenaChallenge(payable(deployedChallengeAddress));
-
 
         //Hydrate challenges array
         s_challengesMap[_challengeCounter].challengeAddress = deployedChallengeAddress;
         challenge.challengeAddress = deployedChallengeAddress;
         s_challenges.push(challenge);
 
-        //Create the firstTeam and add the creator of the challenge in this first team
-        bitarenaChallenge.createOrJoinTeam(0);
-
-        //Send amountPerPlayer from creator to challenge smart contract
+        //Send amountPerPlayer from creator to challenge smart contract first
         (bool sent, ) = address(bitarenaChallenge).call{value: challenge.amountPerPlayer}("");
         if (!sent) revert SendMoneyToChallengeError();
+
+        // Enregistrement du challenge dans BitarenaChallengesData avant de créer la première équipe
+        s_challengesData.registerChallengeContract(address(deployedChallengeAddress));
+
+        //Create the firstTeam and add the creator of the challenge in this first team after funds are sent
+        bitarenaChallenge.createOrJoinTeam(0);
 
         emit ChallengeDeployed(_challengeCounter, address(bitarenaChallenge), address(this));
 

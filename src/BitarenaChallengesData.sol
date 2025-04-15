@@ -129,6 +129,7 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
         uint256 delayStartDisputeParticipation = BitarenaChallenge(deployedChallengeAddress).getDelayStartDisputeParticipation();
         uint256 delayEndDisputeParticipation = BitarenaChallenge(deployedChallengeAddress).getDelayEndDisputeParticipation();
         uint256 feePercentageDispute = BitarenaChallenge(deployedChallengeAddress).getFeePercentageDispute();
+        uint256 currentPool = BitarenaChallenge(deployedChallengeAddress).getChallengePool();
 
         ChallengeData memory newChallenge = ChallengeData({
             challengeAddress: deployedChallengeAddress,
@@ -142,7 +143,7 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
             amountPerPlayer: amountPerPlayer,
             startAt: startAt,
             isPrivate: isPrivate,
-            pool: 0,                      
+            pool: currentPool,                      
             winnerTeam: 0,
             winnersClaimedCount: 0,
             delayStartVictoryClaim: delayStartVictoryClaim,
@@ -245,6 +246,7 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
         if(_challengeContract == address(0)) revert InvalidChallengeAddress();
         
         ChallengeData storage challenge = s_challenges[_challengeContract];
+        challenge.pool = _amountToAdd;  // On met à jour le pool avec la nouvelle valeur
         emit ChallengePoolUpdated(_challengeContract, challenge.pool);
     }
 
