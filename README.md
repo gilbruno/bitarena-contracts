@@ -159,13 +159,32 @@ catapulta script script/catapulta/Deploy.s.sol:DeployScript --network amoy --leg
 ## Last deployment on Sepolia
 
 ```sh
-BitarenaGames deployed to 0xa333b90E4274cDCeA7281C66692FBdd5A61899c7
-BitarenaChallengesData implementation deployed to 0xfAFF867AB903c360c8484cdf73300a9A783051B1
-BitarenaChallengesData proxy deployed to 0x7c1F4740Bef719D63d7d97dc4d0DF8DF56443723
-BitarenaFactory implementation deployed to 0xDFfB1E5746017BdF41f2dFDCf0AC39e08247b2AF
+BitarenaGames deployed to 0xbddbd1827abffce63c71f82ff01f07a0072c514a
+BitarenaChallengesData implementation deployed to 0x88b6ff8dc075c2761bffe147702aa1f1dfc2b668
+BitarenaChallengesData proxy deployed to 0xfa5e709cd4261f092f8fadbe5a0ed7ac10649ad3
+BitarenaFactory implementation deployed to 0x160db94719504893ad836f0afd59e9984c61251d
 
-https://catapulta.sh/project/678f558bf2e1970d286019ed/op/92b38dff-5ab5-482f-87c4-89bb7c5893d5
+https://catapulta.sh/project/678f558bf2e1970d286019ed/op/ea9f9f20-6d28-4eb6-9189-541fb4f4b73b
 ```
+
+# After deployment actions
+
+## Set all games, platforms & modes
+
+### Platforms
+make setPlatform PLATFORM_NAME=steam && make setPlatform PLATFORM_NAME=ps5
+
+### Games
+make setGame GAME_NAME=apex && make setGame GAME_NAME=csgo && make setGame GAME_NAME=fortnite
+
+### Modes
+make setMode NB_TEAMS=2 NB_PLAYERS=1 && make setMode NB_TEAMS=2 NB_PLAYERS=2
+
+
+## Authorize Factory
+
+
+
 
 ## Foundry
 
