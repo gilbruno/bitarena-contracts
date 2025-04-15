@@ -181,9 +181,9 @@ make setGame GAME_NAME=apex && make setGame GAME_NAME=csgo && make setGame GAME_
 make setMode NB_TEAMS=2 NB_PLAYERS=1 && make setMode NB_TEAMS=2 NB_PLAYERS=2
 
 
-## Authorize Factory
+## Authorize Factory 
 
-
+make authorize-contract
 
 
 ## Foundry
