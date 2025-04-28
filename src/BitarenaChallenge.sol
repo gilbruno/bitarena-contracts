@@ -25,7 +25,9 @@ contract BitarenaChallenge is
 
     IBitarenaChallengesData private immutable s_challengesData;
 
-    string private s_game;
+    // aderyn-ignore-next-line(state-variable-could-be-immutable)
+    string private s_game; 
+    // aderyn-ignore-next-line(state-variable-could-be-immutable)
     string private s_platform;
 
     uint16 private immutable s_nbTeams;
@@ -35,7 +37,7 @@ contract BitarenaChallenge is
     uint16 private s_teamCounter;
     uint16 private s_winnerTeam;
 
-    bool private s_isPrivate;
+    bool private immutable s_isPrivate;
     bool private s_isCanceled;
     bool private s_isPoolWithdrawed;
 
@@ -96,6 +98,7 @@ contract BitarenaChallenge is
     /**
      * @dev Modifier for the "joinTeam" function
      */
+    // aderyn-ignore-next-line(modifier-used-only-once)
     modifier checkJoinTeam(uint16 _teamIndex) {
         if (s_teams[_teamIndex].length == s_nbTeamPlayers) revert NbPlayersPerTeamsLimitReachedError();
         if (_teamIndex > s_teamCounter) revert TeamDoesNotExistsError();        
@@ -105,6 +108,7 @@ contract BitarenaChallenge is
         _;
     }
 
+    // aderyn-ignore-next-line(modifier-used-only-once)
     modifier checkCreateTeam() {
         if (msg.value < s_amountPerPlayer && _msgSender() != s_factory) revert BalanceChallengePlayerError();
         _;
@@ -119,6 +123,7 @@ contract BitarenaChallenge is
      *  - Challenge is not canceled
      * 
      */
+    // aderyn-ignore-next-line(modifier-used-only-once)
     modifier checkClaimVictory() {
         address sender = _msgSender();
         uint16 _teamIndex = getTeamOfPlayer(sender);
@@ -144,6 +149,7 @@ contract BitarenaChallenge is
      *  - a dispute participation is only allowed after the delay of claim victory so after startat + delayStartClaimVictory + delayEndClaimVictory
      *  - only a team that claim victory can participate to a dispute
      */
+    // aderyn-ignore-next-line(modifier-used-only-once)
     modifier checkDisputeParticipation() {
         address sender = _msgSender();
         if (getDelayStartVictoryClaim() == 0 || getDelayEndVictoryClaim() == 0) revert DelayClaimVictoryNotSet();
@@ -178,6 +184,7 @@ contract BitarenaChallenge is
      *   - a dispute must contain 2 participants at least
      *   - the team choosed by the admin must exists and must be a participant of the dispute
      */
+    // aderyn-ignore-next-line(modifier-used-only-once)
     modifier checkRevealWinnerAfterDispute(uint16 _teamIndex) {
         if (getDisputeParticipantsCount() < 2) revert RevealWinnerImpossibleDueToTooFewDisputersError();
         if (_teamIndex > s_teamCounter) revert TeamDoesNotExistsError();
@@ -194,6 +201,7 @@ contract BitarenaChallenge is
      *   - impossible to withdraw the pool if the winner has not been revealed yet with at least 2 disputers
      *   - only the member of the team who won can withdraw the challenge pool
      */
+    // aderyn-ignore-next-line(modifier-used-only-once)
     modifier checkWithdrawPool() {
         address sender = _msgSender();
         if (!isAuthorizedPlayer(sender)) revert WithdrawPoolNotAuthorized();
@@ -228,6 +236,7 @@ contract BitarenaChallenge is
      * We reject the Tx if a player wants to join a team afetr the challenge start date
      * 
      */
+    // aderyn-ignore-next-line(internal-function-used-once)
     function joinTeam(uint16 _teamIndex) internal checkJoinTeam(_teamIndex) {
         address sender = _msgSender();
         joinTeamInternal(_teamIndex, sender);
@@ -237,6 +246,7 @@ contract BitarenaChallenge is
     /**
      * @dev Create a team
      */    
+    // aderyn-ignore-next-line(internal-function-used-once)
     function createTeam() internal checkCreateTeam() {
         unchecked {
             ++s_teamCounter;
@@ -294,7 +304,7 @@ contract BitarenaChallenge is
             s_winnerTeam = 0;
         }
         s_challengesData.updateWinnersClaimedCount(address(this));
-        s_challengesData.updateWinnerTeam(address(this), teamIndex);
+        s_challengesData.updateWinnerTeam(address(this), s_winnerTeam);
         emit VictoryClaimed(teamIndex, sender);   
     }
 
@@ -340,6 +350,7 @@ contract BitarenaChallenge is
     /**
      * @dev After many teams participate to a dispute, the challenge ADMIN reveal which team is the winner by indicating which team is the winner
      */
+    // aderyn-ignore-next-line(centralization-risk)
     function revealWinnerAfterDispute(uint16 _teamIndex) external onlyRole(CHALLENGE_DISPUTE_ADMIN_ROLE) checkRevealWinnerAfterDispute(_teamIndex) {
         s_winnerTeam = _teamIndex;
         s_challengesData.updateWinnerTeam(address(this), _teamIndex);
@@ -358,6 +369,7 @@ contract BitarenaChallenge is
     /**
      * @dev
      */
+    // aderyn-ignore-next-line(centralization-risk)
     function setFeePercentageDispute(uint16 _percentage) external onlyRole(CHALLENGE_ADMIN_ROLE) {
         s_feePercentageDispute = _percentage;
         emit FeePercentageDisputeUpdated(_percentage);
@@ -366,6 +378,7 @@ contract BitarenaChallenge is
     /**
      * @dev
      */
+    // aderyn-ignore-next-line(centralization-risk)
     function setFeePercentage(uint16 _percentage) external onlyRole(CHALLENGE_ADMIN_ROLE) {
         s_feePercentage = _percentage;
         emit FeePercentageUpdated(_percentage);
@@ -391,12 +404,14 @@ contract BitarenaChallenge is
         
         incrementDisputePool(getDisputeAmountParticipation());
         emit ParticipateToDispute(sender);
+        s_challengesData.updateWinnerTeam(address(this), s_winnerTeam);
     }
 
     /**
      * @dev Mettre le contrat en pause
      * Only the emergency admin can call this function
-     */
+     */ 
+    // aderyn-ignore-next-line(centralization-risk)
     function pause() external onlyRole(CHALLENGE_EMERGENCY_ADMIN_ROLE) {
         _pause();
     }
@@ -405,6 +420,7 @@ contract BitarenaChallenge is
      * @dev Reprendre le contrat
      * Only the emergency admin can call this function
      */
+    // aderyn-ignore-next-line(centralization-risk)
     function unpause() external onlyRole(CHALLENGE_EMERGENCY_ADMIN_ROLE) {
         _unpause();
     }
@@ -415,6 +431,7 @@ contract BitarenaChallenge is
      * 
      * @dev
      */
+    // aderyn-ignore-next-line(centralization-risk)
     function setDelayStartForVictoryClaim(uint256 _delayStartVictoryClaim) external onlyRole(CHALLENGE_ADMIN_ROLE) {
         if (s_delayEndVictoryClaim > 0 && _delayStartVictoryClaim > s_delayEndVictoryClaim) revert DelayStartGreaterThanDelayEnd();
         s_delayStartVictoryClaim = _delayStartVictoryClaim;
@@ -427,6 +444,7 @@ contract BitarenaChallenge is
      * 
      * @dev
      */
+    // aderyn-ignore-next-line(centralization-risk)
     function setDelayEndForVictoryClaim(uint256 _delayEndVictoryClaim) external onlyRole(CHALLENGE_ADMIN_ROLE) {
         if (s_delayStartVictoryClaim > 0 && s_delayStartVictoryClaim > _delayEndVictoryClaim) revert DelayStartGreaterThanDelayEnd();
         s_delayEndVictoryClaim = _delayEndVictoryClaim;
@@ -439,6 +457,7 @@ contract BitarenaChallenge is
      * 
      * @dev
      */
+    // aderyn-ignore-next-line(centralization-risk)
     function setDelayStartDisputeParticipation(uint256 _delayStartDisputeParticipation) external onlyRole(CHALLENGE_DISPUTE_ADMIN_ROLE) {
         if (s_delayEndDisputeParticipation > 0 && _delayStartDisputeParticipation > s_delayEndDisputeParticipation) revert DelayStartGreaterThanDelayEnd();
         s_delayStartDisputeParticipation = _delayStartDisputeParticipation;
@@ -451,6 +470,7 @@ contract BitarenaChallenge is
      * 
      * @dev
      */
+    // aderyn-ignore-next-line(centralization-risk)
     function setDelayEndDisputeParticipation(uint256 _delayEndDisputeParticipation) external onlyRole(CHALLENGE_DISPUTE_ADMIN_ROLE) {
         if (s_delayStartDisputeParticipation > 0 && s_delayStartDisputeParticipation > _delayEndDisputeParticipation) revert DelayStartGreaterThanDelayEnd();
         s_delayEndDisputeParticipation = _delayEndDisputeParticipation;
@@ -466,6 +486,7 @@ contract BitarenaChallenge is
     /**
      * @dev increment the challenge pool
      */
+    // aderyn-ignore-next-line(internal-function-used-once)
     function incrementChallengePool(uint256 _amount) internal {
         s_challengePool += _amount;
     }
@@ -473,6 +494,7 @@ contract BitarenaChallenge is
     /**
      * @dev increment the challenge pool
      */
+    // aderyn-ignore-next-line(internal-function-used-once)
     function incrementDisputePool(uint256 _amount) internal {
         s_disputePool += _amount;
     }
@@ -480,6 +502,7 @@ contract BitarenaChallenge is
     /**
      * @dev Only the challengecreator can cancel  a challenge only before _startDate
      */
+    // aderyn-ignore-next-line(centralization-risk)
     function cancelChallenge() external onlyRole(CHALLENGE_CREATOR_ROLE) {
         if (block.timestamp > s_startAt) revert ChallengeCancelAfterStartDateError();
         setIsCanceled(true);
@@ -490,6 +513,7 @@ contract BitarenaChallenge is
     /**
      * After the challenge creator cancel the challenge, the money must be sent back to players
      */
+    // aderyn-ignore-next-line(internal-function-used-once)
     function returnMoneyBackDueToChallengeCancel() internal nonReentrant {
         uint16 teamCount = s_teamCounter;
 
@@ -671,6 +695,7 @@ contract BitarenaChallenge is
     /**
      * @dev setter for state variable s_isCanceled
      */
+    // aderyn-ignore-next-line(internal-function-used-once)
     function setIsCanceled(bool _isCanceled) internal {
         s_isCanceled = _isCanceled;
     }

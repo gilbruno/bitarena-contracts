@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.22;
+pragma solidity 0.8.26;
 
 import {ChallengeParams} from "./struct/ChallengeParams.sol";
 import {IBitarenaChallengesData} from "./interfaces/IBitarenaChallengesData.sol";
-import {AccessControl} from "openzeppelin-contracts/contracts/access/AccessControl.sol";
-import {Context} from "openzeppelin-contracts/contracts/utils/Context.sol";
 import {AccessControlUpgradeable} from "openzeppelin-contracts-upgradeable/contracts/access/AccessControlUpgradeable.sol";
 import {UUPSUpgradeable} from "openzeppelin-contracts-upgradeable/contracts/proxy/utils/UUPSUpgradeable.sol";
 import {BitarenaChallenge} from "./BitarenaChallenge.sol";
@@ -97,19 +95,22 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
      * @dev Initialize the contract
      * @param _superAdmin Address of the super admin
      */
-    function initialize(address _superAdmin) initializer public {
+    function initialize(address _superAdmin) initializer external {
         if(_superAdmin == address(0)) revert AddressZeroError();
         __AccessControl_init();
         __UUPSUpgradeable_init();
-        _grantRole(DEFAULT_ADMIN_ROLE, _superAdmin);
+        bool success = _grantRole(DEFAULT_ADMIN_ROLE, _superAdmin);
+        if (!success) revert RoleGrantFailed();
     }
 
     /**
      * @dev Authorize an addresse to register challenges. 
      * Normally it' the BitarenaFactory it can be any other address in some specific cases
      */
-    function authorizeConractsRegistering(address _factoryAddress) public onlyRole(DEFAULT_ADMIN_ROLE) {
-        _grantRole(CONTRACTS_REGISTERING_ROLE, _factoryAddress);
+    // aderyn-ignore-next-line(centralization-risk)
+    function authorizeConractsRegistering(address _factoryAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        bool success = _grantRole(CONTRACTS_REGISTERING_ROLE, _factoryAddress);
+        if (!success) revert RoleGrantFailed();
     }
 
     function _buildChallenge(address payable deployedChallengeAddress) internal view returns (ChallengeData memory) {
@@ -160,7 +161,8 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
      * @param _challengeContract Address of the challenge contract to register
      * @notice Only the authorized factory can call this function
      */
-    function registerChallengeContract(address _challengeContract) public onlyRole(CONTRACTS_REGISTERING_ROLE) 
+    // aderyn-ignore-next-line(centralization-risk)
+    function registerChallengeContract(address _challengeContract) external onlyRole(CONTRACTS_REGISTERING_ROLE) 
     {
         if(_challengeContract == address(0)) revert InvalidChallengeAddress();
         if(s_isOfficialChallenge[_challengeContract]) revert ChallengeAlreadyRegistered();
@@ -275,8 +277,10 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
      * @dev Authorize a new BitarenaChallenge contract
      * @param _challengeDataAdmin Address to authorize
      */
+    // aderyn-ignore-next-line(centralization-risk)
     function grantRoleChallangeDataAdmin(address _challengeDataAdmin) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        _grantRole(CHALLENGE_DATA_ADMIN_ROLE, _challengeDataAdmin);
+        bool success = _grantRole(CHALLENGE_DATA_ADMIN_ROLE, _challengeDataAdmin);
+        if (!success) revert RoleGrantFailed();
         emit ChallengeContractAuthorized(_challengeDataAdmin);
     }
 
@@ -286,7 +290,7 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
      * @param _challengeAddress Address of the challenge
      * @param _challenge The challenge parameters
      */
-    function addChallengeToPlayerHistory(address _player, address _challengeAddress, ChallengeParams memory _challenge, uint16 _teamIndex) public onlyOfficialChallenge() {
+    function addChallengeToPlayerHistory(address _player, address _challengeAddress, ChallengeParams memory _challenge, uint16 _teamIndex) external onlyOfficialChallenge() {
         if(_player == address(0)) revert AddressZeroError();
         // Get the existing array
         //ChallengeParams[] storage playerChallenges = s_playerChallenges[_player];
@@ -388,6 +392,7 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
      * @param newImplementation Address of the new implementation
      * @param data Data to pass to the new implementation
      */
+    // aderyn-ignore-next-line(centralization-risk)
     function upgradeToAndCallSecure(address newImplementation, bytes memory data) external payable onlyRole(UPGRADE_ADMIN_ROLE) {
         upgradeToAndCall(newImplementation, data);
     }
@@ -398,6 +403,20 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
 
     function proxiableUUID() external view override notDelegated returns (bytes32) {
         return ERC1967Utils.IMPLEMENTATION_SLOT;
+    }
+
+    /**
+     * @dev Allows the admin to withdraw any ETH locked in the contract
+     * @param _to Address to send the ETH to
+     * @param _amount Amount of ETH to withdraw
+     */
+    // aderyn-ignore-next-line(centralization-risk)
+    function withdraw(address payable _to, uint256 _amount) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        if(_to == address(0)) revert AddressZeroError();
+        if(_amount > address(this).balance) revert InsufficientBalance();
+        
+        (bool success, ) = _to.call{value: _amount}("");
+        if(!success) revert WithdrawalFailed();
     }
 
 }

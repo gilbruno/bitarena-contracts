@@ -33,7 +33,9 @@ interface IBitarenaChallengesData {
     error InvalidBatch();
     error BatchTooLarge();
     error InvalidId();
-
+    error InsufficientBalance();
+    error WithdrawalFailed();
+    error RoleGrantFailed();
     function authorizeConractsRegistering(address _factoryAddress) external;
 
     /**
@@ -77,4 +79,11 @@ interface IBitarenaChallengesData {
 
     function setChallengeAsStarted(address _challengeContract) external;
     function setChallengeAsEnded(address _challengeContract) external;
+    
+    /**
+     * @dev Allows the admin to withdraw any ETH locked in the contract
+     * @param _to Address to send the ETH to
+     * @param _amount Amount of ETH to withdraw
+     */
+    function withdraw(address payable _to, uint256 _amount) external;
 }
