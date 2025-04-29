@@ -23,6 +23,8 @@ interface IBitarenaFactory {
     error NbPlayersPerTeamsError();
     error PlatformDoesNotExistError();
     error SendMoneyToChallengeError();
+    error RoleGrantFailed();
+    error BitarenaGamesAddressZeroError();
 
     // Events
     event ChallengeDeployed(uint indexed challengeCounter, address indexed challengeAddress, address indexed challengeFactoryAddress);

@@ -32,10 +32,11 @@ contract BitarenaFactory is Context, Ownable, AccessControl, IBitarenaFactory {
     
     bytes32 public constant BITARENA_FACTORY_ADMIN = keccak256("BITARENA_FACTORY_ADMIN");
 
-    address private s_challengeAdmin;
-    address private s_challengeDisputeAdmin;
-    address private s_challengeEmergencyAdmin;
+    address private immutable s_challengeAdmin;
+    address private immutable s_challengeDisputeAdmin;
+    address private immutable s_challengeEmergencyAdmin;
 	constructor (address _bitarenaGames, address _challengeAdmin, address _challengeDisputeAdmin, address _challengeEmergencyAdmin, address _challengeData) Ownable(msg.sender) {
+        if(_bitarenaGames == address(0)) revert BitarenaGamesAddressZeroError();
         if(_challengeAdmin == address(0)) revert ChallengeAdminAddressZeroError();
         if(_challengeDisputeAdmin == address(0)) revert ChallengeDisputeAdminAddressZeroError();
         if(_challengeEmergencyAdmin == address(0)) revert ChallengeEmergencyAdminAddressZeroError();
@@ -46,7 +47,8 @@ contract BitarenaFactory is Context, Ownable, AccessControl, IBitarenaFactory {
         s_challengeDisputeAdmin = _challengeDisputeAdmin;
         s_challengeEmergencyAdmin = _challengeEmergencyAdmin;
         s_challengesData = IBitarenaChallengesData(_challengeData); 
-		_grantRole(BITARENA_FACTORY_ADMIN, msg.sender);
+		bool success = _grantRole(BITARENA_FACTORY_ADMIN, msg.sender);
+		if (!success) revert RoleGrantFailed();
 	}
 
     modifier checkIntentCreation(string calldata _game,
@@ -71,6 +73,7 @@ contract BitarenaFactory is Context, Ownable, AccessControl, IBitarenaFactory {
      * @dev Returns true if a game exists in the state var array of games of BitarenaGames smart contract
      * False otherwise
      */
+    // aderyn-ignore-next-line(internal-function-used-once)
     function gameExists(string memory _game) internal view returns(bool) {
         string[] memory games = s_bitarenaGames.getGames();
         bool _gameExists = false;
@@ -86,6 +89,7 @@ contract BitarenaFactory is Context, Ownable, AccessControl, IBitarenaFactory {
      * @dev Returns true if a platform exists in the state var array of platforms of BitarenaGames smart contract.
      * False otherwise
      */
+    // aderyn-ignore-next-line(internal-function-used-once)
     function platformExists(string memory _platform) internal view returns(bool) {
         string[] memory platforms = s_bitarenaGames.getPlatforms();
         bool _platformExists = false;
@@ -111,7 +115,7 @@ contract BitarenaFactory is Context, Ownable, AccessControl, IBitarenaFactory {
         uint256 _amountPerPlayer,
         uint256 _startAt,
         bool _isPrivate
-    ) public payable checkIntentCreation(_game, _platform, _nbTeams, _nbTeamPlayers, _amountPerPlayer, _startAt, _isPrivate) {
+    ) external payable checkIntentCreation(_game, _platform, _nbTeams, _nbTeamPlayers, _amountPerPlayer, _startAt, _isPrivate) {
         //Increment counter of challenges
         s_challengeCounter++;
         //Create challenge struct
@@ -144,7 +148,7 @@ contract BitarenaFactory is Context, Ownable, AccessControl, IBitarenaFactory {
         uint256 _amountPerPlayer,
         uint256 _startAt,
         bool _isPrivate
-    ) public payable checkIntentCreation(_game, _platform, _nbTeams, _nbTeamPlayers, _amountPerPlayer, _startAt, _isPrivate) returns (BitarenaChallenge) {
+    ) external payable checkIntentCreation(_game, _platform, _nbTeams, _nbTeamPlayers, _amountPerPlayer, _startAt, _isPrivate) returns (BitarenaChallenge) {
         //Increment counter of challenges
         s_challengeCounter++;
         //Create challenge struct
@@ -193,6 +197,7 @@ contract BitarenaFactory is Context, Ownable, AccessControl, IBitarenaFactory {
      * @dev Deploy new Challenge.
      * This function must be used in the case of Bitarena is in charge to deploy new challenge smart contract
      */
+    // aderyn-ignore-next-line(internal-function-used-once)
     function createChallenge_byCreator(uint256 _challengeCounter) internal returns (BitarenaChallenge) {
         if (_challengeCounter == 0 || _challengeCounter > s_challengeCounter) revert ChallengeCounterError();
         if (isChallengeDeployed(_challengeCounter)) revert ChallengeDeployedError();
@@ -250,7 +255,7 @@ contract BitarenaFactory is Context, Ownable, AccessControl, IBitarenaFactory {
         address _challengeAdmin,
         address _challengeDisputeAdmin,
         uint256 _challengeCounter
-    ) public onlyRole(BITARENA_FACTORY_ADMIN) returns (BitarenaChallenge){
+    ) external onlyRole(BITARENA_FACTORY_ADMIN) returns (BitarenaChallenge){
         if (_challengeCounter == 0 || _challengeCounter > s_challengeCounter) revert ChallengeCounterError();
         if (isChallengeDeployed(_challengeCounter)) revert ChallengeDeployedError();
 
@@ -304,7 +309,7 @@ contract BitarenaFactory is Context, Ownable, AccessControl, IBitarenaFactory {
     /**
      * @dev Getter for 's_challengeCounter'
      */
-    function getChallengeCounter() public view returns (uint256) {
+    function getChallengeCounter() external view returns (uint256) {
         return s_challengeCounter;
     }
 
@@ -319,7 +324,7 @@ contract BitarenaFactory is Context, Ownable, AccessControl, IBitarenaFactory {
     /**
      * @dev Getter for s_challenges
      */
-    function getChallengesArray() public view returns (Challenge[] memory) {
+    function getChallengesArray() external view returns (Challenge[] memory) {
         return s_challenges;
     }
 

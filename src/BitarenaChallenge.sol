@@ -209,7 +209,7 @@ contract BitarenaChallenge is
         if (s_winnerTeam == 0) revert WinnerNotRevealedYetError();
         uint16 teamIndex = getTeamOfPlayer(sender);
         if (s_winnerTeam != 0 && teamIndex != s_winnerTeam) revert WithdrawPoolByLooserTeamImpossibleError();
-        if (getIsPoolWithdrawed() == true) revert ChallengePoolAlreadyWithdrawed();
+        if (getIsPoolWithdrawed()) revert ChallengePoolAlreadyWithdrawed();
         _;
     }
 
@@ -266,7 +266,8 @@ contract BitarenaChallenge is
     function joinTeamInternal(uint16 _teamIndex, address _player) internal {
         s_teams[_teamIndex].push(_player);
         s_players[_player] = _teamIndex;
-        _grantRole(GAMER_ROLE, _player);
+        bool successGrantRole = _grantRole(GAMER_ROLE, _player);
+        if (!successGrantRole) revert RoleGrantFailed();
         incrementChallengePool(s_amountPerPlayer);
         // Ajouter le challenge à l'historique du joueur
         ChallengeParams memory _challengeParams = ChallengeParams({

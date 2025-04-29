@@ -115,4 +115,5 @@ interface IBitarenaChallenge {
     error WinnerNotRevealedYetError();
     error WithdrawPoolNotAuthorized();
     error WithdrawPoolByLooserTeamImpossibleError();
+    error RoleGrantFailed();
 } 

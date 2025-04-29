@@ -28,6 +28,11 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
     bytes32 public constant UPGRADE_ADMIN_ROLE = keccak256("UPGRADE_ADMIN_ROLE");
 
     /**
+     * @dev Maximum size for batch operations
+     */
+    uint256 public constant MAX_BATCH_SIZE = 100;
+
+    /**
      * @dev Mapping from a wallet to an array of ChallengeParams
      */
     mapping(address => ChallengeParams[]) private s_playerChallenges;
@@ -187,8 +192,8 @@ contract BitarenaChallengesData is AccessControlUpgradeable, IBitarenaChallenges
      */
     function getChallengesBatch(uint256 _start, uint256 _size) external view returns (address[] memory challenges) 
     {
-        if(_size > 100) revert BatchTooLarge();
-        if(_start + _size > s_challengeCounter && _size <= 100) revert InvalidBatch();
+        if(_size > MAX_BATCH_SIZE) revert BatchTooLarge();
+        if(_start + _size > s_challengeCounter && _size <= MAX_BATCH_SIZE) revert InvalidBatch();
         
 
         challenges = new address[](_size);
