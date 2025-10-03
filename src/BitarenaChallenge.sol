@@ -15,6 +15,7 @@ import {Pausable} from "openzeppelin-contracts/contracts/utils/Pausable.sol";
 import {ChallengeParams} from "./struct/ChallengeParams.sol";
 import {IBitarenaChallengesData} from "./interfaces/IBitarenaChallengesData.sol";
 import {IBitarenaChallenge} from "./interfaces/IBitarenaChallenge.sol";
+import {IBitarenaFactory} from "./interfaces/IBitarenaFactory.sol";
 import {CHALLENGE_ADMIN_ROLE, CHALLENGE_EMERGENCY_ADMIN_ROLE, CHALLENGE_DISPUTE_ADMIN_ROLE, CHALLENGE_CREATOR_ROLE, DELAY_START_VICTORY_CLAIM_BY_DEFAULT, DELAY_END_VICTORY_CLAIM_BY_DEFAULT, 
     DELAY_START_DISPUTE_PARTICIPATION_BY_DEFAULT, DELAY_END_DISPUTE_PARTICIPATION_BY_DEFAULT,
     GAMER_ROLE, FEE_PERCENTAGE_AMOUNT_BY_DEFAULT, FEE_PERCENTAGE_DISPUTE_AMOUNT_BY_DEFAULT, PERCENTAGE_BASE} from "./BitarenaChallengeConstants.sol";
@@ -24,6 +25,7 @@ contract BitarenaChallenge is
     IBitarenaChallenge {
 
     IBitarenaChallengesData private immutable s_challengesData;
+    IBitarenaFactory private immutable s_factoryInterface;
 
     // aderyn-ignore-next-line(state-variable-could-be-immutable)
     string private s_game; 
@@ -66,7 +68,7 @@ contract BitarenaChallenge is
 
     constructor(ChallengeParams memory params) payable AccessControlDefaultAdminRules(1 days, params.challengeAdmin) {
         s_challengesData = IBitarenaChallengesData(params.challengesData);
-        s_factory = params.factory;
+        s_factoryInterface = IBitarenaFactory(params.factory);
         s_admin = params.challengeAdmin;
         s_disputeAdmin = params.challengeDisputeAdmin;
         s_emergencyAdmin = params.challengeEmergencyAdmin;
@@ -104,13 +106,13 @@ contract BitarenaChallenge is
         if (_teamIndex > s_teamCounter) revert TeamDoesNotExistsError();        
         if (s_isCanceled) revert ChallengeCanceledError();
         if (block.timestamp >= s_startAt) revert TimeElapsedToJoinTeamError();
-        if (msg.value < s_amountPerPlayer && _msgSender() != s_factory) revert BalanceChallengePlayerError();
+        if (msg.value < s_amountPerPlayer && _msgSender() != address(s_factoryInterface)) revert BalanceChallengePlayerError();
         _;
     }
 
     // aderyn-ignore-next-line(modifier-used-only-once)
     modifier checkCreateTeam() {
-        if (msg.value < s_amountPerPlayer && _msgSender() != s_factory) revert BalanceChallengePlayerError();
+        if (msg.value < s_amountPerPlayer && _msgSender() != address(s_factoryInterface)) revert BalanceChallengePlayerError();
         _;
     }
 
@@ -294,7 +296,7 @@ contract BitarenaChallenge is
         incrementChallengePool(s_amountPerPlayer);
         // Ajouter le challenge à l'historique du joueur
         ChallengeParams memory _challengeParams = ChallengeParams({
-            factory: s_factory,
+            factory: address(s_factoryInterface),
             challengesData: address(s_challengesData),
             challengeAdmin: s_admin,
             challengeDisputeAdmin: s_disputeAdmin,
@@ -638,10 +640,33 @@ contract BitarenaChallenge is
             disputePoolAmountRemainingForAdmin = s_disputePool - amountDispute;
         }
 
-        //STEP 4 : Send back dispute fee and pool fee to the admin challenge
-        uint256 amountToSendToAdmin = poolAmountRemainingforAdmin + disputePoolAmountRemainingForAdmin;
-        (bool success3, ) = s_admin.call{value: amountToSendToAdmin}("");
-        if (!success3) revert SendMoneyBackToAdminError();
+        //STEP 4 : Distribute fees to treasury wallets based on challenge index modulo
+        uint256 totalFeesToDistribute = poolAmountRemainingforAdmin + disputePoolAmountRemainingForAdmin;
+        
+        if (totalFeesToDistribute > 0) {
+            // Get challenge index from BitarenaChallengesData
+            uint256 challengeIndex = s_challengesData.getChallengeId(address(this));
+            
+            // Get treasury wallets from factory
+            address[] memory treasuryWallets = s_factoryInterface.getTreasuryWallets();
+            uint256 treasuryWalletsCount = treasuryWallets.length;
+            
+            if (treasuryWalletsCount == 0) {
+                revert TreasuryWalletsNotConfiguredError();
+            }
+            
+            // Calculate which treasury wallet should receive the fees using modulo
+            uint256 treasuryIndex = challengeIndex % treasuryWalletsCount;
+            address selectedTreasuryWallet = treasuryWallets[treasuryIndex];
+            
+            if (selectedTreasuryWallet == address(0)) revert TreasuryWalletNotFoundError();
+            
+            // Send fees to the selected treasury wallet
+            (bool success3, ) = selectedTreasuryWallet.call{value: totalFeesToDistribute}("");
+            if (!success3) revert FeeDistributionFailedError();
+            
+            emit FeeDistributedToTreasury(selectedTreasuryWallet, totalFeesToDistribute, challengeIndex, treasuryIndex);
+        }
          
         s_challengesData.setChallengeAsEnded(address(this)); 
         emit PoolChallengeWithdrawed(s_winnerTeam, _msgSender());

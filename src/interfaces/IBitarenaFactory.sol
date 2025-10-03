@@ -25,6 +25,8 @@ interface IBitarenaFactory {
     error SendMoneyToChallengeError();
     error RoleGrantFailed();
     error BitarenaGamesAddressZeroError();
+    error TreasuryWalletAddressZeroError();
+    error TreasuryWalletsNotInitializedError();
 
     // Events
     event ChallengeDeployed(uint indexed challengeCounter, address indexed challengeAddress, address indexed challengeFactoryAddress);
@@ -66,4 +68,10 @@ interface IBitarenaFactory {
     function getChallengesArray() external view returns (Challenge[] memory);
     
     function isChallengeDeployed(uint256 index) external view returns (bool);
+    
+    function getTreasuryWallets() external view returns (address[] memory);
+    
+    function getTreasuryWalletByIndex(uint256 index) external view returns (address);
+    
+    function getTreasuryWalletsCount() external view returns (uint256);
 }

@@ -30,23 +30,45 @@ contract BitarenaFactory is Context, Ownable, AccessControl, IBitarenaFactory {
     
     Challenge[] private s_challenges;
     
+    // Treasury wallets array for fee distribution
+    address[] private s_treasuryWallets;
+    
     bytes32 public constant BITARENA_FACTORY_ADMIN = keccak256("BITARENA_FACTORY_ADMIN");
 
     address private immutable s_challengeAdmin;
     address private immutable s_challengeDisputeAdmin;
     address private immutable s_challengeEmergencyAdmin;
-	constructor (address _bitarenaGames, address _challengeAdmin, address _challengeDisputeAdmin, address _challengeEmergencyAdmin, address _challengeData) Ownable(msg.sender) {
+	constructor (
+        address _bitarenaGames, 
+        address _challengeAdmin, 
+        address _challengeDisputeAdmin, 
+        address _challengeEmergencyAdmin, 
+        address _challengeData,
+        address[4] memory _treasuryWallets
+    ) Ownable(msg.sender) {
         if(_bitarenaGames == address(0)) revert BitarenaGamesAddressZeroError();
         if(_challengeAdmin == address(0)) revert ChallengeAdminAddressZeroError();
         if(_challengeDisputeAdmin == address(0)) revert ChallengeDisputeAdminAddressZeroError();
         if(_challengeEmergencyAdmin == address(0)) revert ChallengeEmergencyAdminAddressZeroError();
         if(_challengeData == address(0)) revert ChallengesDataAddressZeroError();
+        
+        // Validate treasury wallets
+        for (uint256 i = 0; i < 4; i++) {
+            if(_treasuryWallets[i] == address(0)) revert TreasuryWalletAddressZeroError();
+        }
+        
         s_challengeCounter = 0;
         s_bitarenaGames = IBitarenaGames(_bitarenaGames);
         s_challengeAdmin = _challengeAdmin;
         s_challengeDisputeAdmin = _challengeDisputeAdmin;
         s_challengeEmergencyAdmin = _challengeEmergencyAdmin;
-        s_challengesData = IBitarenaChallengesData(_challengeData); 
+        s_challengesData = IBitarenaChallengesData(_challengeData);
+        
+        // Initialize treasury wallets
+        for (uint256 i = 0; i < 4; i++) {
+            s_treasuryWallets.push(_treasuryWallets[i]);
+        }
+        
 		bool success = _grantRole(BITARENA_FACTORY_ADMIN, msg.sender);
 		if (!success) revert RoleGrantFailed();
 	}
@@ -331,5 +353,31 @@ contract BitarenaFactory is Context, Ownable, AccessControl, IBitarenaFactory {
     function isChallengeDeployed(uint256 index) public view returns(bool) {
         Challenge memory challengeCreated = getChallengeByIndex(index);
         return (challengeCreated.challengeAddress != address(0));
+    }
+
+    /**
+     * @dev Getter for treasury wallets array
+     * @return address[] memory Array of treasury wallet addresses
+     */
+    function getTreasuryWallets() external view returns (address[] memory) {
+        return s_treasuryWallets;
+    }
+
+    /**
+     * @dev Getter for a specific treasury wallet by index
+     * @param index Index of the treasury wallet (0-3)
+     * @return address Treasury wallet address
+     */
+    function getTreasuryWalletByIndex(uint256 index) external view returns (address) {
+        if (index >= s_treasuryWallets.length) revert TreasuryWalletsNotInitializedError();
+        return s_treasuryWallets[index];
+    }
+
+    /**
+     * @dev Getter for treasury wallets count
+     * @return uint256 Number of treasury wallets
+     */
+    function getTreasuryWalletsCount() external view returns (uint256) {
+        return s_treasuryWallets.length;
     }
 }

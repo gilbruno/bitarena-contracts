@@ -75,6 +75,7 @@ interface IBitarenaChallenge {
     event ChallengeCanceled(address indexed challenge);
     event FeePercentageDisputeUpdated(uint16 percentage);
     event FeePercentageUpdated(uint16 percentage);
+    event FeeDistributedToTreasury(address indexed treasuryWallet, uint256 amount, uint256 challengeIndex, uint256 treasuryIndex);
     
     // Errors
     error BalanceChallengePlayerError();
@@ -120,4 +121,7 @@ interface IBitarenaChallenge {
     error OtherTeamsJoinedChallengeError();
     error TimeToJoinChallengeNotElapsedError();
     error OnlyCreatorTeamCanWithdrawError();
+    error TreasuryWalletNotFoundError();
+    error FeeDistributionFailedError();
+    error TreasuryWalletsNotConfiguredError();
 } 

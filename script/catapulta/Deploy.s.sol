@@ -55,8 +55,16 @@ contract DeployScript is Script {
     //******************************************************************/
     //********* 3 - Deploy BitarenaFactory ****************/
     //******************************************************************/
+    // Define treasury wallets (4 wallets for fee distribution)
+    address[4] memory treasuryWallets = [
+        0x1234567890123456789012345678901234567890, // Treasury Wallet 1
+        0x2345678901234567890123456789012345678901, // Treasury Wallet 2
+        0x3456789012345678901234567890123456789012, // Treasury Wallet 3
+        0x4567890123456789012345678901234567890123  // Treasury Wallet 4
+    ];
+    
     //   2-1. Deploy implementation
-    BitarenaFactory bitarenaFactory = new BitarenaFactory(address(bitarenaGames), challengeAdmin, challengeDisputeAdmin, challengeEmergencyAdmin, address(proxyChallengesData));
+    BitarenaFactory bitarenaFactory = new BitarenaFactory(address(bitarenaGames), challengeAdmin, challengeDisputeAdmin, challengeEmergencyAdmin, address(proxyChallengesData), treasuryWallets);
     console.log("BitarenaFactory implementation deployed to %s", address(bitarenaFactory));
 
     //***********************************************************************************************/

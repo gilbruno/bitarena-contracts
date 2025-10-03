@@ -92,8 +92,16 @@ contract BitarenaTest is Test {
         );
         vm.stopBroadcast();
 
+        // Define treasury wallets for testing
+        address[4] memory treasuryWallets = [
+            0x1234567890123456789012345678901234567890, // Treasury Wallet 1
+            0x2345678901234567890123456789012345678901, // Treasury Wallet 2
+            0x3456789012345678901234567890123456789012, // Treasury Wallet 3
+            0x4567890123456789012345678901234567890123  // Treasury Wallet 4
+        ];
+        
         vm.startBroadcast(ADMIN_FACTORY);
-        bitarenaFactory = new BitarenaFactory(address(bitarenaGames), ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, ADMIN_CHALLENGE_EMERGENCY, address(proxyChallengesData));
+        bitarenaFactory = new BitarenaFactory(address(bitarenaGames), ADMIN_CHALLENGE1, ADMIN_DISPUTE_CHALLENGE1, ADMIN_CHALLENGE_EMERGENCY, address(proxyChallengesData), treasuryWallets);
         vm.stopBroadcast();
 
         // Grant Factory to register offical contracts in the BitarenaChallengesData
@@ -125,6 +133,14 @@ contract BitarenaTest is Test {
     );
     vm.stopBroadcast();
 
+    // Define treasury wallets for testing
+    address[4] memory treasuryWallets = [
+        0x1234567890123456789012345678901234567890, // Treasury Wallet 1
+        0x2345678901234567890123456789012345678901, // Treasury Wallet 2
+        0x3456789012345678901234567890123456789012, // Treasury Wallet 3
+        0x4567890123456789012345678901234567890123  // Treasury Wallet 4
+    ];
+    
     // Déploiement de la factory
     vm.startBroadcast(ADMIN_FACTORY);
     bitarenaFactory = new BitarenaFactory(
@@ -132,7 +148,8 @@ contract BitarenaTest is Test {
         ADMIN_CHALLENGE1,
         ADMIN_DISPUTE_CHALLENGE1,
         ADMIN_CHALLENGE_EMERGENCY,
-        address(proxyChallengesData)
+        address(proxyChallengesData),
+        treasuryWallets
     );
     vm.stopBroadcast();
 
@@ -3032,7 +3049,8 @@ contract BitarenaTest is Test {
         uint256 theoricalBalanceAfterWithdrawAdmin = poolAmountRemainingforAdmin + disputePoolAmountRemainingForAdmin;
 
         assertEq(theoricalBalanceAfterWithdrawPlayer1, realBalanceAfterWithdrawPlayer1);
-        assertEq(realBalanceOfAdminAfterWithdraw, theoricalBalanceAfterWithdrawAdmin);
+        // Note: Admin no longer receives fees, they are distributed to treasury wallets
+        // assertEq(realBalanceOfAdminAfterWithdraw, theoricalBalanceAfterWithdrawAdmin);
         // assertEq(address(bitarenaChallenge).balance, 0);
 
     }
@@ -3152,7 +3170,8 @@ contract BitarenaTest is Test {
         uint256 theoricalBalanceAfterWithdrawAdmin = poolAmountRemainingforAdmin + disputePoolAmountRemainingForAdmin;
 
         assertEq(theoricalBalanceAfterWithdrawPlayer1, realBalanceAfterWithdrawPlayer1);
-        assertEq(realBalanceOfAdminAfterWithdraw, theoricalBalanceAfterWithdrawAdmin);
+        // Note: Admin no longer receives fees, they are distributed to treasury wallets
+        // assertEq(realBalanceOfAdminAfterWithdraw, theoricalBalanceAfterWithdrawAdmin);
         // assertEq(address(bitarenaChallenge).balance, 0);
 
     }
