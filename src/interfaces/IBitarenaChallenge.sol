@@ -32,6 +32,7 @@ interface IBitarenaChallenge {
     function setFeePercentage(uint16 _percentage) external;
     function revealWinnerAfterDispute(uint16 _teamIndex) external;
     function withdrawChallengePool() external;
+    function withdrawPoolIfNoOthersTeamsJoined() external;
 
     // Public view functions
     function getCreator() external view returns (address);
@@ -116,4 +117,7 @@ interface IBitarenaChallenge {
     error WithdrawPoolNotAuthorized();
     error WithdrawPoolByLooserTeamImpossibleError();
     error RoleGrantFailed();
+    error OtherTeamsJoinedChallengeError();
+    error TimeToJoinChallengeNotElapsedError();
+    error OnlyCreatorTeamCanWithdrawError();
 } 

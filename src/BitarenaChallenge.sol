@@ -213,6 +213,29 @@ contract BitarenaChallenge is
         _;
     }
 
+
+    /**
+     * @notice Allows the challenge creator to withdraw the pool if no other teams have joined the challenge within the allotted time
+     * @dev Checks that :
+     *      - The sender is authorized (CHALLENGE_CREATOR_ROLE or GAMER_ROLE)
+     *      - The pool has not already been withdrawn
+     *      - No other teams have joined the challenge (s_teamCounter == 1)
+     *      - The time to join the challenge has elapsed (block.timestamp >= s_startAt)
+     *      - The sender belongs to team 1 (first team created by the creator)
+     * @custom:error OtherTeamsJoinedChallengeError() If other teams have joined the challenge
+     * @custom:error TimeToJoinChallengeNotElapsedError() If the time to join has not yet elapsed
+     * @custom:error OnlyCreatorTeamCanWithdrawError() If the sender does not belong to the creator's team
+     */
+    modifier checkWithdrawPoolIfNoOthersTeamsJoined() {
+        address sender = _msgSender();
+        if (!isAuthorizedPlayer(sender)) revert WithdrawPoolNotAuthorized();
+        if (getIsPoolWithdrawed()) revert ChallengePoolAlreadyWithdrawed();
+        if (s_teamCounter > 1) revert OtherTeamsJoinedChallengeError();
+        if (block.timestamp < s_startAt) revert TimeToJoinChallengeNotElapsedError();
+        if (getTeamOfPlayer(sender) != 1) revert OnlyCreatorTeamCanWithdrawError();
+        _;
+    }
+
     /**
      * @dev Entry point for front application to create or join a team 
      */
@@ -622,6 +645,33 @@ contract BitarenaChallenge is
          
         s_challengesData.setChallengeAsEnded(address(this)); 
         emit PoolChallengeWithdrawed(s_winnerTeam, _msgSender());
+    }
+
+    /**
+     * @notice Allows the challenge creator to withdraw the pool if no other teams have joined within the allotted time
+     * @dev This function can only be called by the creator when no other teams have joined the challenge
+     *      and the time to join has elapsed. The entire pool is returned to the creator without any protocol fees
+     *      since the challenge did not take place.
+     */
+    function withdrawPoolIfNoOthersTeamsJoined() external nonReentrant whenNotPaused checkWithdrawPoolIfNoOthersTeamsJoined() {
+        s_isPoolWithdrawed = true;
+
+        // Get the creator's team (team 1)
+        address[] memory creatorTeam = s_teams[1];
+        uint256 teamPlayersCount = creatorTeam.length;
+
+        // Calculate the amount to return (entire pool without fees since challenge didn't take place)
+        uint256 totalPoolAmount = getChallengePool();
+        uint256 amountPerPlayer = totalPoolAmount / teamPlayersCount;
+
+        // Send the entire pool back to all players in the creator's team
+        for (uint256 i = 0; i < teamPlayersCount; i++) {
+            (bool success, ) = creatorTeam[i].call{value: amountPerPlayer}("");
+            if (!success) revert SendMoneyBackToPlayersError();
+        }
+
+        s_challengesData.setChallengeAsEnded(address(this));
+        emit PoolChallengeWithdrawed(1, _msgSender());
     }
 
     /**

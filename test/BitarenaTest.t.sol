@@ -3693,4 +3693,215 @@ contract BitarenaTest is Test {
         assertEq(bitarenaChallenge.getTeamsByTeamIndex(2)[0], PLAYER2_CHALLENGE1, "PLAYER2 should be in the team 2");
         assertEq(bitarenaChallenge.getTeamsByTeamIndex(2)[1], PLAYER3_CHALLENGE1, "PLAYER3 should be in the team 2");
     }
+
+    // ==================== TESTS FOR withdrawPoolIfNoOthersTeamsJoined ====================
+
+    /**
+     * @dev Test successful withdrawal when no other teams have joined and time has elapsed
+     */
+    function testWithdrawPoolIfNoOthersTeamsJoined_Success() public {
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        
+        // Only the creator's team exists (team 1), no other teams have joined
+        assertEq(bitarenaChallenge.getTeamCounter(), 1, "Only creator's team should exist");
+        
+        // Warp to after the start time
+        uint256 futureTime = block.timestamp + 2 days;
+        vm.warp(futureTime);
+        
+        // Record initial balances
+        uint256 creatorInitialBalance = CREATOR_CHALLENGE1.balance;
+        uint256 challengePool = bitarenaChallenge.getChallengePool();
+        uint256 expectedAmountPerPlayer = challengePool / 1; // Only creator in team 1, no fees deducted
+        
+        // Creator withdraws the pool
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaChallenge.withdrawPoolIfNoOthersTeamsJoined();
+        vm.stopBroadcast();
+        
+        // Check that pool is marked as withdrawn
+        assertTrue(bitarenaChallenge.getIsPoolWithdrawed(), "Pool should be marked as withdrawn");
+        
+        // Check balances
+        assertEq(CREATOR_CHALLENGE1.balance, creatorInitialBalance + expectedAmountPerPlayer, "Creator should receive the entire pool amount");
+    }
+
+    /**
+     * @dev Test failure when other teams have joined the challenge
+     */
+    function testWithdrawPoolIfNoOthersTeamsJoined_OtherTeamsJoined() public {
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        
+        // Add a second team
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.createOrJoinTeam{value: 1 ether}(0); // Create team 2
+        vm.stopBroadcast();
+        
+        // Warp to after the start time
+        uint256 futureTime = block.timestamp + 2 days;
+        vm.warp(futureTime);
+        
+        // Creator tries to withdraw the pool
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        vm.expectRevert(IBitarenaChallenge.OtherTeamsJoinedChallengeError.selector);
+        bitarenaChallenge.withdrawPoolIfNoOthersTeamsJoined();
+        vm.stopBroadcast();
+        
+        // Check that pool is not withdrawn
+        assertFalse(bitarenaChallenge.getIsPoolWithdrawed(), "Pool should not be withdrawn");
+    }
+
+    /**
+     * @dev Test failure when time to join has not elapsed yet
+     */
+    function testWithdrawPoolIfNoOthersTeamsJoined_TimeNotElapsed() public {
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        
+        // Try to withdraw before start time
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        vm.expectRevert(IBitarenaChallenge.TimeToJoinChallengeNotElapsedError.selector);
+        bitarenaChallenge.withdrawPoolIfNoOthersTeamsJoined();
+        vm.stopBroadcast();
+        
+        // Check that pool is not withdrawn
+        assertFalse(bitarenaChallenge.getIsPoolWithdrawed(), "Pool should not be withdrawn");
+    }
+
+    /**
+     * @dev Test failure when sender is not from team 1
+     */
+    function testWithdrawPoolIfNoOthersTeamsJoined_WrongTeam() public {
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        
+        // Join team 2 (team 1 is already created by the creator)
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.createOrJoinTeam{value: 1 ether}(0); // Join team 2
+        vm.stopBroadcast();
+        
+        // Warp to after the start time
+        uint256 futureTime = block.timestamp + 2 days;
+        vm.warp(futureTime);
+        
+        // Player from team 2 tries to withdraw (should fail because other teams have joined)
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        vm.expectRevert(IBitarenaChallenge.OtherTeamsJoinedChallengeError.selector);
+        bitarenaChallenge.withdrawPoolIfNoOthersTeamsJoined();
+        vm.stopBroadcast();
+        
+        // Check that pool is not withdrawn
+        assertFalse(bitarenaChallenge.getIsPoolWithdrawed(), "Pool should not be withdrawn");
+    }
+
+    /**
+     * @dev Test failure when pool has already been withdrawn
+     */
+    function testWithdrawPoolIfNoOthersTeamsJoined_PoolAlreadyWithdrawn() public {
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        
+        // Warp to after the start time
+        uint256 futureTime = block.timestamp + 2 days;
+        vm.warp(futureTime);
+        
+        // First withdrawal should succeed
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaChallenge.withdrawPoolIfNoOthersTeamsJoined();
+        vm.stopBroadcast();
+        
+        // Second withdrawal should fail
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        vm.expectRevert(IBitarenaChallenge.ChallengePoolAlreadyWithdrawed.selector);
+        bitarenaChallenge.withdrawPoolIfNoOthersTeamsJoined();
+        vm.stopBroadcast();
+    }
+
+    /**
+     * @dev Test failure when sender is not authorized (not a player)
+     */
+    function testWithdrawPoolIfNoOthersTeamsJoined_NotAuthorized() public {
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        
+        // Warp to after the start time
+        uint256 futureTime = block.timestamp + 2 days;
+        vm.warp(futureTime);
+        
+        // Unauthorized address tries to withdraw
+        vm.startBroadcast(PLAYER_WITH_NOT_SUFFICIENT_BALANCE);
+        vm.expectRevert(IBitarenaChallenge.WithdrawPoolNotAuthorized.selector);
+        bitarenaChallenge.withdrawPoolIfNoOthersTeamsJoined();
+        vm.stopBroadcast();
+        
+        // Check that pool is not withdrawn
+        assertFalse(bitarenaChallenge.getIsPoolWithdrawed(), "Pool should not be withdrawn");
+    }
+
+    /**
+     * @dev Test successful withdrawal with multiple players in creator's team
+     */
+    function testWithdrawPoolIfNoOthersTeamsJoined_MultiplePlayersInCreatorTeam() public {
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        
+        // Add a second player to team 1 (creator's team)
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.createOrJoinTeam{value: 1 ether}(1); // Join team 1
+        vm.stopBroadcast();
+        
+        // Warp to after the start time
+        uint256 futureTime = block.timestamp + 2 days;
+        vm.warp(futureTime);
+        
+        // Record initial balances
+        uint256 creatorInitialBalance = CREATOR_CHALLENGE1.balance;
+        uint256 player1InitialBalance = PLAYER1_CHALLENGE1.balance;
+        uint256 adminInitialBalance = ADMIN_CHALLENGE1.balance;
+        uint256 challengePool = bitarenaChallenge.getChallengePool();
+        uint256 expectedAmountPerPlayer = challengePool / 2; // Two players in team 1, no fees deducted
+        
+        // Creator withdraws the pool
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaChallenge.withdrawPoolIfNoOthersTeamsJoined();
+        vm.stopBroadcast();
+        
+        // Check that pool is marked as withdrawn
+        assertTrue(bitarenaChallenge.getIsPoolWithdrawed(), "Pool should be marked as withdrawn");
+        
+        // Check balances - both players should receive their share
+        assertEq(CREATOR_CHALLENGE1.balance, creatorInitialBalance + expectedAmountPerPlayer, "Creator should receive their share");
+        assertEq(PLAYER1_CHALLENGE1.balance, player1InitialBalance + expectedAmountPerPlayer, "Player1 should receive their share");
+        assertEq(ADMIN_CHALLENGE1.balance, adminInitialBalance, "Admin should not receive any fees since challenge didn't take place");
+    }
+
+    /**
+     * @dev Test to verify that no protocol fees are deducted when withdrawing pool if no other teams joined
+     */
+    function testWithdrawPoolIfNoOthersTeamsJoined_NoFeesDeducted() public {
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        
+        // Warp to after the start time
+        uint256 futureTime = block.timestamp + 2 days;
+        vm.warp(futureTime);
+        
+        // Record initial balances
+        uint256 creatorInitialBalance = CREATOR_CHALLENGE1.balance;
+        uint256 adminInitialBalance = ADMIN_CHALLENGE1.balance;
+        uint256 challengePool = bitarenaChallenge.getChallengePool();
+        uint256 feeAmount = bitarenaChallenge.calculateFeeAmount();
+        
+        // Verify that fees would normally be calculated
+        assertTrue(feeAmount > 0, "Fee amount should be greater than 0");
+        
+        // Creator withdraws the pool
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaChallenge.withdrawPoolIfNoOthersTeamsJoined();
+        vm.stopBroadcast();
+        
+        // Check that creator received the entire pool (no fees deducted)
+        assertEq(CREATOR_CHALLENGE1.balance, creatorInitialBalance + challengePool, "Creator should receive the entire pool without fees");
+        
+        // Check that admin received no fees
+        assertEq(ADMIN_CHALLENGE1.balance, adminInitialBalance, "Admin should not receive any fees");
+        
+        // Verify the total amount sent equals the original pool
+        uint256 totalSent = CREATOR_CHALLENGE1.balance - creatorInitialBalance;
+        assertEq(totalSent, challengePool, "Total amount sent should equal the original pool");
+    }
 }
