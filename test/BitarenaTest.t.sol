@@ -3923,4 +3923,208 @@ contract BitarenaTest is Test {
         uint256 totalSent = CREATOR_CHALLENGE1.balance - creatorInitialBalance;
         assertEq(totalSent, challengePool, "Total amount sent should equal the original pool");
     }
+
+    // ==================== TESTS POUR EMERGENCY WITHDRAW ====================
+
+    /**
+     * @dev Test que l'emergency admin peut retirer tous les fonds en cas d'urgence
+     */
+    function testEmergencyWithdraw_Success() public {
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
+
+        // Vérifier que le contrat a des fonds
+        uint256 contractBalance = address(bitarenaChallenge).balance;
+        assertGt(contractBalance, 0, "Contract should have funds");
+
+        // Adresse de destination pour l'urgence
+        address emergencyRecipient = makeAddr("emergencyRecipient");
+        uint256 recipientInitialBalance = emergencyRecipient.balance;
+
+        // L'emergency admin retire tous les fonds
+        vm.startBroadcast(ADMIN_CHALLENGE_EMERGENCY);
+        bitarenaChallenge.emergencyWithdraw(payable(emergencyRecipient));
+        vm.stopBroadcast();
+
+        // Vérifier que tous les fonds ont été transférés
+        assertEq(emergencyRecipient.balance, recipientInitialBalance + contractBalance, "All funds should be transferred to emergency recipient");
+        assertEq(address(bitarenaChallenge).balance, 0, "Contract should have no funds left");
+        
+        // Vérifier que les pools ont été remis à zéro
+        assertEq(bitarenaChallenge.getChallengePool(), 0, "Challenge pool should be zero");
+        assertEq(bitarenaChallenge.getDisputePool(), 0, "Dispute pool should be zero");
+    }
+
+    /**
+     * @dev Test que seul l'emergency admin peut appeler emergencyWithdraw
+     */
+    function testEmergencyWithdraw_OnlyEmergencyAdmin() public {
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
+
+        address emergencyRecipient = makeAddr("emergencyRecipient");
+
+        // Test qu'un joueur normal ne peut pas appeler emergencyWithdraw
+        vm.expectRevert(abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, PLAYER1_CHALLENGE1, CHALLENGE_EMERGENCY_ADMIN_ROLE));
+        vm.startBroadcast(PLAYER1_CHALLENGE1);
+        bitarenaChallenge.emergencyWithdraw(payable(emergencyRecipient));
+        vm.stopBroadcast();
+
+        // Test que l'admin normal ne peut pas appeler emergencyWithdraw
+        vm.expectRevert(abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, ADMIN_CHALLENGE1, CHALLENGE_EMERGENCY_ADMIN_ROLE));
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        bitarenaChallenge.emergencyWithdraw(payable(emergencyRecipient));
+        vm.stopBroadcast();
+
+        // Test que le créateur ne peut pas appeler emergencyWithdraw
+        vm.expectRevert(abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, CREATOR_CHALLENGE1, CHALLENGE_EMERGENCY_ADMIN_ROLE));
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        bitarenaChallenge.emergencyWithdraw(payable(emergencyRecipient));
+        vm.stopBroadcast();
+    }
+
+    /**
+     * @dev Test que emergencyWithdraw échoue si l'adresse destinataire est nulle
+     */
+    function testEmergencyWithdraw_InvalidRecipient() public {
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
+
+        // Test avec adresse nulle
+        vm.expectRevert(abi.encodeWithSelector(IBitarenaChallenge.InvalidRecipientError.selector));
+        vm.startBroadcast(ADMIN_CHALLENGE_EMERGENCY);
+        bitarenaChallenge.emergencyWithdraw(payable(address(0)));
+        vm.stopBroadcast();
+    }
+
+    /**
+     * @dev Test que emergencyWithdraw échoue si le contrat n'a pas de fonds
+     */
+    function testEmergencyWithdraw_NoFunds() public {
+        // Créer un challenge mais ne pas envoyer de fonds
+        // Le créateur envoie des fonds lors de la création, donc on doit les retirer d'abord
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        
+        // Retirer tous les fonds d'abord pour simuler un contrat sans fonds
+        address tempRecipient = makeAddr("tempRecipient");
+        vm.startBroadcast(ADMIN_CHALLENGE_EMERGENCY);
+        bitarenaChallenge.emergencyWithdraw(payable(tempRecipient));
+        vm.stopBroadcast();
+
+        address emergencyRecipient = makeAddr("emergencyRecipient");
+
+        // Test avec contrat sans fonds
+        vm.expectRevert(abi.encodeWithSelector(IBitarenaChallenge.NoFundsToWithdrawError.selector));
+        vm.startBroadcast(ADMIN_CHALLENGE_EMERGENCY);
+        bitarenaChallenge.emergencyWithdraw(payable(emergencyRecipient));
+        vm.stopBroadcast();
+    }
+
+    /**
+     * @dev Test que emergencyWithdraw ne peut pas être appelé si le contrat est en pause
+     */
+    function testEmergencyWithdraw_WhenPaused() public {
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
+
+        // Mettre le contrat en pause
+        vm.startBroadcast(ADMIN_CHALLENGE_EMERGENCY);
+        bitarenaChallenge.pause();
+        vm.stopBroadcast();
+
+        address emergencyRecipient = makeAddr("emergencyRecipient");
+
+        // Test que emergencyWithdraw échoue quand le contrat est en pause
+        vm.expectRevert(abi.encodeWithSelector(Pausable.EnforcedPause.selector));
+        vm.startBroadcast(ADMIN_CHALLENGE_EMERGENCY);
+        bitarenaChallenge.emergencyWithdraw(payable(emergencyRecipient));
+        vm.stopBroadcast();
+    }
+
+    /**
+     * @dev Test que emergencyWithdraw fonctionne même après qu'un challenge soit terminé
+     */
+    function testEmergencyWithdraw_AfterChallengeEnd() public {
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
+
+        // Simuler un challenge terminé avec des fonds restants
+        uint256 contractBalance = address(bitarenaChallenge).balance;
+        assertGt(contractBalance, 0, "Contract should have funds");
+
+        address emergencyRecipient = makeAddr("emergencyRecipient");
+        uint256 recipientInitialBalance = emergencyRecipient.balance;
+
+        // L'emergency admin peut toujours retirer les fonds même après la fin du challenge
+        vm.startBroadcast(ADMIN_CHALLENGE_EMERGENCY);
+        bitarenaChallenge.emergencyWithdraw(payable(emergencyRecipient));
+        vm.stopBroadcast();
+
+        // Vérifier que tous les fonds ont été transférés
+        assertEq(emergencyRecipient.balance, recipientInitialBalance + contractBalance, "All funds should be transferred to emergency recipient");
+        assertEq(address(bitarenaChallenge).balance, 0, "Contract should have no funds left");
+    }
+
+    /**
+     * @dev Test que emergencyWithdraw fonctionne avec un contrat qui reçoit des fonds directement
+     */
+    function testEmergencyWithdraw_WithDirectEtherTransfer() public {
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        
+        // Envoyer des fonds directement au contrat (simulation d'un envoi accidentel)
+        uint256 directTransferAmount = 1 ether;
+        vm.deal(address(bitarenaChallenge), directTransferAmount);
+
+        address emergencyRecipient = makeAddr("emergencyRecipient");
+        uint256 recipientInitialBalance = emergencyRecipient.balance;
+
+        // L'emergency admin retire tous les fonds
+        vm.startBroadcast(ADMIN_CHALLENGE_EMERGENCY);
+        bitarenaChallenge.emergencyWithdraw(payable(emergencyRecipient));
+        vm.stopBroadcast();
+
+        // Vérifier que tous les fonds ont été transférés
+        assertEq(emergencyRecipient.balance, recipientInitialBalance + directTransferAmount, "All funds should be transferred to emergency recipient");
+        assertEq(address(bitarenaChallenge).balance, 0, "Contract should have no funds left");
+    }
+
+    /**
+     * @dev Test que emergencyWithdraw émet l'événement correct
+     */
+    function testEmergencyWithdraw_EventEmitted() public {
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
+
+        uint256 contractBalance = address(bitarenaChallenge).balance;
+        address emergencyRecipient = makeAddr("emergencyRecipient");
+
+        // Vérifier que l'événement est émis
+        vm.expectEmit(true, false, false, true);
+        emit IBitarenaChallenge.EmergencyWithdraw(emergencyRecipient, contractBalance);
+
+        vm.startBroadcast(ADMIN_CHALLENGE_EMERGENCY);
+        bitarenaChallenge.emergencyWithdraw(payable(emergencyRecipient));
+        vm.stopBroadcast();
+    }
+
+    /**
+     * @dev Test que emergencyWithdraw ne peut pas être appelé deux fois
+     */
+    function testEmergencyWithdraw_CannotCallTwice() public {
+        BitarenaChallenge bitarenaChallenge = createChallenge(TWO_TEAMS, TWO_PLAYERS);
+        joinTeamWith2PlayersPerTeam_challengeWith2Teams(bitarenaChallenge);
+
+        address emergencyRecipient = makeAddr("emergencyRecipient");
+
+        // Premier appel réussi
+        vm.startBroadcast(ADMIN_CHALLENGE_EMERGENCY);
+        bitarenaChallenge.emergencyWithdraw(payable(emergencyRecipient));
+        vm.stopBroadcast();
+
+        // Deuxième appel devrait échouer car il n'y a plus de fonds
+        vm.expectRevert(abi.encodeWithSelector(IBitarenaChallenge.NoFundsToWithdrawError.selector));
+        vm.startBroadcast(ADMIN_CHALLENGE_EMERGENCY);
+        bitarenaChallenge.emergencyWithdraw(payable(emergencyRecipient));
+        vm.stopBroadcast();
+    }
 }

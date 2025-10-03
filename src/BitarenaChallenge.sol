@@ -919,4 +919,34 @@ contract BitarenaChallenge is
         return s_winnerTeam;
     }
 
+    /**
+     * @dev Fonction d'urgence pour retirer tous les fonds du contrat
+     * @param recipient Adresse destinataire des fonds
+     * @notice Seul l'admin d'urgence peut appeler cette fonction
+     * @notice Utilise le pattern Withdrawal recommandé par Solidity
+     * @notice Protégé contre la réentrance avec ReentrancyGuard
+     * @notice Nécessite que le contrat ne soit pas en pause
+     */
+    function emergencyWithdraw(address payable recipient) 
+        external 
+        onlyRole(CHALLENGE_EMERGENCY_ADMIN_ROLE) 
+        whenNotPaused 
+        nonReentrant
+    {
+        if (recipient == address(0)) revert InvalidRecipientError();
+        if (address(this).balance == 0) revert NoFundsToWithdrawError();
+        
+        // ✅ Pattern Withdrawal recommandé par Solidity
+        // Zéro les pools avant l'envoi pour éviter la réentrance
+        uint256 totalBalance = address(this).balance;
+        s_challengePool = 0;
+        s_disputePool = 0;
+        
+        // ✅ Utilisation de call{value: amount}("") recommandée par Solidity
+        (bool success, ) = recipient.call{value: totalBalance}("");
+        if (!success) revert EmergencyWithdrawFailedError();
+        
+        emit EmergencyWithdraw(recipient, totalBalance);
+    }
+
 }

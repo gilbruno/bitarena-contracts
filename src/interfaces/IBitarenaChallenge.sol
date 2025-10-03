@@ -33,6 +33,7 @@ interface IBitarenaChallenge {
     function revealWinnerAfterDispute(uint16 _teamIndex) external;
     function withdrawChallengePool() external;
     function withdrawPoolIfNoOthersTeamsJoined() external;
+    function emergencyWithdraw(address payable recipient) external;
 
     // Public view functions
     function getCreator() external view returns (address);
@@ -76,6 +77,7 @@ interface IBitarenaChallenge {
     event FeePercentageDisputeUpdated(uint16 percentage);
     event FeePercentageUpdated(uint16 percentage);
     event FeeDistributedToTreasury(address indexed treasuryWallet, uint256 amount, uint256 challengeIndex, uint256 treasuryIndex);
+    event EmergencyWithdraw(address indexed recipient, uint256 amount);
     
     // Errors
     error BalanceChallengePlayerError();
@@ -124,4 +126,7 @@ interface IBitarenaChallenge {
     error TreasuryWalletNotFoundError();
     error FeeDistributionFailedError();
     error TreasuryWalletsNotConfiguredError();
+    error InvalidRecipientError();
+    error NoFundsToWithdrawError();
+    error EmergencyWithdrawFailedError();
 } 
