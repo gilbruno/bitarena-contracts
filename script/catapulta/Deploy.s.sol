@@ -57,13 +57,13 @@ contract DeployScript is Script {
     //******************************************************************/
     // Define treasury wallets (1 main treasury + 6 team wallets for fee distribution)
     address[7] memory treasuryWallets = [
-        0x1234567890123456789012345678901234567890, // Main Treasury Wallet
-        0x2345678901234567890123456789012345678901, // Team Wallet 1
-        0x3456789012345678901234567890123456789012, // Team Wallet 2
-        0x4567890123456789012345678901234567890123, // Team Wallet 3
-        0x5678901234567890123456789012345678901234, // Team Wallet 4
-        0x6789012345678901234567890123456789012345, // Team Wallet 5
-        0x7890123456789012345678901234567890123456  // Team Wallet 6
+        0xe1AC37c903D42F5d7C2362c4A49Ce81703132342, // Main Treasury Wallet
+        0xEeDeF819730808f1779573b9C2c210e08c16673E, // Team Wallet 1
+        0x6757c5baBb04b6D44168e41Df5F7Ad8F2cCB335b, // Team Wallet 2
+        0xbCa2181af9E7f976b3B94f3da39379E911aaD90B, // Team Wallet 3
+        0x0DDeA31BA73ba92Cd3F914218e03443Ba676f973, // Team Wallet 4
+        0x212FDDc0771E7EcC0b36069D8BA407088094B15C, // Team Wallet 5
+        0x86C93fc08eA957c7948dB996360013394A448a14  // Team Wallet 6
     ];
     
     //   2-1. Deploy implementation

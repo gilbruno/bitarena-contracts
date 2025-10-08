@@ -153,7 +153,7 @@ To decode it, you can run the command to decode hex value
 
 
 ```sh
-catapulta script script/catapulta/Deploy.s.sol:DeployScript --network amoy --legacy --sender 0xdB70Ce51809af94EC2d4CC2dc2fD1f099A7cDE0C
+catapulta script script/catapulta/Deploy.s.sol:DeployScript --network sepolia --legacy --sender 0xdB70Ce51809af94EC2d4CC2dc2fD1f099A7cDE0C
 ```
 
 ## Last deployment on Sepolia
