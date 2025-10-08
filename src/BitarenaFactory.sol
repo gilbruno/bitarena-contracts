@@ -38,13 +38,13 @@ contract BitarenaFactory is Context, Ownable, AccessControl, IBitarenaFactory {
     address private immutable s_challengeAdmin;
     address private immutable s_challengeDisputeAdmin;
     address private immutable s_challengeEmergencyAdmin;
-	constructor (
+    constructor (
         address _bitarenaGames, 
         address _challengeAdmin, 
         address _challengeDisputeAdmin, 
         address _challengeEmergencyAdmin, 
         address _challengeData,
-        address[4] memory _treasuryWallets
+        address[7] memory _treasuryWallets
     ) Ownable(msg.sender) {
         if(_bitarenaGames == address(0)) revert BitarenaGamesAddressZeroError();
         if(_challengeAdmin == address(0)) revert ChallengeAdminAddressZeroError();
@@ -53,7 +53,7 @@ contract BitarenaFactory is Context, Ownable, AccessControl, IBitarenaFactory {
         if(_challengeData == address(0)) revert ChallengesDataAddressZeroError();
         
         // Validate treasury wallets
-        for (uint256 i = 0; i < 4; i++) {
+        for (uint256 i = 0; i < 7; i++) {
             if(_treasuryWallets[i] == address(0)) revert TreasuryWalletAddressZeroError();
         }
         
@@ -65,7 +65,7 @@ contract BitarenaFactory is Context, Ownable, AccessControl, IBitarenaFactory {
         s_challengesData = IBitarenaChallengesData(_challengeData);
         
         // Initialize treasury wallets
-        for (uint256 i = 0; i < 4; i++) {
+        for (uint256 i = 0; i < 7; i++) {
             s_treasuryWallets.push(_treasuryWallets[i]);
         }
         
@@ -365,7 +365,7 @@ contract BitarenaFactory is Context, Ownable, AccessControl, IBitarenaFactory {
 
     /**
      * @dev Getter for a specific treasury wallet by index
-     * @param index Index of the treasury wallet (0-3)
+     * @param index Index of the treasury wallet (0-6)
      * @return address Treasury wallet address
      */
     function getTreasuryWalletByIndex(uint256 index) external view returns (address) {
@@ -379,5 +379,41 @@ contract BitarenaFactory is Context, Ownable, AccessControl, IBitarenaFactory {
      */
     function getTreasuryWalletsCount() external view returns (uint256) {
         return s_treasuryWallets.length;
+    }
+
+    /**
+     * @dev Getter for the main treasury wallet (index 0)
+     * @return address Main treasury wallet address
+     */
+    function getMainTreasuryWallet() external view returns (address) {
+        if (s_treasuryWallets.length == 0) revert TreasuryWalletsNotInitializedError();
+        return s_treasuryWallets[0];
+    }
+
+    /**
+     * @dev Getter for team wallets (indices 1-6)
+     * @return address[] Array of team wallet addresses
+     */
+    function getTeamWallets() external view returns (address[] memory) {
+        if (s_treasuryWallets.length < 7) revert TreasuryWalletsNotInitializedError();
+        
+        address[] memory teamWallets = new address[](6);
+        // Using uint8 and unchecked for gas optimization (6 wallets max)
+        for (uint8 i = 0; i < 6; ) {
+            teamWallets[i] = s_treasuryWallets[i + 1];
+            unchecked { ++i; }
+        }
+        return teamWallets;
+    }
+
+    /**
+     * @dev Getter for a specific team wallet by index
+     * @param index Index of the team wallet (0-5)
+     * @return address Team wallet address
+     */
+    function getTeamWalletByIndex(uint256 index) external view returns (address) {
+        if (s_treasuryWallets.length < 7) revert TreasuryWalletsNotInitializedError();
+        if (index >= 6) revert TreasuryWalletsNotInitializedError();
+        return s_treasuryWallets[index + 1];
     }
 }

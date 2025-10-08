@@ -64,8 +64,11 @@ contract TreasuryErrorTest is Test {
         // by creating a mock scenario where treasuryWalletsCount is 0
         
         // Define empty treasury wallets (this will cause an error in constructor)
-        address[4] memory emptyTreasuryWallets = [
+        address[7] memory emptyTreasuryWallets = [
             address(0), // This should cause TreasuryWalletAddressZeroError
+            address(0),
+            address(0),
+            address(0),
             address(0),
             address(0),
             address(0)
@@ -87,11 +90,14 @@ contract TreasuryErrorTest is Test {
     
     function testTreasuryWalletsValidation() public {
         // Test that treasury wallets must be non-zero addresses
-        address[4] memory invalidTreasuryWallets = [
+        address[7] memory invalidTreasuryWallets = [
             address(0x1001), // Valid
+            address(0x1002), // Valid
             address(0),      // Invalid - should cause error
-            address(0x1003), // Valid
-            address(0x1004)  // Valid
+            address(0x1004), // Valid
+            address(0x1005), // Valid
+            address(0x1006), // Valid
+            address(0x1007)  // Valid
         ];
         
         vm.startBroadcast(ADMIN_FACTORY);
@@ -109,11 +115,14 @@ contract TreasuryErrorTest is Test {
     
     function testValidTreasuryWallets() public {
         // Test with valid treasury wallets
-        address[4] memory validTreasuryWallets = [
+        address[7] memory validTreasuryWallets = [
             address(0x1001),
             address(0x1002),
             address(0x1003),
-            address(0x1004)
+            address(0x1004),
+            address(0x1005),
+            address(0x1006),
+            address(0x1007)
         ];
         
         vm.startBroadcast(ADMIN_FACTORY);
@@ -129,11 +138,14 @@ contract TreasuryErrorTest is Test {
         
         // Verify treasury wallets are correctly set
         address[] memory treasuryWallets = bitarenaFactory.getTreasuryWallets();
-        assertEq(treasuryWallets.length, 4);
+        assertEq(treasuryWallets.length, 7);
         assertEq(treasuryWallets[0], address(0x1001));
         assertEq(treasuryWallets[1], address(0x1002));
         assertEq(treasuryWallets[2], address(0x1003));
         assertEq(treasuryWallets[3], address(0x1004));
+        assertEq(treasuryWallets[4], address(0x1005));
+        assertEq(treasuryWallets[5], address(0x1006));
+        assertEq(treasuryWallets[6], address(0x1007));
         
         console.log("Valid treasury wallets test passed");
     }

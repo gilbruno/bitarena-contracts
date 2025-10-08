@@ -77,6 +77,7 @@ interface IBitarenaChallenge {
     event FeePercentageDisputeUpdated(uint16 percentage);
     event FeePercentageUpdated(uint16 percentage);
     event FeeDistributedToTreasury(address indexed treasuryWallet, uint256 amount, uint256 challengeIndex, uint256 treasuryIndex);
+    event FeeDistributedToTreasuryAndTeam(address indexed mainTreasuryWallet, uint256 treasuryAmount, address[] teamWallets, uint256 teamAmount);
     event EmergencyWithdraw(address indexed recipient, uint256 amount);
     
     // Errors

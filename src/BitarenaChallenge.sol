@@ -640,32 +640,45 @@ contract BitarenaChallenge is
             disputePoolAmountRemainingForAdmin = s_disputePool - amountDispute;
         }
 
-        //STEP 4 : Distribute fees to treasury wallets based on challenge index modulo
+        //STEP 4 : Distribute fees according to new rules: 50% to main treasury, 50% equally distributed among 6 team wallets
         uint256 totalFeesToDistribute = poolAmountRemainingforAdmin + disputePoolAmountRemainingForAdmin;
         
         if (totalFeesToDistribute > 0) {
-            // Get challenge index from BitarenaChallengesData
-            uint256 challengeIndex = s_challengesData.getChallengeId(address(this));
+            // Get main treasury wallet and team wallets from factory
+            address mainTreasuryWallet = s_factoryInterface.getMainTreasuryWallet();
+            address[] memory teamWallets = s_factoryInterface.getTeamWallets();
             
-            // Get treasury wallets from factory
-            address[] memory treasuryWallets = s_factoryInterface.getTreasuryWallets();
-            uint256 treasuryWalletsCount = treasuryWallets.length;
+            if (mainTreasuryWallet == address(0)) revert TreasuryWalletNotFoundError();
+            if (teamWallets.length != 6) revert TreasuryWalletsNotConfiguredError();
             
-            if (treasuryWalletsCount == 0) {
-                revert TreasuryWalletsNotConfiguredError();
-            }
+            // Calculate 50% for main treasury
+            uint256 treasuryAmount = totalFeesToDistribute / 2;
             
-            // Calculate which treasury wallet should receive the fees using modulo
-            uint256 treasuryIndex = challengeIndex % treasuryWalletsCount;
-            address selectedTreasuryWallet = treasuryWallets[treasuryIndex];
+            // Calculate amount per team wallet (remaining 50% divided by 6)
+            uint256 teamAmount = (totalFeesToDistribute - treasuryAmount) / 6;
             
-            if (selectedTreasuryWallet == address(0)) revert TreasuryWalletNotFoundError();
-            
-            // Send fees to the selected treasury wallet
-            (bool success3, ) = selectedTreasuryWallet.call{value: totalFeesToDistribute}("");
+            // Send 50% to main treasury wallet
+            (bool success3, ) = mainTreasuryWallet.call{value: treasuryAmount}("");
             if (!success3) revert FeeDistributionFailedError();
             
-            emit FeeDistributedToTreasury(selectedTreasuryWallet, totalFeesToDistribute, challengeIndex, treasuryIndex);
+            // Send equal shares to each team wallet
+            // Using uint8 and unchecked for gas optimization (6 wallets max)
+            for (uint8 i = 0; i < 6; ) {
+                if (teamWallets[i] != address(0)) {
+                    (bool success, ) = teamWallets[i].call{value: teamAmount}("");
+                    if (!success) revert FeeDistributionFailedError();
+                }
+                unchecked { ++i; }
+            }
+            
+            // Calculate any remainder and send it to main treasury
+            uint256 remainder = totalFeesToDistribute - treasuryAmount - (teamAmount * 6);
+            if (remainder > 0) {
+                (bool success4, ) = mainTreasuryWallet.call{value: remainder}("");
+                if (!success4) revert FeeDistributionFailedError();
+            }
+            
+            emit FeeDistributedToTreasuryAndTeam(mainTreasuryWallet, treasuryAmount + remainder, teamWallets, teamAmount);
         }
          
         s_challengesData.setChallengeAsEnded(address(this)); 

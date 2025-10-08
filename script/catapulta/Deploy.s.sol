@@ -55,12 +55,15 @@ contract DeployScript is Script {
     //******************************************************************/
     //********* 3 - Deploy BitarenaFactory ****************/
     //******************************************************************/
-    // Define treasury wallets (4 wallets for fee distribution)
-    address[4] memory treasuryWallets = [
-        0x1234567890123456789012345678901234567890, // Treasury Wallet 1
-        0x2345678901234567890123456789012345678901, // Treasury Wallet 2
-        0x3456789012345678901234567890123456789012, // Treasury Wallet 3
-        0x4567890123456789012345678901234567890123  // Treasury Wallet 4
+    // Define treasury wallets (1 main treasury + 6 team wallets for fee distribution)
+    address[7] memory treasuryWallets = [
+        0x1234567890123456789012345678901234567890, // Main Treasury Wallet
+        0x2345678901234567890123456789012345678901, // Team Wallet 1
+        0x3456789012345678901234567890123456789012, // Team Wallet 2
+        0x4567890123456789012345678901234567890123, // Team Wallet 3
+        0x5678901234567890123456789012345678901234, // Team Wallet 4
+        0x6789012345678901234567890123456789012345, // Team Wallet 5
+        0x7890123456789012345678901234567890123456  // Team Wallet 6
     ];
     
     //   2-1. Deploy implementation

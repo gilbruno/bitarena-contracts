@@ -25,11 +25,14 @@ contract TreasuryDistributionTest is Test {
     address constant PLAYER3 = address(0xa);
     address constant PLAYER4 = address(0xb);
     
-    // Treasury wallets for testing
-    address constant TREASURY_WALLET_1 = address(0x1001);
-    address constant TREASURY_WALLET_2 = address(0x1002);
-    address constant TREASURY_WALLET_3 = address(0x1003);
-    address constant TREASURY_WALLET_4 = address(0x1004);
+    // Treasury wallets for testing (1 main treasury + 6 team wallets)
+    address constant MAIN_TREASURY_WALLET = address(0x1001);
+    address constant TEAM_WALLET_1 = address(0x1002);
+    address constant TEAM_WALLET_2 = address(0x1003);
+    address constant TEAM_WALLET_3 = address(0x1004);
+    address constant TEAM_WALLET_4 = address(0x1005);
+    address constant TEAM_WALLET_5 = address(0x1006);
+    address constant TEAM_WALLET_6 = address(0x1007);
     
     uint256 constant STARTING_BALANCE_ETH = 100 ether;
     uint256 constant AMOUNT_PER_PLAYER = 1 ether;
@@ -63,11 +66,14 @@ contract TreasuryDistributionTest is Test {
         vm.stopBroadcast();
         
         // Define treasury wallets
-        address[4] memory treasuryWallets = [
-            TREASURY_WALLET_1,
-            TREASURY_WALLET_2,
-            TREASURY_WALLET_3,
-            TREASURY_WALLET_4
+        address[7] memory treasuryWallets = [
+            MAIN_TREASURY_WALLET,
+            TEAM_WALLET_1,
+            TEAM_WALLET_2,
+            TEAM_WALLET_3,
+            TEAM_WALLET_4,
+            TEAM_WALLET_5,
+            TEAM_WALLET_6
         ];
         
         // Deploy BitarenaFactory
@@ -91,23 +97,49 @@ contract TreasuryDistributionTest is Test {
         vm.deal(address(bitarenaFactory), STARTING_BALANCE_ETH);
     }
     
-    function testTreasuryWalletsInitialization() public {
+    function testTreasuryWalletsInitialization() public view {
         // Test that treasury wallets are correctly initialized
         address[] memory treasuryWallets = bitarenaFactory.getTreasuryWallets();
-        assertEq(treasuryWallets.length, 4);
-        assertEq(treasuryWallets[0], TREASURY_WALLET_1);
-        assertEq(treasuryWallets[1], TREASURY_WALLET_2);
-        assertEq(treasuryWallets[2], TREASURY_WALLET_3);
-        assertEq(treasuryWallets[3], TREASURY_WALLET_4);
+        assertEq(treasuryWallets.length, 7);
+        assertEq(treasuryWallets[0], MAIN_TREASURY_WALLET);
+        assertEq(treasuryWallets[1], TEAM_WALLET_1);
+        assertEq(treasuryWallets[2], TEAM_WALLET_2);
+        assertEq(treasuryWallets[3], TEAM_WALLET_3);
+        assertEq(treasuryWallets[4], TEAM_WALLET_4);
+        assertEq(treasuryWallets[5], TEAM_WALLET_5);
+        assertEq(treasuryWallets[6], TEAM_WALLET_6);
         
         // Test individual getters
-        assertEq(bitarenaFactory.getTreasuryWalletByIndex(0), TREASURY_WALLET_1);
-        assertEq(bitarenaFactory.getTreasuryWalletByIndex(1), TREASURY_WALLET_2);
-        assertEq(bitarenaFactory.getTreasuryWalletByIndex(2), TREASURY_WALLET_3);
-        assertEq(bitarenaFactory.getTreasuryWalletByIndex(3), TREASURY_WALLET_4);
+        assertEq(bitarenaFactory.getTreasuryWalletByIndex(0), MAIN_TREASURY_WALLET);
+        assertEq(bitarenaFactory.getTreasuryWalletByIndex(1), TEAM_WALLET_1);
+        assertEq(bitarenaFactory.getTreasuryWalletByIndex(2), TEAM_WALLET_2);
+        assertEq(bitarenaFactory.getTreasuryWalletByIndex(3), TEAM_WALLET_3);
+        assertEq(bitarenaFactory.getTreasuryWalletByIndex(4), TEAM_WALLET_4);
+        assertEq(bitarenaFactory.getTreasuryWalletByIndex(5), TEAM_WALLET_5);
+        assertEq(bitarenaFactory.getTreasuryWalletByIndex(6), TEAM_WALLET_6);
         
         // Test count
-        assertEq(bitarenaFactory.getTreasuryWalletsCount(), 4);
+        assertEq(bitarenaFactory.getTreasuryWalletsCount(), 7);
+        
+        // Test new getters
+        assertEq(bitarenaFactory.getMainTreasuryWallet(), MAIN_TREASURY_WALLET);
+        
+        address[] memory teamWallets = bitarenaFactory.getTeamWallets();
+        assertEq(teamWallets.length, 6);
+        assertEq(teamWallets[0], TEAM_WALLET_1);
+        assertEq(teamWallets[1], TEAM_WALLET_2);
+        assertEq(teamWallets[2], TEAM_WALLET_3);
+        assertEq(teamWallets[3], TEAM_WALLET_4);
+        assertEq(teamWallets[4], TEAM_WALLET_5);
+        assertEq(teamWallets[5], TEAM_WALLET_6);
+        
+        // Test individual team wallet getters
+        assertEq(bitarenaFactory.getTeamWalletByIndex(0), TEAM_WALLET_1);
+        assertEq(bitarenaFactory.getTeamWalletByIndex(1), TEAM_WALLET_2);
+        assertEq(bitarenaFactory.getTeamWalletByIndex(2), TEAM_WALLET_3);
+        assertEq(bitarenaFactory.getTeamWalletByIndex(3), TEAM_WALLET_4);
+        assertEq(bitarenaFactory.getTeamWalletByIndex(4), TEAM_WALLET_5);
+        assertEq(bitarenaFactory.getTeamWalletByIndex(5), TEAM_WALLET_6);
     }
     
     function testFeeDistributionModulo() public {
@@ -175,9 +207,10 @@ contract TreasuryDistributionTest is Test {
         }
         
         // Record initial balances of treasury wallets
-        uint256[] memory initialBalances = new uint256[](4);
-        for (uint256 i = 0; i < 4; i++) {
-            initialBalances[i] = address(bitarenaFactory.getTreasuryWalletByIndex(i)).balance;
+        uint256 initialMainTreasuryBalance = MAIN_TREASURY_WALLET.balance;
+        uint256[] memory initialTeamBalances = new uint256[](6);
+        for (uint256 i = 0; i < 6; i++) {
+            initialTeamBalances[i] = bitarenaFactory.getTeamWalletByIndex(i).balance;
         }
         
         // Claim victory and withdraw for each challenge
@@ -211,34 +244,36 @@ contract TreasuryDistributionTest is Test {
             vm.stopBroadcast();
         }
         
-        // Check that fees were distributed according to modulo
-        // Challenge 1 (index 1) -> 1 % 4 = 1 -> Treasury Wallet 2
-        // Challenge 2 (index 2) -> 2 % 4 = 2 -> Treasury Wallet 3
-        // Challenge 3 (index 3) -> 3 % 4 = 3 -> Treasury Wallet 4
-        // Challenge 4 (index 4) -> 4 % 4 = 0 -> Treasury Wallet 1
-        // Challenge 5 (index 5) -> 5 % 4 = 1 -> Treasury Wallet 2
-        
-        uint256[] memory finalBalances = new uint256[](4);
-        for (uint256 i = 0; i < 4; i++) {
-            finalBalances[i] = address(bitarenaFactory.getTreasuryWalletByIndex(i)).balance;
+        // Check that fees were distributed according to new rules (50% main treasury + 50% equally among 6 team wallets)
+        uint256 finalMainTreasuryBalance = MAIN_TREASURY_WALLET.balance;
+        uint256[] memory finalTeamBalances = new uint256[](6);
+        for (uint256 i = 0; i < 6; i++) {
+            finalTeamBalances[i] = bitarenaFactory.getTeamWalletByIndex(i).balance;
         }
         
-        // Treasury Wallet 1 should receive fees from challenge 4 (index 4 % 4 = 0)
-        assertGt(finalBalances[0], initialBalances[0], "Treasury Wallet 1 should receive fees");
+        // Calculate total fees distributed across all challenges
+        uint256 totalMainTreasuryIncrease = finalMainTreasuryBalance - initialMainTreasuryBalance;
+        uint256 totalTeamIncrease = 0;
+        for (uint256 i = 0; i < 6; i++) {
+            totalTeamIncrease += finalTeamBalances[i] - initialTeamBalances[i];
+        }
         
-        // Treasury Wallet 2 should receive fees from challenges 1 and 5 (indexes 1 and 5 % 4 = 1)
-        assertGt(finalBalances[1], initialBalances[1], "Treasury Wallet 2 should receive fees");
+        // Main treasury should receive approximately 50% of total fees
+        assertGt(totalMainTreasuryIncrease, 0, "Main treasury should receive fees");
         
-        // Treasury Wallet 3 should receive fees from challenge 2 (index 2 % 4 = 2)
-        assertGt(finalBalances[2], initialBalances[2], "Treasury Wallet 3 should receive fees");
+        // Each team wallet should receive equal share of remaining 50%
+        for (uint256 i = 0; i < 6; i++) {
+            uint256 teamIncrease = finalTeamBalances[i] - initialTeamBalances[i];
+            assertGt(teamIncrease, 0, "Each team wallet should receive fees");
+            console.log("Team wallet", i, "increase:", teamIncrease);
+        }
         
-        // Treasury Wallet 4 should receive fees from challenge 3 (index 3 % 4 = 3)
-        assertGt(finalBalances[3], initialBalances[3], "Treasury Wallet 4 should receive fees");
+        // Verify that main treasury received approximately half of total team increase
+        // (allowing for small rounding differences)
+        assertApproxEqRel(totalMainTreasuryIncrease, totalTeamIncrease, 1e15, "Main treasury should receive ~50% of total fees");
         
-        console.log("Treasury Wallet 1 balance increase:", finalBalances[0] - initialBalances[0]);
-        console.log("Treasury Wallet 2 balance increase:", finalBalances[1] - initialBalances[1]);
-        console.log("Treasury Wallet 3 balance increase:", finalBalances[2] - initialBalances[2]);
-        console.log("Treasury Wallet 4 balance increase:", finalBalances[3] - initialBalances[3]);
+        console.log("Main treasury increase:", totalMainTreasuryIncrease);
+        console.log("Total team increase:", totalTeamIncrease);
     }
     
     function testFeeDistributionEvent() public {
@@ -308,7 +343,10 @@ contract TreasuryDistributionTest is Test {
         uint256 withdrawalTime = challengeStartTime + 11520; // All delays passed
         vm.warp(withdrawalTime);
         
-        // Withdraw the pool (this should emit FeeDistributedToTreasury event)
+        // Withdraw the pool (this should emit FeeDistributedToTreasuryAndTeam event)
+        // Note: We can't easily test the exact event parameters due to dynamic arrays
+        // but we can verify the event is emitted by checking balances
+        
         vm.startBroadcast(PLAYER1);
         challenge.withdrawChallengePool();
         vm.stopBroadcast();

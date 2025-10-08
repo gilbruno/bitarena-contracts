@@ -74,4 +74,10 @@ interface IBitarenaFactory {
     function getTreasuryWalletByIndex(uint256 index) external view returns (address);
     
     function getTreasuryWalletsCount() external view returns (uint256);
+    
+    function getMainTreasuryWallet() external view returns (address);
+    
+    function getTeamWallets() external view returns (address[] memory);
+    
+    function getTeamWalletByIndex(uint256 index) external view returns (address);
 }

@@ -21,11 +21,14 @@ contract SimpleTreasuryTest is Test {
     address constant PLAYER1 = address(0x7);
     address constant PLAYER2 = address(0x8);
     
-    // Treasury wallets for testing
-    address constant TREASURY_WALLET_1 = address(0x1001);
-    address constant TREASURY_WALLET_2 = address(0x1002);
-    address constant TREASURY_WALLET_3 = address(0x1003);
-    address constant TREASURY_WALLET_4 = address(0x1004);
+    // Treasury wallets for testing (1 main treasury + 6 team wallets)
+    address constant MAIN_TREASURY_WALLET = address(0x1001);
+    address constant TEAM_WALLET_1 = address(0x1002);
+    address constant TEAM_WALLET_2 = address(0x1003);
+    address constant TEAM_WALLET_3 = address(0x1004);
+    address constant TEAM_WALLET_4 = address(0x1005);
+    address constant TEAM_WALLET_5 = address(0x1006);
+    address constant TEAM_WALLET_6 = address(0x1007);
     
     uint256 constant STARTING_BALANCE_ETH = 100 ether;
     uint256 constant AMOUNT_PER_PLAYER = 1 ether;
@@ -59,11 +62,14 @@ contract SimpleTreasuryTest is Test {
         vm.stopBroadcast();
         
         // Define treasury wallets
-        address[4] memory treasuryWallets = [
-            TREASURY_WALLET_1,
-            TREASURY_WALLET_2,
-            TREASURY_WALLET_3,
-            TREASURY_WALLET_4
+        address[7] memory treasuryWallets = [
+            MAIN_TREASURY_WALLET,
+            TEAM_WALLET_1,
+            TEAM_WALLET_2,
+            TEAM_WALLET_3,
+            TEAM_WALLET_4,
+            TEAM_WALLET_5,
+            TEAM_WALLET_6
         ];
         
         // Deploy BitarenaFactory
@@ -90,34 +96,62 @@ contract SimpleTreasuryTest is Test {
     function testTreasuryWalletsAreCorrectlySet() public view {
         // Test that treasury wallets are correctly initialized
         address[] memory treasuryWallets = bitarenaFactory.getTreasuryWallets();
-        assertEq(treasuryWallets.length, 4);
-        assertEq(treasuryWallets[0], TREASURY_WALLET_1);
-        assertEq(treasuryWallets[1], TREASURY_WALLET_2);
-        assertEq(treasuryWallets[2], TREASURY_WALLET_3);
-        assertEq(treasuryWallets[3], TREASURY_WALLET_4);
+        assertEq(treasuryWallets.length, 7);
+        assertEq(treasuryWallets[0], MAIN_TREASURY_WALLET);
+        assertEq(treasuryWallets[1], TEAM_WALLET_1);
+        assertEq(treasuryWallets[2], TEAM_WALLET_2);
+        assertEq(treasuryWallets[3], TEAM_WALLET_3);
+        assertEq(treasuryWallets[4], TEAM_WALLET_4);
+        assertEq(treasuryWallets[5], TEAM_WALLET_5);
+        assertEq(treasuryWallets[6], TEAM_WALLET_6);
         
         // Test individual getters
-        assertEq(bitarenaFactory.getTreasuryWalletByIndex(0), TREASURY_WALLET_1);
-        assertEq(bitarenaFactory.getTreasuryWalletByIndex(1), TREASURY_WALLET_2);
-        assertEq(bitarenaFactory.getTreasuryWalletByIndex(2), TREASURY_WALLET_3);
-        assertEq(bitarenaFactory.getTreasuryWalletByIndex(3), TREASURY_WALLET_4);
+        assertEq(bitarenaFactory.getTreasuryWalletByIndex(0), MAIN_TREASURY_WALLET);
+        assertEq(bitarenaFactory.getTreasuryWalletByIndex(1), TEAM_WALLET_1);
+        assertEq(bitarenaFactory.getTreasuryWalletByIndex(2), TEAM_WALLET_2);
+        assertEq(bitarenaFactory.getTreasuryWalletByIndex(3), TEAM_WALLET_3);
+        assertEq(bitarenaFactory.getTreasuryWalletByIndex(4), TEAM_WALLET_4);
+        assertEq(bitarenaFactory.getTreasuryWalletByIndex(5), TEAM_WALLET_5);
+        assertEq(bitarenaFactory.getTreasuryWalletByIndex(6), TEAM_WALLET_6);
         
         // Test count
-        assertEq(bitarenaFactory.getTreasuryWalletsCount(), 4);
+        assertEq(bitarenaFactory.getTreasuryWalletsCount(), 7);
+        
+        // Test new getters
+        assertEq(bitarenaFactory.getMainTreasuryWallet(), MAIN_TREASURY_WALLET);
+        
+        address[] memory teamWallets = bitarenaFactory.getTeamWallets();
+        assertEq(teamWallets.length, 6);
+        assertEq(teamWallets[0], TEAM_WALLET_1);
+        assertEq(teamWallets[1], TEAM_WALLET_2);
+        assertEq(teamWallets[2], TEAM_WALLET_3);
+        assertEq(teamWallets[3], TEAM_WALLET_4);
+        assertEq(teamWallets[4], TEAM_WALLET_5);
+        assertEq(teamWallets[5], TEAM_WALLET_6);
     }
     
-    function testModuloCalculation() public {
-        // Test modulo calculation logic
-        address[] memory treasuryWallets = bitarenaFactory.getTreasuryWallets();
-        uint256 treasuryWalletsCount = treasuryWallets.length;
+    function testNewDistributionLogic() public view {
+        // Test new distribution logic (50% main treasury + 50% equally among 6 team wallets)
+        address mainTreasury = bitarenaFactory.getMainTreasuryWallet();
+        address[] memory teamWallets = bitarenaFactory.getTeamWallets();
         
-        // Test different challenge indices
-        assertEq(1 % treasuryWalletsCount, 1); // Challenge 1 -> Treasury 1
-        assertEq(2 % treasuryWalletsCount, 2); // Challenge 2 -> Treasury 2
-        assertEq(3 % treasuryWalletsCount, 3); // Challenge 3 -> Treasury 3
-        assertEq(4 % treasuryWalletsCount, 0); // Challenge 4 -> Treasury 0
-        assertEq(5 % treasuryWalletsCount, 1); // Challenge 5 -> Treasury 1
+        // Verify main treasury is correct
+        assertEq(mainTreasury, MAIN_TREASURY_WALLET, "Main treasury should be correct");
         
-        console.log("Modulo calculation test passed");
+        // Verify team wallets are correct
+        assertEq(teamWallets.length, 6, "Should have 6 team wallets");
+        assertEq(teamWallets[0], TEAM_WALLET_1, "Team wallet 1 should be correct");
+        assertEq(teamWallets[1], TEAM_WALLET_2, "Team wallet 2 should be correct");
+        assertEq(teamWallets[2], TEAM_WALLET_3, "Team wallet 3 should be correct");
+        assertEq(teamWallets[3], TEAM_WALLET_4, "Team wallet 4 should be correct");
+        assertEq(teamWallets[4], TEAM_WALLET_5, "Team wallet 5 should be correct");
+        assertEq(teamWallets[5], TEAM_WALLET_6, "Team wallet 6 should be correct");
+        
+        // Test individual team wallet getters
+        for (uint256 i = 0; i < 6; i++) {
+            assertEq(bitarenaFactory.getTeamWalletByIndex(i), teamWallets[i], "Team wallet getter should work");
+        }
+        
+        console.log("New distribution logic test passed");
     }
 }
