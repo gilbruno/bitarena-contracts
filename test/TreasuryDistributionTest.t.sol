@@ -351,4 +351,121 @@ contract TreasuryDistributionTest is Test {
         challenge.withdrawChallengePool();
         vm.stopBroadcast();
     }
+    
+    function testPreciseTeamWalletBalances() public {
+        // Fund the factory for challenge creation
+        vm.deal(address(bitarenaFactory), STARTING_BALANCE_ETH);
+        
+        // Fund the creator for challenge creation
+        vm.deal(CREATOR_CHALLENGE1, 10 ether);
+        
+        // Create a challenge with known amounts for precise testing
+        uint256 startTime = block.timestamp + 1 hours;
+        uint256 amountPerPlayer = 2 ether; // Use 2 ETH for easier calculations
+        
+        console.log("Creating challenge with amountPerPlayer:", amountPerPlayer);
+        
+        vm.startBroadcast(CREATOR_CHALLENGE1);
+        BitarenaChallenge challenge = bitarenaFactory.intentChallengeDeployment{value: amountPerPlayer}(
+            "TestGame",
+            "TestPlatform",
+            2, // nbTeams
+            1, // nbTeamPlayers
+            amountPerPlayer,
+            startTime,
+            false // isPrivate
+        );
+        vm.stopBroadcast();
+        
+        console.log("Challenge created successfully");
+        
+        // Add second player to challenge (create team 2)
+        vm.deal(PLAYER1, 10 ether);
+        vm.startBroadcast(PLAYER1);
+        challenge.createOrJoinTeam{value: amountPerPlayer}(0); // Create team 2
+        vm.stopBroadcast();
+        
+        console.log("Second player joined successfully");
+        
+        // Set delays for victory claim and dispute participation
+        vm.startBroadcast(ADMIN_CHALLENGE1);
+        challenge.setDelayStartForVictoryClaim(1 minutes);
+        challenge.setDelayEndForVictoryClaim(3 hours); // Allow 3 hours to claim victory
+        vm.stopBroadcast();
+        
+        // Set dispute participation delays
+        vm.startBroadcast(ADMIN_DISPUTE_CHALLENGE1);
+        challenge.setDelayStartDisputeParticipation(1 minutes);
+        challenge.setDelayEndDisputeParticipation(10 minutes); // Short dispute period
+        vm.stopBroadcast();
+        
+        // Record initial balances of team wallets and main treasury
+        uint256[] memory initialTeamBalances = new uint256[](6);
+        for (uint8 i = 0; i < 6; i++) {
+            initialTeamBalances[i] = bitarenaFactory.getTeamWalletByIndex(i).balance;
+        }
+        uint256 initialMainTreasuryBalance = MAIN_TREASURY_WALLET.balance;
+        
+        // Calculate expected amounts
+        uint256 challengePool = challenge.getChallengePool(); // 4 ETH total (2 players * 2 ETH)
+        uint256 feeAmount = challenge.calculateFeeAmount(); // Assuming 10% fee = 0.4 ETH
+        uint256 treasuryAmount = feeAmount / 2; // 0.2 ETH to main treasury
+        uint256 teamAmount = (feeAmount - treasuryAmount) / 6; // 0.2 ETH / 6 = 0.0333... ETH per team wallet
+        
+        console.log("Challenge pool:", challengePool);
+        console.log("Fee amount:", feeAmount);
+        console.log("Treasury amount (50%):", treasuryAmount);
+        console.log("Team amount per wallet:", teamAmount);
+        
+        // Claim victory and withdraw
+        uint256 challengeStartTime = challenge.getChallengeStartDate();
+        uint256 victoryClaimTime = challengeStartTime + 2 hours;
+        vm.warp(victoryClaimTime);
+        
+        vm.startBroadcast(PLAYER1);
+        challenge.claimVictory();
+        vm.stopBroadcast();
+        
+        uint256 withdrawalTime = challengeStartTime + 11520; // All delays passed
+        vm.warp(withdrawalTime);
+        
+        vm.startBroadcast(PLAYER1);
+        challenge.withdrawChallengePool();
+        vm.stopBroadcast();
+        
+        // Check precise balances for each team wallet
+        for (uint8 i = 0; i < 6; i++) {
+            uint256 finalBalance = bitarenaFactory.getTeamWalletByIndex(i).balance;
+            uint256 balanceIncrease = finalBalance - initialTeamBalances[i];
+            
+            console.log("Team wallet", i, "balance increase:", balanceIncrease);
+            console.log("Expected amount:", teamAmount);
+            
+            // Check that each team wallet received exactly the expected amount
+            assertEq(balanceIncrease, teamAmount, string(abi.encodePacked("Team wallet ", i, " should receive exact amount")));
+        }
+        
+        // Verify main treasury balance
+        uint256 finalMainTreasuryBalance = MAIN_TREASURY_WALLET.balance;
+        uint256 mainTreasuryIncrease = finalMainTreasuryBalance - initialMainTreasuryBalance;
+        
+        console.log("Main treasury increase:", mainTreasuryIncrease);
+        console.log("Expected treasury amount:", treasuryAmount);
+        
+        // Check that main treasury received the expected amount (allowing for remainder)
+        assertGe(mainTreasuryIncrease, treasuryAmount, "Main treasury should receive at least 50% of fees");
+        
+        // Verify total distribution equals fee amount
+        uint256 totalTeamIncrease = 0;
+        for (uint8 i = 0; i < 6; i++) {
+            totalTeamIncrease += bitarenaFactory.getTeamWalletByIndex(i).balance - initialTeamBalances[i];
+        }
+        
+        uint256 totalDistributed = mainTreasuryIncrease + totalTeamIncrease;
+        assertEq(totalDistributed, feeAmount, "Total distributed should equal fee amount");
+        
+        console.log("Total team increase:", totalTeamIncrease);
+        console.log("Total distributed:", totalDistributed);
+        console.log("Fee amount:", feeAmount);
+    }
 }
