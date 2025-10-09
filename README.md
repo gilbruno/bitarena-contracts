@@ -158,11 +158,14 @@ catapulta script script/catapulta/Deploy.s.sol:DeployScript --network sepolia --
 
 ## Last deployment on Sepolia
 
+The last deploymùent on Sepolia can be visible here : https://catapulta.sh/report/732eb766-14d9-430a-82e6-4c2ccc811ed3
+
 ```sh
-BitarenaGames deployed to 0xbddbd1827abffce63c71f82ff01f07a0072c514a
-BitarenaChallengesData implementation deployed to 0x88b6ff8dc075c2761bffe147702aa1f1dfc2b668
-BitarenaChallengesData proxy deployed to 0xfa5e709cd4261f092f8fadbe5a0ed7ac10649ad3
-BitarenaFactory implementation deployed to 0x160db94719504893ad836f0afd59e9984c61251d
+BitarenaGames deployed to 0xe69B6373517DDB7002c54b8C8Cd7f6317E2e6fe4
+BitarenaChallengesData implementation deployed to 0x33770873440c2871f30AbE6cC0Aa07d60cC305d8
+BitarenaChallengesData proxy deployed to 0x77a04C6bcf0Ec67462D6e34011B3D1c3fead5068
+BitarenaFactory implementation deployed to 0x026184d8e4492ca126Def23c48C89718edFc8303
+Challenge deployed to 0x6FddB62d5dfbEacAAeAEdf23BE8a0F984D87a0Ff
 
 https://catapulta.sh/project/678f558bf2e1970d286019ed/op/ea9f9f20-6d28-4eb6-9189-541fb4f4b73b
 ```
