@@ -33,16 +33,6 @@ interface IBitarenaFactory {
     event IntentChallengeCreation(uint indexed challengeCounter);
 
     // Functions
-    function intentChallengeCreation(
-        string calldata _game,
-        string calldata _platform,
-        uint16 _nbTeams,
-        uint16 _nbTeamPlayers,
-        uint256 _amountPerPlayer,
-        uint256 _startAt,
-        bool _isPrivate
-    ) external payable;
-
     function intentChallengeDeployment(
         string calldata _game,
         string calldata _platform,
@@ -55,11 +45,11 @@ interface IBitarenaFactory {
 
     function getChallengeBytecode(ChallengeParams memory _params) external pure returns (bytes memory);
 
-    function createChallenge(
-        address _challengeAdmin,
-        address _challengeDisputeAdmin,
-        uint256 _challengeCounter
-    ) external returns (BitarenaChallenge);
+    // function createChallenge(
+    //     address _challengeAdmin,
+    //     address _challengeDisputeAdmin,
+    //     uint256 _challengeCounter
+    // ) external returns (BitarenaChallenge);
 
     function getChallengeCounter() external view returns (uint256);
     
