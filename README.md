@@ -158,7 +158,7 @@ catapulta script script/catapulta/Deploy.s.sol:DeployScript --network sepolia --
 
 ## Last deployment on Sepolia
 
-The last deploymùent on Sepolia can be visible here : https://catapulta.sh/report/732eb766-14d9-430a-82e6-4c2ccc811ed3
+The last deployment on Sepolia can be visible here : https://catapulta.sh/report/732eb766-14d9-430a-82e6-4c2ccc811ed3
 
 ```sh
 BitarenaGames deployed to 0xe69B6373517DDB7002c54b8C8Cd7f6317E2e6fe4
@@ -174,14 +174,25 @@ https://catapulta.sh/project/678f558bf2e1970d286019ed/op/ea9f9f20-6d28-4eb6-9189
 
 ## Set all games, platforms & modes
 
-### Platforms
+
+### Platforms
+
+
+```sh
 make setPlatform PLATFORM_NAME=steam && make setPlatform PLATFORM_NAME=ps5
+```
 
-### Games
+### Games
+
+```sh
 make setGame GAME_NAME=apex && make setGame GAME_NAME=csgo && make setGame GAME_NAME=fortnite
+```
 
-### Modes
+### Modes
+
+```sh
 make setMode NB_TEAMS=2 NB_PLAYERS=1 && make setMode NB_TEAMS=2 NB_PLAYERS=2
+```
 
 
 ## Authorize Factory 
