@@ -161,19 +161,20 @@ catapulta script script/catapulta/Deploy.s.sol:DeployScript --network sepolia --
 The last deployment on Sepolia can be visible here : https://catapulta.sh/report/732eb766-14d9-430a-82e6-4c2ccc811ed3
 
 ```sh
-BitarenaGames deployed to 0xe69B6373517DDB7002c54b8C8Cd7f6317E2e6fe4
-BitarenaChallengesData implementation deployed to 0x33770873440c2871f30AbE6cC0Aa07d60cC305d8
-BitarenaChallengesData proxy deployed to 0x77a04C6bcf0Ec67462D6e34011B3D1c3fead5068
-BitarenaFactory implementation deployed to 0x026184d8e4492ca126Def23c48C89718edFc8303
-Challenge deployed to 0x6FddB62d5dfbEacAAeAEdf23BE8a0F984D87a0Ff
+BitarenaGames deployed to 0x529d5c557f19085fB7C2884A573A22D45bac0Cc2
+BitarenaChallengesData implementation deployed to 0x6E93987ad6a0307cdf643bB6B052E893Ea4c3A56
+BitarenaChallengesData proxy deployed to 0xad63D40B7cc6f11697334aC4b96eD709b52764b2
+BitarenaFactory implementation deployed to 0x927110c418374443A059ECc5Ad22B18c53Dc9c94
+Challenge deployed to 0xAA2b067e2Af7FfE9A15953936e6AbA31505A732c
 
-https://catapulta.sh/project/678f558bf2e1970d286019ed/op/ea9f9f20-6d28-4eb6-9189-541fb4f4b73b
+https://catapulta.sh/project/68e6939bc2a1f30dbbd91371/op/eeb42ab6-b2be-4f68-b7ef-db335a5c9a69
 ```
 
 # After deployment actions
 
 ## Set all games, platforms & modes
 
+If you want to manually create games, platforms and modes on the blockchain, send the tx on the BC and then manually update the database.
 
 ### Platforms
 
@@ -192,6 +193,21 @@ make setGame GAME_NAME=apex && make setGame GAME_NAME=csgo && make setGame GAME_
 
 ```sh
 make setMode NB_TEAMS=2 NB_PLAYERS=1 && make setMode NB_TEAMS=2 NB_PLAYERS=2
+```
+
+
+If you want an automatic script that execute the commands and save it in the DB, you have to run these commands : 
+
+```sh
+./run_platforms.sh
+./run_games.sh  
+./run_modes.sh
+```
+
+or everything at once :
+
+```sh
+./run_commands.sh
 ```
 
 
