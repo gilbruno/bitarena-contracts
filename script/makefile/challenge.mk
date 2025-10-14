@@ -154,3 +154,91 @@ getTeamCounter:
 	@echo "Récupération du nombre d'équipes pour le challenge $(CHALLENGE_ADDRESS)"; \
 	cast call $(CHALLENGE_ADDRESS) "getTeamCounter()(uint256)" \
 		--rpc-url $(RPC_URL)
+
+# ===========================================
+# COMMANDES POUR LISTER LES PARTICIPANTS
+# ===========================================
+
+listAllParticipants:
+	@if [ -z "$(CHALLENGE_ADDRESS)" ]; then \
+		echo "Usage: make listAllParticipants CHALLENGE_ADDRESS=<address>"; \
+		exit 1; \
+	fi
+	@echo "=== LISTE DE TOUS LES PARTICIPANTS ET LEURS ÉQUIPES ==="; \
+	echo "Challenge: $(CHALLENGE_ADDRESS)"; \
+	echo ""; \
+	teamCounter=$$(cast call $(CHALLENGE_ADDRESS) "getTeamCounter()(uint16)" --rpc-url $(RPC_URL)); \
+	echo "Nombre total d'équipes: $$teamCounter"; \
+	echo ""; \
+	for i in $$(seq 1 $$teamCounter); do \
+		echo "--- ÉQUIPE $$i ---"; \
+		players=$$(cast call $(CHALLENGE_ADDRESS) "getTeamsByTeamIndex(uint16)(address[])" $$i --rpc-url $(RPC_URL)); \
+		echo "Joueurs: $$players"; \
+		echo ""; \
+	done
+
+listTeamParticipants:
+	@if [ -z "$(CHALLENGE_ADDRESS)" ] || [ -z "$(TEAM_INDEX)" ]; then \
+		echo "Usage: make listTeamParticipants CHALLENGE_ADDRESS=<address> TEAM_INDEX=<index>"; \
+		echo "Note: TEAM_INDEX doit être entre 1 et le nombre d'équipes"; \
+		exit 1; \
+	fi
+	@echo "=== PARTICIPANTS DE L'ÉQUIPE $(TEAM_INDEX) ==="; \
+	echo "Challenge: $(CHALLENGE_ADDRESS)"; \
+	echo ""; \
+	players=$$(cast call $(CHALLENGE_ADDRESS) "getTeamsByTeamIndex(uint16)(address[])" $(TEAM_INDEX) --rpc-url $(RPC_URL)); \
+	echo "Joueurs de l'équipe $(TEAM_INDEX): $$players"
+
+getPlayerTeam:
+	@if [ -z "$(CHALLENGE_ADDRESS)" ] || [ -z "$(PLAYER_ADDRESS)" ]; then \
+		echo "Usage: make getPlayerTeam CHALLENGE_ADDRESS=<address> PLAYER_ADDRESS=<address>"; \
+		exit 1; \
+	fi
+	@echo "=== ÉQUIPE DU JOUEUR ==="; \
+	echo "Challenge: $(CHALLENGE_ADDRESS)"; \
+	echo "Joueur: $(PLAYER_ADDRESS)"; \
+	echo ""; \
+	teamIndex=$$(cast call $(CHALLENGE_ADDRESS) "getTeamOfPlayer(address)(uint16)" $(PLAYER_ADDRESS) --rpc-url $(RPC_URL)); \
+	if [ "$$teamIndex" = "0" ]; then \
+		echo "Ce joueur ne participe pas à ce challenge"; \
+	else \
+		echo "Le joueur fait partie de l'équipe $$teamIndex"; \
+		players=$$(cast call $(CHALLENGE_ADDRESS) "getTeamsByTeamIndex(uint16)(address[])" $$teamIndex --rpc-url $(RPC_URL)); \
+		echo "Tous les joueurs de l'équipe $$teamIndex: $$players"; \
+	fi
+
+getChallengeSummary:
+	@if [ -z "$(CHALLENGE_ADDRESS)" ]; then \
+		echo "Usage: make getChallengeSummary CHALLENGE_ADDRESS=<address>"; \
+		exit 1; \
+	fi
+	@echo "=== RÉSUMÉ DU CHALLENGE ==="; \
+	echo "Challenge: $(CHALLENGE_ADDRESS)"; \
+	echo ""; \
+	game=$$(cast call $(CHALLENGE_ADDRESS) "getGame()(string)" --rpc-url $(RPC_URL)); \
+	platform=$$(cast call $(CHALLENGE_ADDRESS) "getPlatform()(string)" --rpc-url $(RPC_URL)); \
+	nbTeams=$$(cast call $(CHALLENGE_ADDRESS) "getNbTeams()(uint16)" --rpc-url $(RPC_URL)); \
+	nbTeamPlayers=$$(cast call $(CHALLENGE_ADDRESS) "getNbTeamPlayers()(uint16)" --rpc-url $(RPC_URL)); \
+	teamCounter=$$(cast call $(CHALLENGE_ADDRESS) "getTeamCounter()(uint16)" --rpc-url $(RPC_URL)); \
+	amountPerPlayer=$$(cast call $(CHALLENGE_ADDRESS) "getAmountPerPlayer()(uint256)" --rpc-url $(RPC_URL)); \
+	challengePool=$$(cast call $(CHALLENGE_ADDRESS) "getChallengePool()(uint256)" --rpc-url $(RPC_URL)); \
+	winnerTeam=$$(cast call $(CHALLENGE_ADDRESS) "getWinnerTeam()(uint16)" --rpc-url $(RPC_URL)); \
+	echo "Jeu: $$game"; \
+	echo "Plateforme: $$platform"; \
+	echo "Nombre d'équipes max: $$nbTeams"; \
+	echo "Joueurs par équipe: $$nbTeamPlayers"; \
+	echo "Équipes créées: $$teamCounter"; \
+	echo "Montant par joueur: $$amountPerPlayer wei"; \
+	echo "Pool total: $$challengePool wei"; \
+	if [ "$$winnerTeam" = "0" ]; then \
+		echo "Équipe gagnante: Aucune"; \
+	else \
+		echo "Équipe gagnante: $$winnerTeam"; \
+	fi; \
+	echo ""; \
+	echo "=== DÉTAIL DES ÉQUIPES ==="; \
+	for i in $$(seq 1 $$teamCounter); do \
+		players=$$(cast call $(CHALLENGE_ADDRESS) "getTeamsByTeamIndex(uint16)(address[])" $$i --rpc-url $(RPC_URL)); \
+		playerCount=$$(echo "$$players" | tr ',' '\n' | wc -l); \
+		echo "Équipe $$i: $$playerCount joueur(s) - $$players"; \
+	done
