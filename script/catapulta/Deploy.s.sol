@@ -58,12 +58,12 @@ contract DeployScript is Script {
     // Define treasury wallets (1 main treasury + 6 team wallets for fee distribution)
     address[7] memory treasuryWallets = [
         0xe1AC37c903D42F5d7C2362c4A49Ce81703132342, // Main Treasury Wallet
-        0xEeDeF819730808f1779573b9C2c210e08c16673E, // Team Wallet 1
-        0x6757c5baBb04b6D44168e41Df5F7Ad8F2cCB335b, // Team Wallet 2
-        0xbCa2181af9E7f976b3B94f3da39379E911aaD90B, // Team Wallet 3
-        0x0DDeA31BA73ba92Cd3F914218e03443Ba676f973, // Team Wallet 4
-        0x212FDDc0771E7EcC0b36069D8BA407088094B15C, // Team Wallet 5
-        0x86C93fc08eA957c7948dB996360013394A448a14  // Team Wallet 6
+        0xEeDeF819730808f1779573b9C2c210e08c16673E, // Team Wallet 1 - Gilles
+        0xbee951ef3B1c4a1B37a1529203AA9237B4BDe49e, // Team Wallet 2 - Eric
+        0x9cDE6f3ddc55183942f6c26D9df56cAA864fA038, // Team Wallet 3 - Greg
+        0x386B167f396882be2aaE0B3B4b43771f40C85814, // Team Wallet 4 - Corentin
+        0x212FDDc0771E7EcC0b36069D8BA407088094B15C, // Team Wallet 5 - François (still waiting the address )
+        0x2eAE7fd035D28c225dC7645F25E355e3ca52Ea81  // Team Wallet 6 - Marc
     ];
     
     //   2-1. Deploy implementation
