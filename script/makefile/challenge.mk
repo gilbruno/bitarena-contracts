@@ -242,3 +242,117 @@ getChallengeSummary:
 		playerCount=$$(echo "$$players" | tr ',' '\n' | wc -l); \
 		echo "Équipe $$i: $$playerCount joueur(s) - $$players"; \
 	done
+
+# ===========================================
+# COMMANDES POUR GÉRER LES DISPUTES
+# ===========================================
+
+checkTeamDisputeStatus:
+	@if [ -z "$(CHALLENGE_ADDRESS)" ] || [ -z "$(TEAM_INDEX)" ]; then \
+		echo "Usage: make checkTeamDisputeStatus CHALLENGE_ADDRESS=<address> TEAM_INDEX=<index>"; \
+		echo "Note: TEAM_INDEX doit être entre 1 et le nombre d'équipes"; \
+		exit 1; \
+	fi
+	@echo "=== STATUT DE DISPUTE DE L'ÉQUIPE $(TEAM_INDEX) ==="; \
+	echo "Challenge: $(CHALLENGE_ADDRESS)"; \
+	echo ""; \
+	disputeParticipant=$$(cast call $(CHALLENGE_ADDRESS) "getDisputeParticipants(uint16)(address)" $(TEAM_INDEX) --rpc-url $(RPC_URL)); \
+	if [ "$$disputeParticipant" = "0x0000000000000000000000000000000000000000" ]; then \
+		echo "❌ L'équipe $(TEAM_INDEX) ne participe PAS à la dispute"; \
+	else \
+		echo "✅ L'équipe $(TEAM_INDEX) participe à la dispute"; \
+		echo "Participant: $$disputeParticipant"; \
+	fi
+
+listAllDisputeParticipants:
+	@if [ -z "$(CHALLENGE_ADDRESS)" ]; then \
+		echo "Usage: make listAllDisputeParticipants CHALLENGE_ADDRESS=<address>"; \
+		exit 1; \
+	fi
+	@echo "=== TOUS LES PARTICIPANTS À LA DISPUTE ==="; \
+	echo "Challenge: $(CHALLENGE_ADDRESS)"; \
+	echo ""; \
+	disputeCount=$$(cast call $(CHALLENGE_ADDRESS) "getDisputeParticipantsCount()(uint256)" --rpc-url $(RPC_URL)); \
+	echo "Nombre d'équipes participant à la dispute: $$disputeCount"; \
+	echo ""; \
+	teamCounter=$$(cast call $(CHALLENGE_ADDRESS) "getTeamCounter()(uint16)" --rpc-url $(RPC_URL)); \
+	for i in $$(seq 1 $$teamCounter); do \
+		disputeParticipant=$$(cast call $(CHALLENGE_ADDRESS) "getDisputeParticipants(uint16)(address)" $$i --rpc-url $(RPC_URL)); \
+		if [ "$$disputeParticipant" != "0x0000000000000000000000000000000000000000" ]; then \
+			echo "✅ Équipe $$i: $$disputeParticipant"; \
+		fi; \
+	done
+
+getDisputeInfo:
+	@if [ -z "$(CHALLENGE_ADDRESS)" ]; then \
+		echo "Usage: make getDisputeInfo CHALLENGE_ADDRESS=<address>"; \
+		exit 1; \
+	fi
+	@echo "=== INFORMATIONS SUR LA DISPUTE ==="; \
+	echo "Challenge: $(CHALLENGE_ADDRESS)"; \
+	echo ""; \
+	disputeCount=$$(cast call $(CHALLENGE_ADDRESS) "getDisputeParticipantsCount()(uint256)" --rpc-url $(RPC_URL)); \
+	disputePool=$$(cast call $(CHALLENGE_ADDRESS) "getDisputePool()(uint256)" --rpc-url $(RPC_URL)); \
+	disputeAmount=$$(cast call $(CHALLENGE_ADDRESS) "getDisputeAmountParticipation()(uint256)" --rpc-url $(RPC_URL)); \
+	feePercentageDispute=$$(cast call $(CHALLENGE_ADDRESS) "getFeePercentageDispute()(uint16)" --rpc-url $(RPC_URL)); \
+	atLeast2Teams=$$(cast call $(CHALLENGE_ADDRESS) "atLeast2TeamsParticipateToDispute()(bool)" --rpc-url $(RPC_URL)); \
+	atLeast1Team=$$(cast call $(CHALLENGE_ADDRESS) "atLeast1TeamParticipateToDispute()(bool)" --rpc-url $(RPC_URL)); \
+	echo "Nombre d'équipes en dispute: $$disputeCount"; \
+	echo "Pool de dispute: $$disputePool wei"; \
+	echo "Montant pour participer à la dispute: $$disputeAmount wei"; \
+	echo "Pourcentage de frais de dispute: $$feePercentageDispute"; \
+	echo "Au moins 2 équipes en dispute: $$atLeast2Teams"; \
+	echo "Au moins 1 équipe en dispute: $$atLeast1Team"; \
+	echo ""; \
+	if [ "$$disputeCount" -gt 0 ]; then \
+		echo "=== ÉQUIPES EN DISPUTE ==="; \
+		teamCounter=$$(cast call $(CHALLENGE_ADDRESS) "getTeamCounter()(uint16)" --rpc-url $(RPC_URL)); \
+		for i in $$(seq 1 $$teamCounter); do \
+			disputeParticipant=$$(cast call $(CHALLENGE_ADDRESS) "getDisputeParticipants(uint16)(address)" $$i --rpc-url $(RPC_URL)); \
+			if [ "$$disputeParticipant" != "0x0000000000000000000000000000000000000000" ]; then \
+				players=$$(cast call $(CHALLENGE_ADDRESS) "getTeamsByTeamIndex(uint16)(address[])" $$i --rpc-url $(RPC_URL)); \
+				echo "Équipe $$i: $$disputeParticipant (Tous les joueurs: $$players)"; \
+			fi; \
+		done; \
+	fi
+
+checkDisputeEligibility:
+	@if [ -z "$(CHALLENGE_ADDRESS)" ] || [ -z "$(TEAM_INDEX)" ]; then \
+		echo "Usage: make checkDisputeEligibility CHALLENGE_ADDRESS=<address> TEAM_INDEX=<index>"; \
+		echo "Note: TEAM_INDEX doit être entre 1 et le nombre d'équipes"; \
+		exit 1; \
+	fi
+	@echo "=== ÉLIGIBILITÉ À LA DISPUTE POUR L'ÉQUIPE $(TEAM_INDEX) ==="; \
+	echo "Challenge: $(CHALLENGE_ADDRESS)"; \
+	echo ""; \
+	# Vérifier si l'équipe a réclamé la victoire
+	hasClaimedVictory=$$(cast call $(CHALLENGE_ADDRESS) "getWinnerClaimed(uint16)(bool)" $(TEAM_INDEX) --rpc-url $(RPC_URL)); \
+	if [ "$$hasClaimedVictory" = "true" ]; then \
+		echo "✅ L'équipe $(TEAM_INDEX) a réclamé la victoire"; \
+	else \
+		echo "❌ L'équipe $(TEAM_INDEX) n'a PAS réclamé la victoire"; \
+		echo "   → L'équipe doit d'abord réclamer la victoire pour participer à la dispute"; \
+	fi; \
+	# Vérifier si l'équipe participe déjà à la dispute
+	disputeParticipant=$$(cast call $(CHALLENGE_ADDRESS) "getDisputeParticipants(uint16)(address)" $(TEAM_INDEX) --rpc-url $(RPC_URL)); \
+	if [ "$$disputeParticipant" != "0x0000000000000000000000000000000000000000" ]; then \
+		echo "❌ L'équipe $(TEAM_INDEX) participe DÉJÀ à la dispute"; \
+		echo "   → Participant: $$disputeParticipant"; \
+	else \
+		echo "✅ L'équipe $(TEAM_INDEX) ne participe pas encore à la dispute"; \
+	fi; \
+	# Vérifier s'il y a au moins 2 équipes qui ont réclamé la victoire
+	atLeast2TeamsClaimed=$$(cast call $(CHALLENGE_ADDRESS) "atLeast2TeamsClaimVictory()(bool)" --rpc-url $(RPC_URL)); \
+	if [ "$$atLeast2TeamsClaimed" = "true" ]; then \
+		echo "✅ Il y a au moins 2 équipes qui ont réclamé la victoire (dispute possible)"; \
+	else \
+		echo "❌ Il n'y a pas assez d'équipes qui ont réclamé la victoire pour créer une dispute"; \
+	fi; \
+	# Vérifier les délais
+	delayStart=$$(cast call $(CHALLENGE_ADDRESS) "getDelayStartDisputeParticipation()(uint256)" --rpc-url $(RPC_URL)); \
+	delayEnd=$$(cast call $(CHALLENGE_ADDRESS) "getDelayEndDisputeParticipation()(uint256)" --rpc-url $(RPC_URL)); \
+	if [ "$$delayStart" = "0" ] || [ "$$delayEnd" = "0" ]; then \
+		echo "❌ Les délais de participation à la dispute ne sont pas configurés"; \
+	else \
+		echo "✅ Délais de dispute configurés: début=$$delayStart, fin=$$delayEnd"; \
+	fi
