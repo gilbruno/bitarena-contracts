@@ -62,7 +62,7 @@ contract DeployScript is Script {
         0xbee951ef3B1c4a1B37a1529203AA9237B4BDe49e, // Team Wallet 2 - Eric
         0x9cDE6f3ddc55183942f6c26D9df56cAA864fA038, // Team Wallet 3 - Greg
         0x386B167f396882be2aaE0B3B4b43771f40C85814, // Team Wallet 4 - Corentin
-        0x212FDDc0771E7EcC0b36069D8BA407088094B15C, // Team Wallet 5 - François (still waiting the address )
+        0x442aaE3794Dec2200012e2005A90264e461A6a1e, // Team Wallet 5 - François (last deployed SCs without Francçois's wallet )
         0x2eAE7fd035D28c225dC7645F25E355e3ca52Ea81  // Team Wallet 6 - Marc
     ];
     
