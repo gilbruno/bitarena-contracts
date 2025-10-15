@@ -170,6 +170,18 @@ Challenge deployed to 0xAA2b067e2Af7FfE9A15953936e6AbA31505A732c
 https://catapulta.sh/project/68e6939bc2a1f30dbbd91371/op/eeb42ab6-b2be-4f68-b7ef-db335a5c9a69
 ```
 
+Others smart contract deployed with shortest delays (not more than 1h)
+
+```sh
+BitarenaGames deployed to 0xA5B7d803EA0c6ac6e50D11b38a02b1500Ce9f83d
+BitarenaChallengesData implementation deployed to 0x620906C47508ac4E9DfC8C34947aCC7a62AFf245
+BitarenaChallengesData proxy deployed to 0x8c2485a5A770Ba10E2e4CE260834a8837Dd69f80
+BitarenaFactory implementation deployed to 0x248e0C05782f038eD11e9a770b8b60972b77439B
+Challenge deployed to 0x2DB8A9dadb6dfCeEa014c60fD87a0fF61f5eC722
+
+```
+
+
 # After deployment actions
 
 ## Set all games, platforms & modes

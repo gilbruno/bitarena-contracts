@@ -103,8 +103,7 @@ save_to_database() {
     WITH upsert AS (
         UPDATE public.\"Mode\" 
         SET \"txHash\" = '$tx_hash', 
-            \"blockNumber\" = $block_number, 
-            created_at = CURRENT_TIMESTAMP
+            \"blockNumber\" = $block_number
         WHERE name = '$mode_name'
         RETURNING *
     )
