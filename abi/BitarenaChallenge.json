@@ -267,6 +267,19 @@
   },
   {
     "type": "function",
+    "name": "emergencyWithdraw",
+    "inputs": [
+      {
+        "name": "recipient",
+        "type": "address",
+        "internalType": "address payable"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "getAmountPerPlayer",
     "inputs": [],
     "outputs": [
@@ -971,6 +984,26 @@
     "stateMutability": "nonpayable"
   },
   {
+    "type": "function",
+    "name": "withdrawPoolIfNoOthersTeamsJoined",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "ChallengeCanceled",
+    "inputs": [
+      {
+        "name": "challenge",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
     "type": "event",
     "name": "Debug",
     "inputs": [
@@ -1035,6 +1068,58 @@
   },
   {
     "type": "event",
+    "name": "DelayEndDisputeParticipationUpdated",
+    "inputs": [
+      {
+        "name": "delayEnd",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "DelayEndForVictoryClaimUpdated",
+    "inputs": [
+      {
+        "name": "delayEnd",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "DelayStartDisputeParticipationUpdated",
+    "inputs": [
+      {
+        "name": "delayStart",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "DelayStartForVictoryClaimUpdated",
+    "inputs": [
+      {
+        "name": "delayStart",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "DisputeAccepted",
     "inputs": [
       {
@@ -1042,6 +1127,113 @@
         "type": "address",
         "indexed": false,
         "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "EmergencyWithdraw",
+    "inputs": [
+      {
+        "name": "recipient",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "FeeDistributedToTreasury",
+    "inputs": [
+      {
+        "name": "treasuryWallet",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "challengeIndex",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "treasuryIndex",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "FeeDistributedToTreasuryAndTeam",
+    "inputs": [
+      {
+        "name": "mainTreasuryWallet",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "treasuryAmount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "teamWallets",
+        "type": "address[]",
+        "indexed": false,
+        "internalType": "address[]"
+      },
+      {
+        "name": "teamAmount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "FeePercentageDisputeUpdated",
+    "inputs": [
+      {
+        "name": "percentage",
+        "type": "uint16",
+        "indexed": false,
+        "internalType": "uint16"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "FeePercentageUpdated",
+    "inputs": [
+      {
+        "name": "percentage",
+        "type": "uint16",
+        "indexed": false,
+        "internalType": "uint16"
       }
     ],
     "anonymous": false
@@ -1373,6 +1565,11 @@
   },
   {
     "type": "error",
+    "name": "EmergencyWithdrawFailedError",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "EnforcedPause",
     "inputs": []
   },
@@ -1384,6 +1581,16 @@
   {
     "type": "error",
     "name": "FeeDisputeNotSetError",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "FeeDistributionFailedError",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidRecipientError",
     "inputs": []
   },
   {
@@ -1413,6 +1620,11 @@
   },
   {
     "type": "error",
+    "name": "NoFundsToWithdrawError",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "NotSufficientAmountForDisputeError",
     "inputs": []
   },
@@ -1428,6 +1640,16 @@
   },
   {
     "type": "error",
+    "name": "OnlyCreatorTeamCanWithdrawError",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OtherTeamsJoinedChallengeError",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "ReentrancyGuardReentrantCall",
     "inputs": []
   },
@@ -1439,6 +1661,11 @@
   {
     "type": "error",
     "name": "RevealWinnerImpossibleDueToTooFewDisputersError",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "RoleGrantFailed",
     "inputs": []
   },
   {
@@ -1519,7 +1746,22 @@
   },
   {
     "type": "error",
+    "name": "TimeToJoinChallengeNotElapsedError",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "TimeTooSoonToClaimVictoryError",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "TreasuryWalletNotFoundError",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "TreasuryWalletsNotConfiguredError",
     "inputs": []
   },
   {
